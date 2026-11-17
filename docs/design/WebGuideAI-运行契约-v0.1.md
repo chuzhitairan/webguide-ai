@@ -1,6 +1,8 @@
 # WebGuide AI 运行契约 v0.1
 
-日期：2026-11-17。T03 设计草案，衔接[核心设计](WebGuideAI-核心设计-v0.1.md)与[完整 SRS](../requirements/WebGuideAI-SRS-v0.2.md)。本文定义通用引导运行机制，以 Pages 为首个实例；教程获取、编辑发布和探索模块随后接入同一内容版本，不在此定义其全部业务接口。
+日期：2026-11-17。T03 设计草案，衔接[核心设计](WebGuideAI-核心设计-v0.1.md)与[完整 SRS](../requirements/WebGuideAI-SRS-v0.2.md)。本文定义通用引导运行机制，当前契约样例为 Pages；教程获取、编辑发布和探索模块随后接入同一内容版本，不在此定义其全部业务接口。
+
+场景更新：发起人已将 [GitHub 小组协作入门](../requirements/首场景调整-GitHub协作-2026-11-17.md)调整为首个交付及展示场景。本文的 Pages 参数、能力注册和终验仍仅适用于 Pages；通用消息与会话机制可复用，新场景的任务身份、步骤、能力注册及终验契约尚需补齐，不能直接按现有 Pages 样例实现新首版。
 
 阅读顺序：第 1–3 节看数据，第 4–7 节看运行，第 8–10 节看 Pages 和后端边界。结构源文件为[教程 Schema](contracts/tutorial.schema.json)和[Pages 教程样例](contracts/pages.tutorial.json)。这是设计输入，尚未创建正式工程或验证真实 GitHub 定位器。
 
