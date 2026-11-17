@@ -1,0 +1,118 @@
+Browser tab: 1817236099, Title: "Recents – Figma", URL: "https://www.figma.com/files/team/1704004916862942739/recents-and-sharing/recently-viewed?fuid=1704004913742100299".
+0 AXWebArea Recents – Figma, URL: figma.com/files/team/1704004916862942739/recents-and-sharing/recently-viewed?fuid=1704004913742100299
+	1 container react-page
+		2 container Sidebar
+			3 pop up button (collapsed) 264374662's team, Free plan, ID: :ro:, Secondary Actions: Expand
+			4 button (collapsed) Description: Change plan. 264374662's team currently on Free plan, Secondary Actions: Expand
+			5 pop up button (collapsed) Description: Notifications, Secondary Actions: Expand
+			6 container
+				7 combo box (collapsed, settable) Description: Search, ID: facetedSearchInput, Secondary Actions: Expand
+			8 container
+				9 content list
+					10 button Recents
+						11 text Recents
+					12 container
+						13 button Drafts
+						14 pop up button (collapsed) Description: New file, ID: :r10:, Secondary Actions: Expand
+					15 container
+						16 button Community
+						17 button Open Community in new tab
+				18 content list
+					19 button All folders
+						20 text All folders
+					21 button Resources
+						22 text Resources
+					23 button Trash
+						24 text Trash
+				25 button See what’s included Your plan and usage
+					26 text See what’s included
+					27 text Your plan and usage
+					28 image
+				29 container
+					30 button (expanded) Starred, Secondary Actions: Collapse
+					31 content list
+						32 container
+							33 button Team folder
+								34 text Team folder
+							35 button (disabled) Move row down
+							36 button (disabled) Move row up
+			37 button Upgrade
+		38 container
+			39 heading Recents, Value: 1
+				40 text Recents
+			41 button New Design file
+				42 image
+				43 text Design
+			44 button New FigJam file
+				45 image
+				46 text FigJam
+			47 button New Slides file
+				48 image
+				49 text Slides
+			50 button New Make file
+				51 image
+				52 text Make
+			53 button New Spec file
+				54 image
+				55 text Spec
+			56 pop up button (collapsed) Description: More, ID: :r3:, Secondary Actions: Expand
+			57 heading Describe your idea and make it come to life, Value: 2
+				58 text Describe your idea and make it come to life
+			59 link Description: Learn about AI tools in Figma Design, Value: help.figma.com/hc/articles/23870272542231
+			60 button Dismiss prompt box
+			61 container
+				62 text field (settable) Prompt input field
+				63 button (disabled) Design a file from this
+					64 text Design a file from this
+					65 image
+			66 tab group
+				67 tab (selected, settable, boolean) Recently viewed, Value: 1, ID: tab:r6:-recently-viewed-trigger
+				68 tab (selectable, settable, boolean) Shared files, Value: 0, ID: tab:r6:-shared-with-you-trigger
+				69 tab (selectable, settable, boolean) Shared folders, Value: 0, ID: tab:r6:-shared-projects-trigger
+			70 container
+				71 combo box (collapsed) 264374662's team, Secondary Actions: Expand
+			72 container
+				73 combo box (collapsed) All files, Secondary Actions: Expand
+			74 View mode
+				75 text View mode
+				76 radio button (settable, integer) Description: Show as grid, Value: 1, ID: :rb:-1
+				77 radio button (settable, integer) Description: Show as list, Value: 0, ID: :rb:-0
+			78 container Description: Recently viewed, ID: tab:r6:-recently-viewed-panel
+				79 content list
+					80 container Untitled
+						81 button Untitled, Design file
+						82 container
+							83 checkbox Description: Add to Starred, Value: 0
+						84 container
+							85 text Edited  33 minutes ago
+					86 container FigJam basics
+						87 button FigJam basics, FigJam file
+						88 container
+							89 checkbox Description: Add to Starred, Value: 0
+						90 container
+							91 text Edited  34 minutes ago
+					92 container Figma basics
+						93 button Figma basics, Design file
+						94 container
+							95 checkbox Description: Add to Starred, Value: 0
+						96 container
+							97 text Edited  34 minutes ago
+					98 container 264374662's team library
+						99 button 264374662's team library, Published file
+						100 container
+							101 checkbox Description: Add to Starred, Value: 0
+						102 container
+							103 text Edited  35 minutes ago
+		104 container Help/zoom toolbar
+			105 toolbar Help/zoom toolbar
+				106 pop up button (collapsed) Description: Help, ID: :rj:, Secondary Actions: Expand
+					107 image
+		108 container
+			109 container Add interactivity with Make., ID: :r2h:
+				110 heading Add interactivity with Make., Value: 2, ID: :r2j:
+					111 text Add interactivity with Make.
+				112 button Close
+				113 text Figma Make opens up new ways to prototype—from responsive components to micro-interactions.
+				114 button Try Figma Make
+
+The focused UI element is 0 AXWebArea Recents – Figma, URL: figma.com/files/team/1704004916862942739/recents-and-sharing/recently-viewed?fuid=1704004913742100299

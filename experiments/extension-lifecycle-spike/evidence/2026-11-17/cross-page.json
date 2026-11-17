@@ -1,0 +1,212 @@
+{
+  "experiment": "extension-lifecycle-spike/0.0.1",
+  "browser": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36 Edg/157.0.0.0",
+  "panelInstanceId": "8ad61a72-8406-468e-8b00-810ae725807c",
+  "capabilities": {
+    "sidePanel": true,
+    "onOpened": true,
+    "onClosed": true,
+    "storageSession": true
+  },
+  "bootId": "728c3e90-ea93-4564-bf9c-09c47a263a0b",
+  "logs": [
+    {
+      "at": "2026-11-17T09:06:21.647Z",
+      "bootId": "728c3e90-ea93-4564-bf9c-09c47a263a0b",
+      "event": "reset"
+    },
+    {
+      "at": "2026-11-17T09:06:23.026Z",
+      "bootId": "728c3e90-ea93-4564-bf9c-09c47a263a0b",
+      "event": "page-connected",
+      "tabId": 1817236446,
+      "role": "settings",
+      "documentId": "172533678473C818A7BD3DE55F5192AF"
+    },
+    {
+      "at": "2026-11-17T09:06:24.784Z",
+      "bootId": "728c3e90-ea93-4564-bf9c-09c47a263a0b",
+      "event": "task-started",
+      "taskId": "7bb3ac42-e254-4eff-9994-ce0dbe284029",
+      "windowId": 1817236195
+    },
+    {
+      "at": "2026-11-17T09:06:24.785Z",
+      "bootId": "728c3e90-ea93-4564-bf9c-09c47a263a0b",
+      "event": "check-issued",
+      "tabId": 1817236446,
+      "role": "settings",
+      "revision": 1
+    },
+    {
+      "at": "2026-11-17T09:06:24.786Z",
+      "bootId": "728c3e90-ea93-4564-bf9c-09c47a263a0b",
+      "event": "observation-accepted",
+      "tabId": 1817236446,
+      "role": "settings",
+      "target": "unique-visible"
+    },
+    {
+      "at": "2026-11-17T09:06:27.912Z",
+      "bootId": "728c3e90-ea93-4564-bf9c-09c47a263a0b",
+      "event": "panel-disconnected",
+      "instanceId": "8cb6988b-5806-4a3d-bd1a-c0e135c7439d",
+      "windowId": 1817236195
+    },
+    {
+      "at": "2026-11-17T09:06:27.912Z",
+      "bootId": "728c3e90-ea93-4564-bf9c-09c47a263a0b",
+      "event": "task-paused",
+      "reason": "panel-connection-lost",
+      "taskId": "7bb3ac42-e254-4eff-9994-ce0dbe284029"
+    },
+    {
+      "at": "2026-11-17T09:06:32.591Z",
+      "bootId": "728c3e90-ea93-4564-bf9c-09c47a263a0b",
+      "event": "panel-connected",
+      "instanceId": "8ad61a72-8406-468e-8b00-810ae725807c",
+      "windowId": 1817236195
+    },
+    {
+      "at": "2026-11-17T09:06:37.488Z",
+      "bootId": "728c3e90-ea93-4564-bf9c-09c47a263a0b",
+      "event": "check-issued",
+      "tabId": 1817236446,
+      "role": "settings",
+      "revision": 3
+    },
+    {
+      "at": "2026-11-17T09:06:37.490Z",
+      "bootId": "728c3e90-ea93-4564-bf9c-09c47a263a0b",
+      "event": "observation-accepted",
+      "tabId": 1817236446,
+      "role": "settings",
+      "target": "unique-visible"
+    },
+    {
+      "at": "2026-11-17T09:06:38.825Z",
+      "bootId": "728c3e90-ea93-4564-bf9c-09c47a263a0b",
+      "event": "page-highlight-cleared",
+      "tabId": 1817236446,
+      "reason": "document-hidden"
+    },
+    {
+      "at": "2026-11-17T09:06:41.329Z",
+      "bootId": "728c3e90-ea93-4564-bf9c-09c47a263a0b",
+      "event": "tab-navigation",
+      "tabId": 1817236446,
+      "allowed": true
+    },
+    {
+      "at": "2026-11-17T09:06:41.377Z",
+      "bootId": "728c3e90-ea93-4564-bf9c-09c47a263a0b",
+      "event": "page-disconnected",
+      "tabId": 1817236446
+    },
+    {
+      "at": "2026-11-17T09:06:41.432Z",
+      "bootId": "728c3e90-ea93-4564-bf9c-09c47a263a0b",
+      "event": "page-connected",
+      "tabId": 1817236446,
+      "role": "workflow",
+      "documentId": "4805D04BCED985C51E71C938D10190D6"
+    },
+    {
+      "at": "2026-11-17T09:06:45.648Z",
+      "bootId": "728c3e90-ea93-4564-bf9c-09c47a263a0b",
+      "event": "check-issued",
+      "tabId": 1817236446,
+      "role": "workflow",
+      "revision": 4
+    },
+    {
+      "at": "2026-11-17T09:06:45.649Z",
+      "bootId": "728c3e90-ea93-4564-bf9c-09c47a263a0b",
+      "event": "observation-accepted",
+      "tabId": 1817236446,
+      "role": "workflow",
+      "target": "unique-visible"
+    },
+    {
+      "at": "2026-11-17T09:06:47.226Z",
+      "bootId": "728c3e90-ea93-4564-bf9c-09c47a263a0b",
+      "event": "page-highlight-cleared",
+      "tabId": 1817236446,
+      "reason": "document-hidden"
+    },
+    {
+      "at": "2026-11-17T09:07:01.718Z",
+      "bootId": "728c3e90-ea93-4564-bf9c-09c47a263a0b",
+      "event": "tab-activated",
+      "tabId": 1817236458,
+      "windowId": 1817236195
+    },
+    {
+      "at": "2026-11-17T09:07:01.982Z",
+      "bootId": "728c3e90-ea93-4564-bf9c-09c47a263a0b",
+      "event": "page-connected",
+      "tabId": 1817236458,
+      "role": "site",
+      "documentId": "4A98744A28D2FE5BE053A8EFF7BAED86"
+    },
+    {
+      "at": "2026-11-17T09:07:07.548Z",
+      "bootId": "728c3e90-ea93-4564-bf9c-09c47a263a0b",
+      "event": "check-issued",
+      "tabId": 1817236458,
+      "role": "site",
+      "revision": 6
+    },
+    {
+      "at": "2026-11-17T09:07:07.551Z",
+      "bootId": "728c3e90-ea93-4564-bf9c-09c47a263a0b",
+      "event": "observation-accepted",
+      "tabId": 1817236458,
+      "role": "site",
+      "target": "unique-visible"
+    },
+    {
+      "at": "2026-11-17T09:07:08.657Z",
+      "bootId": "728c3e90-ea93-4564-bf9c-09c47a263a0b",
+      "event": "page-highlight-cleared",
+      "tabId": 1817236458,
+      "reason": "document-hidden"
+    }
+  ],
+  "schema": 1,
+  "task": {
+    "id": "7bb3ac42-e254-4eff-9994-ce0dbe284029",
+    "tag": "WG-LIFECYCLE-V1",
+    "revision": 6,
+    "windowId": 1817236195,
+    "owner": "8ad61a72-8406-468e-8b00-810ae725807c",
+    "status": "active",
+    "observations": {
+      "settings": {
+        "at": "2026-11-17T09:06:37.490Z",
+        "tabId": 1817236446,
+        "documentId": "172533678473C818A7BD3DE55F5192AF",
+        "taskId": "7bb3ac42-e254-4eff-9994-ce0dbe284029",
+        "url": "http://127.0.0.1:43117/webguide-lifecycle/settings.html",
+        "target": "unique-visible"
+      },
+      "workflow": {
+        "at": "2026-11-17T09:06:45.649Z",
+        "tabId": 1817236446,
+        "documentId": "4805D04BCED985C51E71C938D10190D6",
+        "taskId": "7bb3ac42-e254-4eff-9994-ce0dbe284029",
+        "url": "http://127.0.0.1:43117/webguide-lifecycle/workflow.html",
+        "target": "unique-visible"
+      },
+      "site": {
+        "at": "2026-11-17T09:07:07.551Z",
+        "tabId": 1817236458,
+        "documentId": "4A98744A28D2FE5BE053A8EFF7BAED86",
+        "taskId": "7bb3ac42-e254-4eff-9994-ce0dbe284029",
+        "url": "http://127.0.0.1:43118/webguide-lifecycle/site.html",
+        "target": "unique-visible"
+      }
+    },
+    "reason": "observation-recorded"
+  }
+}

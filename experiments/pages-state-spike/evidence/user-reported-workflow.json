@@ -1,0 +1,51 @@
+{
+  "provenance": {
+    "source": "user-pasted-popup-text",
+    "receivedDateAsiaShanghai": "2026-11-16",
+    "evidenceLevel": "用户提供的弹窗文本核对，非截图核对或助手独立复现",
+    "normalization": "用户消息将 URL 自动呈现为 Markdown 链接，此处提取链接 URL；本文件不是原始扩展导出文件。"
+  },
+  "display": {
+    "notice": "已读取本次页面；没有修改目标网站。",
+    "source": "来源匹配，设置页报告站点已上线",
+    "workflow": "目标提交的 Pages 部署成功",
+    "content": "缺少有效观察",
+    "outcome": "尚未完成",
+    "next": "打开测试站点，再点击扩展核对内容标记。"
+  },
+  "observations": [
+    {
+      "branch": "main",
+      "deploymentUrl": "https://github.com/chuzhitairan/webguide-ai-walkthrough-20261116/actions/runs/43801722077",
+      "directory": "/ (root)",
+      "disabled": false,
+      "kind": "settings",
+      "liveSite": "https://chuzhitairan.github.io/webguide-ai-walkthrough-20261116/",
+      "observedAt": 1794811799944,
+      "saveEnabled": false,
+      "sourceConfiguredText": true,
+      "taskId": "SC01-20261116-v1",
+      "url": "https://github.com/chuzhitairan/webguide-ai-walkthrough-20261116/settings/pages"
+    },
+    {
+      "commit": "0b5600ab1d044ee3e8ff9dbb10afe6f74cbeb1b0",
+      "isPagesWorkflow": true,
+      "kind": "workflow",
+      "observedAt": 1794812162745,
+      "siteLinked": true,
+      "status": "success",
+      "taskId": "SC01-20261116-v1",
+      "url": "https://github.com/chuzhitairan/webguide-ai-walkthrough-20261116/actions/runs/43801722077"
+    }
+  ],
+  "assessment": {
+    "case": "T03",
+    "reportedOutputMatchesExpectation": true,
+    "settingsObservationRetainedUnchanged": true,
+    "limitations": [
+      "仅用户粘贴的弹窗文本，非截图或助手独立复现",
+      "站点内容读取及完整三项成功路径尚待检查",
+      "不以两次观察推定其他页面、会话或异常路径可靠"
+    ]
+  }
+}

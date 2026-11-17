@@ -1,0 +1,4 @@
+* text=auto eol=lf
+
+# 原始页面文本保留采集时的空白，不做文案格式清理。
+docs/requirements/evidence/**/*.txt -whitespace

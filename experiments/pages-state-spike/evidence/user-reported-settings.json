@@ -1,0 +1,40 @@
+{
+  "provenance": {
+    "source": "user-pasted-popup-text",
+    "receivedDateAsiaShanghai": "2026-11-16",
+    "evidenceLevel": "用户提供的弹窗文本核对，非截图核对或助手独立复现",
+    "normalization": "用户消息将 URL 自动呈现为 Markdown 链接，此处提取链接 URL；本文件不是原始扩展导出文件。"
+  },
+  "display": {
+    "notice": "已读取本次页面；没有修改目标网站。",
+    "source": "来源匹配，设置页报告站点已上线",
+    "workflow": "缺少有效观察",
+    "content": "缺少有效观察",
+    "outcome": "尚未完成",
+    "next": "打开设置页的 deployed 工作流链接，再点击扩展检查。"
+  },
+  "observations": [
+    {
+      "branch": "main",
+      "deploymentUrl": "https://github.com/chuzhitairan/webguide-ai-walkthrough-20261116/actions/runs/43801722077",
+      "directory": "/ (root)",
+      "disabled": false,
+      "kind": "settings",
+      "liveSite": "https://chuzhitairan.github.io/webguide-ai-walkthrough-20261116/",
+      "observedAt": 1794811799944,
+      "saveEnabled": false,
+      "sourceConfiguredText": true,
+      "taskId": "SC01-20261116-v1",
+      "url": "https://github.com/chuzhitairan/webguide-ai-walkthrough-20261116/settings/pages"
+    }
+  ],
+  "assessment": {
+    "case": "T02",
+    "reportedOutputMatchesExpectation": true,
+    "limitations": [
+      "未独立确认截图、实际注入调用或网络行为",
+      "未单独核验 T01 清空前后变化",
+      "跨页保留、工作流和站点读取待后续检查"
+    ]
+  }
+}

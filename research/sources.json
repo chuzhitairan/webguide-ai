@@ -1,0 +1,429 @@
+{
+  "review_date": "2026-11-13",
+  "collected_at_utc": "2026-11-13T09:33:50.568Z",
+  "method": "官方公开仓库的 depth=1 工作树；针对核心路径的静态阅读，未安装依赖或运行上游项目。",
+  "repositories": [
+    {
+      "name": "ontheway",
+      "category": "直接相关：录制、AI 生成、引导 SDK",
+      "origin": "https://github.com/jiusanzhou/ontheway.git",
+      "homepage": "https://github.com/jiusanzhou/ontheway",
+      "commit": "e390aef282690d208ee6260f5f499c6ffd3b1f34",
+      "branch": "main",
+      "commit_time": "2026-04-28T21:04:42+08:00",
+      "shallow": true,
+      "tracked_files": 91,
+      "tracked_bytes": 723935,
+      "clean": true,
+      "license_note": "README 与 packages/sdk/package.json 声明 MIT；根目录未发现独立 LICENSE 文件。",
+      "root_license_files": [],
+      "references": [
+        {
+          "file": "src/app/api/ai/generate/route.ts",
+          "line": 64,
+          "purpose": "页面 DOM + 意图生成步骤；不是文档学习或沙盒验证",
+          "sha256": "8b91518c21d97565400b5e1f540d3ea4ab189473fb8dd4687fe61717c8b3a01e",
+          "permalink": "https://github.com/jiusanzhou/ontheway/blob/e390aef282690d208ee6260f5f499c6ffd3b1f34/src/app/api/ai/generate/route.ts#L64"
+        },
+        {
+          "file": "packages/sdk/src/index.ts",
+          "line": 457,
+          "purpose": "实际 SDK 的点击推进、跨页恢复、完成统计",
+          "sha256": "cbc560cd618befeeaf359a1e26f873f0f4a5b54b02dde368b51a95f70f6f9968",
+          "permalink": "https://github.com/jiusanzhou/ontheway/blob/e390aef282690d208ee6260f5f499c6ffd3b1f34/packages/sdk/src/index.ts#L457"
+        },
+        {
+          "file": "packages/sdk/src/index.ts",
+          "line": 601,
+          "purpose": "MutationObserver 等待目标",
+          "sha256": "cbc560cd618befeeaf359a1e26f873f0f4a5b54b02dde368b51a95f70f6f9968",
+          "permalink": "https://github.com/jiusanzhou/ontheway/blob/e390aef282690d208ee6260f5f499c6ffd3b1f34/packages/sdk/src/index.ts#L601"
+        },
+        {
+          "file": "packages/sdk/src/index.ts",
+          "line": 857,
+          "purpose": "SDK 调用 AI 生成接口",
+          "sha256": "cbc560cd618befeeaf359a1e26f873f0f4a5b54b02dde368b51a95f70f6f9968",
+          "permalink": "https://github.com/jiusanzhou/ontheway/blob/e390aef282690d208ee6260f5f499c6ffd3b1f34/packages/sdk/src/index.ts#L857"
+        },
+        {
+          "file": "packages/sdk/src/devtools.tsx",
+          "line": 54,
+          "purpose": "录制选择器生成",
+          "sha256": "bc47a00dbb27be23a83bd7bff5cb4004e6967ac5e3f46004de12ed1b53ded348",
+          "permalink": "https://github.com/jiusanzhou/ontheway/blob/e390aef282690d208ee6260f5f499c6ffd3b1f34/packages/sdk/src/devtools.tsx#L54"
+        }
+      ]
+    },
+    {
+      "name": "usertour",
+      "category": "直接相关：完整用户引导平台",
+      "origin": "https://github.com/usertour/usertour.git",
+      "homepage": "https://github.com/usertour/usertour",
+      "commit": "814989a6ced203b3981a1825542b637f57ab1b14",
+      "branch": "main",
+      "commit_time": "2026-11-11T17:16:18+08:00",
+      "shallow": true,
+      "tracked_files": 2975,
+      "tracked_bytes": 26207494,
+      "clean": true,
+      "license_note": "混合许可：一般代码为 MIT；enterprise/ee 路径及功能、权限、角色、套餐开关代码存在例外，见 LICENSE 和 LICENSE.enterprise。",
+      "root_license_files": [
+        "LICENSE",
+        "LICENSE.enterprise"
+      ],
+      "references": [
+        {
+          "file": "apps/sdk/src/core/usertour-element-watcher.ts",
+          "line": 31,
+          "purpose": "目标查找、重试、可见性与生命周期",
+          "sha256": "d57b39981d3cda0f64cd3261bf4551628fca36df07b14d7713a3564de481f16c",
+          "permalink": "https://github.com/usertour/usertour/blob/814989a6ced203b3981a1825542b637f57ab1b14/apps/sdk/src/core/usertour-element-watcher.ts#L31"
+        },
+        {
+          "file": "apps/sdk/src/core/usertour-rules-evaluator.ts",
+          "line": 273,
+          "purpose": "存在、禁用、点击等条件判断",
+          "sha256": "1d445f077dc678c2e2d8e3e1f2bbaf8e7de52b6efa9100fb42db69b0e5f12217",
+          "permalink": "https://github.com/usertour/usertour/blob/814989a6ced203b3981a1825542b637f57ab1b14/apps/sdk/src/core/usertour-rules-evaluator.ts#L273"
+        },
+        {
+          "file": "apps/sdk/src/core/usertour-conditions-monitor.ts",
+          "line": 183,
+          "purpose": "周期条件评估与状态跟踪",
+          "sha256": "d12fe8c2cbf2b94079cc64f489d0899eb4298ff1967cb0fe8f93e98712c1e582",
+          "permalink": "https://github.com/usertour/usertour/blob/814989a6ced203b3981a1825542b637f57ab1b14/apps/sdk/src/core/usertour-conditions-monitor.ts#L183"
+        },
+        {
+          "file": "packages/finder/src/finderx.ts",
+          "line": 34,
+          "purpose": "多种定位信息与上下文结构",
+          "sha256": "076e334a71e378277e6385a5a26ee658d5ced3f37c5b79a55a119e979cff33bf",
+          "permalink": "https://github.com/usertour/usertour/blob/814989a6ced203b3981a1825542b637f57ab1b14/packages/finder/src/finderx.ts#L34"
+        }
+      ]
+    },
+    {
+      "name": "driver.js",
+      "category": "基础组件：高亮与交互引导",
+      "origin": "https://github.com/kamranahmedse/driver.js.git",
+      "homepage": "https://github.com/kamranahmedse/driver.js",
+      "commit": "0163642dc532417ea401684bd26690e2f3283d63",
+      "branch": "master",
+      "commit_time": "2026-11-12T01:15:13Z",
+      "shallow": true,
+      "tracked_files": 280,
+      "tracked_bytes": 6941660,
+      "clean": true,
+      "license_note": "MIT，见 license。",
+      "root_license_files": [
+        "license"
+      ],
+      "references": [
+        {
+          "file": "packages/driver/src/tour/removal.ts",
+          "line": 32,
+          "purpose": "目标移除检测、重新绑定、规则回退",
+          "sha256": "cf2eeb9b91ad8771e5666729f094ee26100b2f9ae739d74d8f34db7489d93f36",
+          "permalink": "https://github.com/kamranahmedse/driver.js/blob/0163642dc532417ea401684bd26690e2f3283d63/packages/driver/src/tour/removal.ts#L32"
+        },
+        {
+          "file": "packages/driver/src/tour/advance.ts",
+          "line": 22,
+          "purpose": "按用户事件及条件推进",
+          "sha256": "09dd530bdd3d682ef15156ac947a90386915f78b991c163cab0a3fa878bb3412",
+          "permalink": "https://github.com/kamranahmedse/driver.js/blob/0163642dc532417ea401684bd26690e2f3283d63/packages/driver/src/tour/advance.ts#L22"
+        },
+        {
+          "file": "packages/driver/src/tour/wait.ts",
+          "line": 33,
+          "purpose": "有超时的元素等待",
+          "sha256": "4fd97a2f289f39f2fb8dbf7fe3a948afd70d47f10b358ee4152cefa6cb0730c8",
+          "permalink": "https://github.com/kamranahmedse/driver.js/blob/0163642dc532417ea401684bd26690e2f3283d63/packages/driver/src/tour/wait.ts#L33"
+        },
+        {
+          "file": "packages/driver/tests/tour/action-steps.test.ts",
+          "line": 83,
+          "purpose": "回退与等待的上游测试样例；本次未执行",
+          "sha256": "4f0f9cb4b3e68c219ef4e18c248215870daef755dfcab22e1e3655f9a555f5a0",
+          "permalink": "https://github.com/kamranahmedse/driver.js/blob/0163642dc532417ea401684bd26690e2f3283d63/packages/driver/tests/tour/action-steps.test.ts#L83"
+        }
+      ]
+    },
+    {
+      "name": "shepherd",
+      "category": "基础组件：声明式引导流程",
+      "origin": "https://github.com/shipshapecode/shepherd.git",
+      "homepage": "https://github.com/shipshapecode/shepherd",
+      "commit": "7841b050adff2eeac5b58cf01904c9d072ae3c11",
+      "branch": "main",
+      "commit_time": "2026-11-11T12:54:48-05:00",
+      "shallow": true,
+      "tracked_files": 341,
+      "tracked_bytes": 24334918,
+      "clean": true,
+      "license_note": "根 LICENSE.md 声明 AGPL-3.0 / 商业双许可；不要按 MIT 组件处理。",
+      "root_license_files": [
+        "LICENSE.md"
+      ],
+      "references": [
+        {
+          "file": "shepherd.js/src/step.ts",
+          "line": 88,
+          "purpose": "显示前异步准备",
+          "sha256": "fcb08c153ecd4c5d0d6a01ddc668b7a290c2a741b7a13d78a0f0b7f6e9c1ffb9",
+          "permalink": "https://github.com/shipshapecode/shepherd/blob/7841b050adff2eeac5b58cf01904c9d072ae3c11/shepherd.js/src/step.ts#L88"
+        },
+        {
+          "file": "shepherd.js/src/step.ts",
+          "line": 282,
+          "purpose": "元素等待选项",
+          "sha256": "fcb08c153ecd4c5d0d6a01ddc668b7a290c2a741b7a13d78a0f0b7f6e9c1ffb9",
+          "permalink": "https://github.com/shipshapecode/shepherd/blob/7841b050adff2eeac5b58cf01904c9d072ae3c11/shepherd.js/src/step.ts#L282"
+        },
+        {
+          "file": "shepherd.js/src/tour.ts",
+          "line": 428,
+          "purpose": "缺失目标跳过与流程调度",
+          "sha256": "789e8c06f87b81d2cd6b1a96b1111fd7fc8091f0ceeaf691bd823f625d5986c1",
+          "permalink": "https://github.com/shipshapecode/shepherd/blob/7841b050adff2eeac5b58cf01904c9d072ae3c11/shepherd.js/src/tour.ts#L428"
+        },
+        {
+          "file": "shepherd.js/AGENTS.md",
+          "line": 158,
+          "purpose": "JSON Schema 与函数选项的边界说明",
+          "sha256": "593c077064366b0c90c4290b0fe9ed65b2150b239df2916d30526d588140972a",
+          "permalink": "https://github.com/shipshapecode/shepherd/blob/7841b050adff2eeac5b58cf01904c9d072ae3c11/shepherd.js/AGENTS.md#L158"
+        }
+      ]
+    },
+    {
+      "name": "rrweb",
+      "category": "基础组件：网页事件录制与回放",
+      "origin": "https://github.com/rrweb-io/rrweb.git",
+      "homepage": "https://github.com/rrweb-io/rrweb",
+      "commit": "3339038d31bc15491e9def76fd4f4818b2eae6aa",
+      "branch": "main",
+      "commit_time": "2026-11-10T16:41:51Z",
+      "shallow": true,
+      "tracked_files": 629,
+      "tracked_bytes": 12993224,
+      "clean": true,
+      "license_note": "MIT，见 LICENSE。",
+      "root_license_files": [
+        "LICENSE"
+      ],
+      "references": [
+        {
+          "file": "packages/rrweb/src/record/index.ts",
+          "line": 140,
+          "purpose": "录制入口、快照配置与输入脱敏默认值",
+          "sha256": "a199ae506d8ddf9b9f27f8ceb9d09fbedb7a775a2c5f8a703d47bc1b71d6c7d8",
+          "permalink": "https://github.com/rrweb-io/rrweb/blob/3339038d31bc15491e9def76fd4f4818b2eae6aa/packages/rrweb/src/record/index.ts#L140"
+        },
+        {
+          "file": "packages/rrweb/src/record/observer.ts",
+          "line": 58,
+          "purpose": "DOM/交互事件观察",
+          "sha256": "ab595dce6c2d2311dabf4e66d75da5a1bcc5828f052a7ad08f4f0a50975ec3b1",
+          "permalink": "https://github.com/rrweb-io/rrweb/blob/3339038d31bc15491e9def76fd4f4818b2eae6aa/packages/rrweb/src/record/observer.ts#L58"
+        },
+        {
+          "file": "packages/rrweb/src/replay/index.ts",
+          "line": 117,
+          "purpose": "历史页面回放；不等于真实网页教程执行",
+          "sha256": "0c7a40b7d49059b8a9c3a2b9158da1bbe12f96eed8ea200185a3cb2cf439307c",
+          "permalink": "https://github.com/rrweb-io/rrweb/blob/3339038d31bc15491e9def76fd4f4818b2eae6aa/packages/rrweb/src/replay/index.ts#L117"
+        }
+      ]
+    },
+    {
+      "name": "nanobrowser",
+      "category": "参考架构：浏览器扩展与页面感知",
+      "origin": "https://github.com/nanobrowser/nanobrowser.git",
+      "homepage": "https://github.com/nanobrowser/nanobrowser",
+      "commit": "6c4c0802a3967cb25e82f1249fcd68e79614c75f",
+      "branch": "master",
+      "commit_time": "2026-11-10T11:43:09+08:00",
+      "shallow": true,
+      "tracked_files": 490,
+      "tracked_bytes": 5314841,
+      "clean": true,
+      "license_note": "Apache-2.0，见 LICENSE。",
+      "root_license_files": [
+        "LICENSE"
+      ],
+      "references": [
+        {
+          "file": "src/browser-control/core/refs.ts",
+          "line": 113,
+          "purpose": "绑定文档生命周期的元素引用",
+          "sha256": "42551c342ea2a54e99c78328bfa60f658ee82145955933231e30a68e0cc0d441",
+          "permalink": "https://github.com/nanobrowser/nanobrowser/blob/6c4c0802a3967cb25e82f1249fcd68e79614c75f/src/browser-control/core/refs.ts#L113"
+        },
+        {
+          "file": "src/browser-control/core/perception/observe.ts",
+          "line": 76,
+          "purpose": "预算受限的页面表示与引用生成",
+          "sha256": "0bbd8f6a72e542a69cb56af960bd7bd406d7c443eb86fba5d2df0d1022381bb9",
+          "permalink": "https://github.com/nanobrowser/nanobrowser/blob/6c4c0802a3967cb25e82f1249fcd68e79614c75f/src/browser-control/core/perception/observe.ts#L76"
+        },
+        {
+          "file": "src/browser-control/protocol/results.ts",
+          "line": 25,
+          "purpose": "区分动作送达、页面反应、后置条件",
+          "sha256": "8f91c5f38bb46051d7dee7d5b08c3c09cffd91f6e637eb21a04a32e405d2cdb1",
+          "permalink": "https://github.com/nanobrowser/nanobrowser/blob/6c4c0802a3967cb25e82f1249fcd68e79614c75f/src/browser-control/protocol/results.ts#L25"
+        },
+        {
+          "file": "src/browser-control/core/interaction/evidence.ts",
+          "line": 64,
+          "purpose": "动作前后证据收集；不直接判定业务成功",
+          "sha256": "42c57ff1984b9893a77da8c5bef080168137ba374a8ea7e50d34207e6ea34f13",
+          "permalink": "https://github.com/nanobrowser/nanobrowser/blob/6c4c0802a3967cb25e82f1249fcd68e79614c75f/src/browser-control/core/interaction/evidence.ts#L64"
+        }
+      ]
+    },
+    {
+      "name": "browser-use",
+      "category": "参考架构：自主浏览器 Agent",
+      "origin": "https://github.com/browser-use/browser-use.git",
+      "homepage": "https://github.com/browser-use/browser-use",
+      "commit": "48d9fe008bb98a8959279b495518652dfb934d6b",
+      "branch": "main",
+      "commit_time": "2026-11-13T12:07:33+05:30",
+      "shallow": true,
+      "tracked_files": 141,
+      "tracked_bytes": 2949199,
+      "clean": true,
+      "license_note": "MIT，见 LICENSE。",
+      "root_license_files": [
+        "LICENSE"
+      ],
+      "references": [
+        {
+          "file": "browser_use/agent/loop.py",
+          "line": 1262,
+          "purpose": "有预算的运行循环、超时和部分结果",
+          "sha256": "63aa8b60d368a012adb844ba4ca8a420fbb15c4c9faa6d911bcfe617751bd835",
+          "permalink": "https://github.com/browser-use/browser-use/blob/48d9fe008bb98a8959279b495518652dfb934d6b/browser_use/agent/loop.py#L1262"
+        },
+        {
+          "file": "browser_use/agent/views.py",
+          "line": 81,
+          "purpose": "完成状态与 Agent 自报成功分开",
+          "sha256": "1fbbe951409b6bb2b6d7dc8eaf6856aedd4f147443616f5c4a322c4f11372624",
+          "permalink": "https://github.com/browser-use/browser-use/blob/48d9fe008bb98a8959279b495518652dfb934d6b/browser_use/agent/views.py#L81"
+        },
+        {
+          "file": "browser_use/repl/worker.py",
+          "line": 742,
+          "purpose": "结果检查点及输出脱敏",
+          "sha256": "7612170d1afb8b127424cbf00d9112c78dc2936d1c497bad235c1851a5276ea5",
+          "permalink": "https://github.com/browser-use/browser-use/blob/48d9fe008bb98a8959279b495518652dfb934d6b/browser_use/repl/worker.py#L742"
+        },
+        {
+          "file": "AGENTS.md",
+          "line": 5,
+          "purpose": "当前架构已是持久 Python REPL，不应照搬旧版教程",
+          "sha256": "2d9d7b4a28fff00cc0732c97996420213587fba912edc40198e9ef276afee164",
+          "permalink": "https://github.com/browser-use/browser-use/blob/48d9fe008bb98a8959279b495518652dfb934d6b/AGENTS.md#L5"
+        }
+      ]
+    },
+    {
+      "name": "stagehand",
+      "category": "参考接口：观察、执行与结构化提取",
+      "origin": "https://github.com/browserbase/stagehand.git",
+      "homepage": "https://github.com/browserbase/stagehand",
+      "commit": "58a6cc14954503c96aba979ca76bcc0ecdf04bbf",
+      "branch": "main",
+      "commit_time": "2026-11-12T20:11:20-08:00",
+      "shallow": true,
+      "tracked_files": 1737,
+      "tracked_bytes": 59148485,
+      "clean": true,
+      "license_note": "MIT，见 LICENSE。",
+      "root_license_files": [
+        "LICENSE"
+      ],
+      "references": [
+        {
+          "file": "packages/sdk-ts/src/stagehand.ts",
+          "line": 262,
+          "purpose": "观察入口；当前 SDK 通过 RPC 转发",
+          "sha256": "f39fa7aca6b9194c94eaea9056603d11034bfbb03d1735ddfa09ca96d4928c7f",
+          "permalink": "https://github.com/browserbase/stagehand/blob/58a6cc14954503c96aba979ca76bcc0ecdf04bbf/packages/sdk-ts/src/stagehand.ts#L262"
+        },
+        {
+          "file": "packages/sdk-ts/src/stagehand.ts",
+          "line": 248,
+          "purpose": "意图或结构化动作执行接口",
+          "sha256": "f39fa7aca6b9194c94eaea9056603d11034bfbb03d1735ddfa09ca96d4928c7f",
+          "permalink": "https://github.com/browserbase/stagehand/blob/58a6cc14954503c96aba979ca76bcc0ecdf04bbf/packages/sdk-ts/src/stagehand.ts#L248"
+        },
+        {
+          "file": "packages/docs/v4/best-practices/caching.mdx",
+          "line": 21,
+          "purpose": "v4 缓存属于托管服务，不能当作本地缓存实现",
+          "sha256": "ef0af393e971fb15bea9b089fcb6339479558c1430ea56ef10fbf1b6aaa60814",
+          "permalink": "https://github.com/browserbase/stagehand/blob/58a6cc14954503c96aba979ca76bcc0ecdf04bbf/packages/docs/v4/best-practices/caching.mdx#L21"
+        }
+      ]
+    },
+    {
+      "name": "OpenAdapt",
+      "category": "参考架构：示范编译、确定性执行、受控修复",
+      "origin": "https://github.com/OpenAdaptAI/OpenAdapt.git",
+      "homepage": "https://github.com/OpenAdaptAI/OpenAdapt",
+      "commit": "b4c36b21c1b894813eb0251d5c81ad7559cc4dc7",
+      "branch": "main",
+      "commit_time": "2026-11-12T19:17:45-05:00",
+      "shallow": true,
+      "tracked_files": 11706,
+      "tracked_bytes": 289549968,
+      "clean": true,
+      "license_note": "根目录和 Flow 引擎为 MIT；benchmark、third_party 等目录有独立许可，不能将根许可套用到所有文件。",
+      "root_license_files": [
+        "LICENSE"
+      ],
+      "references": [
+        {
+          "file": "packages/flow/docs/BROWSER_RECORDING.md",
+          "line": 3,
+          "purpose": "浏览器录制的数据契约与 before/after 证据",
+          "sha256": "a4dd7daa60ba598ca89c933d89cddca4aeaf9a28c4c5f51970ccd1635a218f03",
+          "permalink": "https://github.com/OpenAdaptAI/OpenAdapt/blob/b4c36b21c1b894813eb0251d5c81ad7559cc4dc7/packages/flow/docs/BROWSER_RECORDING.md#L3"
+        },
+        {
+          "file": "packages/flow/openadapt_flow/compiler/compile.py",
+          "line": 2264,
+          "purpose": "录制记录编译成工作流包",
+          "sha256": "e94eebf5d6ff96785c8ac198363b0ef51ae778648c505ea2b8788c810cfcab26",
+          "permalink": "https://github.com/OpenAdaptAI/OpenAdapt/blob/b4c36b21c1b894813eb0251d5c81ad7559cc4dc7/packages/flow/openadapt_flow/compiler/compile.py#L2264"
+        },
+        {
+          "file": "packages/flow/openadapt_flow/ir.py",
+          "line": 2194,
+          "purpose": "步骤意图、锚点、后置条件和效果断言",
+          "sha256": "3202529a48065ae585fc9d08f0bd9aa83ce55b06cacd9f8413aa2d9324293f0e",
+          "permalink": "https://github.com/OpenAdaptAI/OpenAdapt/blob/b4c36b21c1b894813eb0251d5c81ad7559cc4dc7/packages/flow/openadapt_flow/ir.py#L2194"
+        },
+        {
+          "file": "packages/flow/openadapt_flow/runtime/replayer.py",
+          "line": 3,
+          "purpose": "运行流程与业务效果验证边界",
+          "sha256": "c05969d27182005c7fd3114279144e37084f865fefaa6ba059e63324cb764d14",
+          "permalink": "https://github.com/OpenAdaptAI/OpenAdapt/blob/b4c36b21c1b894813eb0251d5c81ad7559cc4dc7/packages/flow/openadapt_flow/runtime/replayer.py#L3"
+        },
+        {
+          "file": "packages/flow/openadapt_flow/repair/self_repair.py",
+          "line": 155,
+          "purpose": "修复候选、探测与批准流程",
+          "sha256": "bbd33e69afb69bf02672dd8327c60b954f25cfe869d2b7334aa7e456a16d83a3",
+          "permalink": "https://github.com/OpenAdaptAI/OpenAdapt/blob/b4c36b21c1b894813eb0251d5c81ad7559cc4dc7/packages/flow/openadapt_flow/repair/self_repair.py#L155"
+        }
+      ]
+    }
+  ]
+}

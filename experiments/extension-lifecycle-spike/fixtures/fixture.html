@@ -1,0 +1,12 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><title>WebGuide 本机实验 · {{ROLE}}</title>
+<style>body{font:18px/1.7 system-ui;max-width:800px;margin:50px auto;padding:0 24px;color:#172033}button,a{font:inherit;margin:8px;padding:10px}#wg-lifecycle-target{background:#e0ecff;border:2px solid #2563eb;border-radius:8px;padding:22px;margin:28px 0}nav{display:flex;flex-wrap:wrap}footer{margin-top:800px}</style></head>
+<body><h1>本机模拟页：{{ROLE}}</h1><p>WG-LIFECYCLE-V1 · 无真实仓库、账号或提交操作。</p>
+<nav><a href="http://127.0.0.1:43117/webguide-lifecycle/settings.html">模拟设置页</a>
+<a href="http://127.0.0.1:43117/webguide-lifecycle/workflow.html">模拟工作流页</a>
+<a href="http://127.0.0.1:43118/webguide-lifecycle/site.html" target="_blank" rel="noopener">新标签打开跨源模拟站点</a>
+<a href="about:blank" target="_blank" rel="noopener">打开范围外空白页</a></nav>
+<div id="wg-lifecycle-target">这是本次应该高亮的目标。蓝框最多保留 10 秒。</div>
+<button id="remove">移除目标</button><button id="replace">重建目标</button><button id="spa">模拟无刷新导航</button>
+<p id="result">请从扩展侧栏开始任务，再测试上方操作。</p>
+<footer>滚动到这里可观察蓝框是否跟随原目标，而不是留在旧坐标。</footer>
+<script src="fixture.js"></script></body></html>

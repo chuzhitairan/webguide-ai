@@ -1,0 +1,13 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>WebGuide AI 生命周期实验</title><link rel="stylesheet" href="panel.css"></head>
+<body><p class="eyebrow">WEBGUIDE AI · 可丢弃实验</p><h1>扩展生命周期</h1>
+<p>仅检查本机模拟页。蓝框保留最多 10 秒；过期后请重新核对。</p>
+<p id="connection" role="status">正在连接…</p><p id="status"></p>
+<div class="buttons"><button id="start">开始新实验任务</button><button id="check">核对当前页</button>
+<button id="pause">暂停</button><button id="resume">继续并核对</button>
+<button id="snapshot">刷新记录</button><button id="reset">清空实验记录</button></div>
+<p>换页或切标签后手动核对；关闭侧栏后重新打开，先查看暂停原因。</p>
+<h2>诊断记录</h2><p>可全选下方内容复制给项目组长。这里只含模拟页面地址、实例 ID 和事件。</p>
+<textarea id="report" readonly spellcheck="false" aria-label="诊断记录"></textarea>
+<script src="panel.js"></script></body></html>

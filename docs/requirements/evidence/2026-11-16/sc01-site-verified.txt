@@ -1,0 +1,8 @@
+Browser tab: 1817236108, Title: "WebGuide AI Walkthrough", URL: "https://chuzhitairan.github.io/webguide-ai-walkthrough-20261116/".
+0 AXWebArea WebGuide AI Walkthrough, URL: chuzhitairan.github.io/webguide-ai-walkthrough-20261116/
+	1 heading WebGuide AI walkthrough test, Value: 1
+		2 text WebGuide AI walkthrough test
+	3 text WG-SC01-20261116-v1
+	4 text Public test content for validating GitHub Pages publishing states. No personal data.
+
+The focused UI element is 0 AXWebArea WebGuide AI Walkthrough, URL: chuzhitairan.github.io/webguide-ai-walkthrough-20261116/

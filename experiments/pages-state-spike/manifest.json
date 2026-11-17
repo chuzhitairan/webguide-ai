@@ -1,0 +1,9 @@
+{
+  "manifest_version": 3,
+  "name": "WebGuide AI Pages 实验",
+  "version": "0.0.1",
+  "description": "一次性可行性实验：手动读取指定练习仓库的 Pages 状态。",
+  "permissions": ["activeTab", "scripting", "storage"],
+  "action": {"default_popup": "popup.html", "default_title": "检查 Pages 练习状态"},
+  "content_security_policy": {"extension_pages": "script-src 'self'; object-src 'none'; connect-src 'none'"}
+}

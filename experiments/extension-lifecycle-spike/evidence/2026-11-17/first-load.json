@@ -1,0 +1,37 @@
+{
+  "experiment": "extension-lifecycle-spike/0.0.1",
+  "browser": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36 Edg/157.0.0.0",
+  "panelInstanceId": "3e451754-b5f0-4194-8ee9-e7dcfc400678",
+  "capabilities": {"sidePanel": true, "onOpened": true, "onClosed": true, "storageSession": true},
+  "schema": 1,
+  "task": {
+    "id": "2ec25857-99e0-4a36-b6cb-c613c90b74c5",
+    "tag": "WG-LIFECYCLE-V1",
+    "revision": 1,
+    "windowId": 1817236195,
+    "owner": "3e451754-b5f0-4194-8ee9-e7dcfc400678",
+    "status": "active",
+    "observations": {
+      "settings": {
+        "at": "2026-11-17T07:54:51.108Z",
+        "tabId": 1817236446,
+        "documentId": "E2BC700A6B67B1E9E561343A6E18B13D",
+        "taskId": "2ec25857-99e0-4a36-b6cb-c613c90b74c5",
+        "url": "http://127.0.0.1:43117/webguide-lifecycle/settings.html",
+        "target": "unique-visible"
+      }
+    },
+    "reason": "observation-recorded"
+  },
+  "logs": [
+    {"at": "2026-11-17T07:54:05.727Z", "bootId": "fb691ec4-1c94-447c-bfd8-11b41ae99cdf", "event": "background-boot", "recoveredTask": false,
+      "capabilities": {"sidePanel": true, "onOpened": true, "onClosed": true, "storageSession": true}},
+    {"at": "2026-11-17T07:54:18.320Z", "bootId": "fb691ec4-1c94-447c-bfd8-11b41ae99cdf", "event": "page-connected", "tabId": 1817236446, "role": "settings", "documentId": "E2BC700A6B67B1E9E561343A6E18B13D"},
+    {"at": "2026-11-17T07:54:29.239Z", "bootId": "fb691ec4-1c94-447c-bfd8-11b41ae99cdf", "event": "panel-connected", "instanceId": "3e451754-b5f0-4194-8ee9-e7dcfc400678", "windowId": 1817236195},
+    {"at": "2026-11-17T07:54:51.106Z", "bootId": "fb691ec4-1c94-447c-bfd8-11b41ae99cdf", "event": "task-started", "taskId": "2ec25857-99e0-4a36-b6cb-c613c90b74c5", "windowId": 1817236195},
+    {"at": "2026-11-17T07:54:51.106Z", "bootId": "fb691ec4-1c94-447c-bfd8-11b41ae99cdf", "event": "check-issued", "tabId": 1817236446, "role": "settings", "revision": 1},
+    {"at": "2026-11-17T07:54:51.108Z", "bootId": "fb691ec4-1c94-447c-bfd8-11b41ae99cdf", "event": "observation-accepted", "tabId": 1817236446, "role": "settings", "target": "unique-visible"},
+    {"at": "2026-11-17T07:55:01.111Z", "bootId": "fb691ec4-1c94-447c-bfd8-11b41ae99cdf", "event": "page-highlight-cleared", "tabId": 1817236446, "reason": "10-second-test-lease-expired"}
+  ],
+  "bootId": "fb691ec4-1c94-447c-bfd8-11b41ae99cdf"
+}

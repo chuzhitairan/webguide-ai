@@ -1,0 +1,35 @@
+{
+  "method": "CUA read-only DOM evaluation of collector.mjs; NOT chrome.scripting or extension isolation test",
+  "observations": [
+    {
+      "branch": "main",
+      "deploymentUrl": "https://github.com/chuzhitairan/webguide-ai-walkthrough-20261116/actions/runs/43801722077",
+      "directory": "/ (root)",
+      "disabled": false,
+      "kind": "settings",
+      "liveSite": "https://chuzhitairan.github.io/webguide-ai-walkthrough-20261116/",
+      "observedAt": 1794807399252,
+      "saveEnabled": false,
+      "sourceConfiguredText": true,
+      "taskId": "SC01-20261116-v1",
+      "url": "https://github.com/chuzhitairan/webguide-ai-walkthrough-20261116/settings/pages"
+    },
+    {
+      "commit": "0b5600ab1d044ee3e8ff9dbb10afe6f74cbeb1b0",
+      "isPagesWorkflow": true,
+      "kind": "workflow",
+      "observedAt": 1794807421765,
+      "siteLinked": true,
+      "status": "success",
+      "taskId": "SC01-20261116-v1",
+      "url": "https://github.com/chuzhitairan/webguide-ai-walkthrough-20261116/actions/runs/43801722077"
+    },
+    {
+      "kind": "site",
+      "marker": "WG-SC01-20261116-v1",
+      "observedAt": 1794807434162,
+      "taskId": "SC01-20261116-v1",
+      "url": "https://chuzhitairan.github.io/webguide-ai-walkthrough-20261116/"
+    }
+  ]
+}
