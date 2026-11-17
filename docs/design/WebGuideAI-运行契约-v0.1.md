@@ -4,6 +4,8 @@
 
 场景更新：发起人已将 [GitHub 小组协作入门](../requirements/首场景调整-GitHub协作-2026-11-17.md)调整为首个交付及展示场景。本文的 Pages 参数、能力注册和终验仍仅适用于 Pages；通用消息与会话机制可复用，新场景的任务身份、步骤、能力注册及终验契约尚需补齐，不能直接按现有 Pages 样例实现新首版。
 
+当前输入为 [SC02 路径与验收草案](../requirements/GitHub协作首场景规格-v0.1.md)。适配修订需覆盖用户输入步骤、工作分支创建、文件／提交／PR 关联、Draft 与普通 PR、编辑器未保存状态及最小证据过滤；本轮不修改 Schema 或假定现有 action 枚举已覆盖这些行为。
+
 阅读顺序：第 1–3 节看数据，第 4–7 节看运行，第 8–10 节看 Pages 和后端边界。结构源文件为[教程 Schema](contracts/tutorial.schema.json)和[Pages 教程样例](contracts/pages.tutorial.json)。这是设计输入，尚未创建正式工程或验证真实 GitHub 定位器。
 
 ## 1. 采用的结构与责任
