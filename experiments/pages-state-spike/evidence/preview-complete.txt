@@ -1,0 +1,39 @@
+Browser tab: 1817236125, Title: "Pages 实验 · 模拟样本预览", URL: "http://127.0.0.1:4178/harness.html".
+0 AXWebArea Pages 实验 · 模拟样本预览, URL: 127.0.0.1:4178/harness.html
+	1 container
+		2 text WEBGUIDE AI · 可行性实验
+		3 heading 发布一个 Pages 页面, Value: 1
+			4 text 发布一个 Pages 页面
+		5 text 模拟样本预览 · 尚未加载浏览器扩展
+		36 text chuzhitairan/webguide-ai-walkthrough-20261116
+		7 button 未配置
+		8 button 未保存
+		9 button 来源已设置
+		10 button 工作流运行中
+		11 button 旧内容
+		12 button 全部匹配
+		37 text 当前为模拟样本：全部匹配。尚未进行扩展实测。
+		14 container Description: 检查进度, ID: steps
+			38 container
+				39 text 1
+				40 heading 发布源, Value: 2
+					41 text 发布源
+				42 text 来源匹配，设置页报告站点已上线
+			43 container
+				44 text 2
+				45 heading 工作流, Value: 2
+					46 text 工作流
+				47 text 目标提交的 Pages 部署成功
+			48 container
+				49 text 3
+				50 heading 站点内容, Value: 2
+					51 text 站点内容
+				52 text 目标站点显示预期内容标记
+		30 heading 本次练习已验证, Value: 2, ID: outcome
+			53 text 本次练习已验证
+		54 text 三项观察匹配，本次练习通过；这是最近观察的结果，页面变化后请重新检查。
+		33 button (collapsed) 本次观察证据（模拟）, Secondary Actions: Expand
+			34 text 本次观察证据（模拟）
+		35 text 真实读取路径另见 popup.html。模拟结果不算扩展实测通过。
+
+The focused UI element is 12 button 全部匹配

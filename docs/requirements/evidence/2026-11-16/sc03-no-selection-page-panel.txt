@@ -1,0 +1,136 @@
+Browser tab: 1817236111, Title: "Untitled – Figma", URL: "https://www.figma.com/design/SYWCHn3kLHDHGBM8AggRv9/Untitled?node-id=0-1&p=f&t=1vF4rtzN4NnxxqEX-0".
+0 AXWebArea Untitled – Figma, URL: figma.com/design/SYWCHn3kLHDHGBM8AggRv9/Untitled?node-id=0-1&p=f&t=1vF4rtzN4NnxxqEX-0
+	1 container react-page
+		111 container
+			367 container fullscreen-root
+				368 container Description: Figma Design, Value: ⁨⁩
+			366 text Screenreader support for the board is currently disabled. To enable it via Accessibility settings, press Ctrl+K, type Accessibility Settings, and press Enter. To see available keyboard shortcuts, enter Ctrl+Shift+Question mark .
+			112 container Comments on canvas
+				113 button Create new comment
+			114 container Left sidebar
+				115 toolbar Navigation Bar
+					116 pop up button (collapsed) Description: Main menu, ID: :rd4:-trigger, Secondary Actions: Expand
+						117 image
+					118 button (collapsed) Description: File, Secondary Actions: Expand
+						119 image
+						120 text File
+					121 button (expanded) Description: Agents, Secondary Actions: Collapse
+						122 text Agents
+					123 button (collapsed) Description: Assets, Secondary Actions: Expand
+						124 image
+						125 text Assets
+					126 button (collapsed) Description: Tools, Secondary Actions: Expand
+						127 image
+						128 text Tools
+					129 button (collapsed) Description: Variables, Secondary Actions: Expand
+						130 image
+						131 text Variables
+				132 container left-panel-container
+					133 container
+						134 heading New chat, Value: 2
+							135 text New chat
+						136 text Shared
+						137 pop up button (collapsed) Description: More options, ID: :rd8:-trigger, Secondary Actions: Expand
+						138 container
+							139 container
+								140 image
+								141 heading What’s next?, Value: 3
+									142 text What’s next?
+								143 container Tidy and polish
+									144 button (collapsed) Tidy and polish, Secondary Actions: Expand
+										145 text Tidy and polish
+								146 container Generate designs
+									147 button (collapsed) Generate designs, Secondary Actions: Expand
+										148 text Generate designs
+								149 container Build with code
+									150 button (collapsed) Build with code, Secondary Actions: Expand
+										151 text Build with code
+								152 container Create plugins and shaders
+									153 button (collapsed) Create plugins and shaders, Secondary Actions: Expand
+										154 text Create plugins and shaders
+							155 container
+								162 container
+									163 text The button action for this text area changes between Send and Stop as the agent works.
+									164 text entry area (settable) Description: Prompt for AI agent, ID: code-chat-chat-box-form, Value: 
+
+								165 pop up button (collapsed) Description: Add context, ID: :rdg:-trigger, Secondary Actions: Expand
+								166 button Dictate
+								167 button (disabled) Send
+					168 slider Description: Resize handle, Value: 280
+			169 container Right sidebar
+				170 container
+					171 container
+						172 pop up button (collapsed) Description: Multiplayer tools, ID: self-avatar-with-tools-container, Secondary Actions: Expand
+							173 image
+						174 container Prototype view
+							175 button Description: Present, ID: :re5:
+							176 pop up button (collapsed) Description: Prototype view, ID: :re4:, Secondary Actions: Expand
+						177 button Share
+						178 tab group
+							179 tab (selected, settable, boolean) Design, Value: 1, ID: tab:re8:-0-trigger
+							180 tab (selectable, settable, boolean) Prototype, Value: 0, ID: tab:re8:-1-trigger
+						181 pop up button (collapsed) Description: 196%, zoom and view options, ID: :reb:, Secondary Actions: Expand
+							182 text 196%
+							183 image
+						369 container
+							370 text Page
+							371 button Solid color hex: F5F5F5
+							372 container
+								373 text Color
+								374 stepper (settable, integer) Description: Color, Value: 0, Details: F5F5F5, ID: :rgf:
+							375 container
+								376 text field (settable) %, Value: 100
+								377 text %
+							378 checkbox (settable, integer) Description: Toggle visibility, Value: 1, ID: :rgg:
+							379 text Toggle visibility
+							380 heading Styles, Value: 2
+								381 button Styles
+							382 pop up button (collapsed) Description: Create style, ID: :rgj:, Secondary Actions: Expand
+							383 button Export
+							384 button Add export settings
+							385 button Close
+							386 text Bring third-party agents to Figma Agents can write to the canvas or build from designs with MCP tools and skills.
+							387 button Set up agents
+					323 slider Description: Resize handle, Value: 241
+		110 container Application toolbar
+			324 toolbar Editor
+				325 container Move
+					326 checkbox Description: Move, Value: 1
+						327 image
+					328 checkbox (collapsed) Description: Move tools, Value: 0, ID: :r4h:, Secondary Actions: Expand
+				329 container Frame
+					330 checkbox Description: Frame, Value: 0
+						331 image
+					332 checkbox (collapsed) Description: Region tools, Value: 0, ID: :r4m:, Secondary Actions: Expand
+				333 container Rectangle
+					334 checkbox Description: Rectangle, Value: 0
+						335 image
+					336 checkbox (collapsed) Description: Shape tools, Value: 0, ID: :r4r:, Secondary Actions: Expand
+				337 container Pen
+					338 checkbox Description: Pen, Value: 0
+						339 image
+					340 checkbox (collapsed) Description: Creation tools, Value: 0, ID: :r50:, Secondary Actions: Expand
+				341 container Text
+					342 checkbox Description: Text, Value: 0
+						343 image
+					344 checkbox (collapsed) Description: Type tools, Value: 0, ID: :r55:, Secondary Actions: Expand
+				345 container Code
+					346 checkbox Description: Code, Value: 0
+						347 image
+					348 checkbox (collapsed) Description: Code tools, Value: 0, ID: :r5a:, Secondary Actions: Expand
+				349 checkbox Description: Comment, Value: 0
+					350 image
+				351 checkbox Description: Actions, Value: 0
+					352 image
+				353 Toolbelt Mode
+					354 text Toolbelt Mode
+					355 radio button (settable, integer) Description: Draw, Value: 0, ID: :r49:-illustration
+					356 radio button (settable, integer) Description: Design, Value: 1, ID: :r49:-design
+					357 radio button (settable, integer) Description: Motion, Value: 0, ID: :r49:-metronome
+					358 radio button (settable, integer) Description: Dev Mode, Value: 0, ID: :r49:-handoff
+		3 container Help/zoom toolbar
+			4 toolbar Help/zoom toolbar
+				5 pop up button (collapsed) Description: Help, ID: :r2k:, Secondary Actions: Expand
+					6 image
+
+The focused UI element is 368 container Description: Figma Design, Value: ⁨⁩

@@ -1,0 +1,17 @@
+{
+  "manifest_version": 3,
+  "name": "WebGuide AI 生命周期实验",
+  "version": "0.0.1",
+  "description": "可丢弃实验：仅在本机模拟页检查侧栏、跨页、高亮失效和会话恢复。",
+  "permissions": ["sidePanel", "storage"],
+  "host_permissions": ["http://127.0.0.1/*"],
+  "background": {"service_worker": "background.mjs", "type": "module"},
+  "action": {"default_title": "打开 WebGuide AI 生命周期实验"},
+  "side_panel": {"default_path": "panel.html"},
+  "content_scripts": [{
+    "matches": ["http://127.0.0.1/webguide-lifecycle/*"],
+    "js": ["content.js"],
+    "run_at": "document_idle"
+  }],
+  "content_security_policy": {"extension_pages": "script-src 'self'; object-src 'none'; connect-src 'none'"}
+}

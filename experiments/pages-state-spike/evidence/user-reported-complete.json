@@ -1,0 +1,78 @@
+{
+  "provenance": {
+    "source": "user-pasted-popup-text",
+    "receivedDateAsiaShanghai": "2026-11-16",
+    "evidenceLevel": "用户提供的弹窗文本核对，非截图核对或助手独立复现",
+    "normalization": "用户消息将 URL 自动呈现为 Markdown 链接，此处提取链接 URL；本文件不是原始扩展导出文件。"
+  },
+  "display": {
+    "notice": "已读取本次页面；没有修改目标网站。",
+    "source": "来源匹配，设置页报告站点已上线",
+    "workflow": "目标提交的 Pages 部署成功",
+    "content": "目标站点显示预期内容标记",
+    "outcome": "本次练习已验证",
+    "next": "三项观察匹配，本次练习通过；这是最近观察的结果，页面变化后请重新检查。"
+  },
+  "observations": [
+    {
+      "branch": "main",
+      "deploymentUrl": "https://github.com/chuzhitairan/webguide-ai-walkthrough-20261116/actions/runs/43801722077",
+      "directory": "/ (root)",
+      "disabled": false,
+      "kind": "settings",
+      "liveSite": "https://chuzhitairan.github.io/webguide-ai-walkthrough-20261116/",
+      "observedAt": 1794811799944,
+      "saveEnabled": false,
+      "sourceConfiguredText": true,
+      "taskId": "SC01-20261116-v1",
+      "url": "https://github.com/chuzhitairan/webguide-ai-walkthrough-20261116/settings/pages"
+    },
+    {
+      "commit": "0b5600ab1d044ee3e8ff9dbb10afe6f74cbeb1b0",
+      "isPagesWorkflow": true,
+      "kind": "workflow",
+      "observedAt": 1794812162745,
+      "siteLinked": true,
+      "status": "success",
+      "taskId": "SC01-20261116-v1",
+      "url": "https://github.com/chuzhitairan/webguide-ai-walkthrough-20261116/actions/runs/43801722077"
+    },
+    {
+      "kind": "site",
+      "marker": "WG-SC01-20261116-v1",
+      "observedAt": 1794812366861,
+      "taskId": "SC01-20261116-v1",
+      "url": "https://chuzhitairan.github.io/webguide-ai-walkthrough-20261116/"
+    }
+  ],
+  "assessment": {
+    "case": "T04",
+    "reportedOutputMatchesExpectation": true,
+    "priorObservationsRetainedUnchanged": true,
+    "limitations": [
+      "用户粘贴的弹窗文本，非截图或助手独立浏览器复现",
+      "只核对本次固定练习的成功路径，不外推其他环境或异常",
+      "不以弹窗的只读提示代替网络与副作用审计"
+    ],
+    "dataCheck": {
+      "evaluatedAtUTC": "2026-11-16T06:59:26.861Z",
+      "observationAgesMs": [
+        {
+          "kind": "settings",
+          "ageMs": 566917
+        },
+        {
+          "kind": "workflow",
+          "ageMs": 204116
+        },
+        {
+          "kind": "site",
+          "ageMs": 0
+        }
+      ],
+      "complete": true,
+      "linked": true,
+      "note": "按用户提供的采集时刻核对历史结果，不是对当前网页实时状态的检查"
+    }
+  }
+}

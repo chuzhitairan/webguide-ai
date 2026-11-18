@@ -1,0 +1,273 @@
+Browser tab: 1817236111, Title: "Untitled – Figma", URL: "https://www.figma.com/design/SYWCHn3kLHDHGBM8AggRv9/Untitled?node-id=1-2&t=1vF4rtzN4NnxxqEX-0".
+0 AXWebArea Untitled – Figma, URL: figma.com/design/SYWCHn3kLHDHGBM8AggRv9/Untitled?node-id=1-2&t=1vF4rtzN4NnxxqEX-0
+	1 container react-page
+		111 container
+			366 text Screenreader support for the board is currently disabled. To enable it via Accessibility settings, press Ctrl+K, type Accessibility Settings, and press Enter. To see available keyboard shortcuts, enter Ctrl+Shift+Question mark .
+			112 container Comments on canvas
+				113 button Create new comment
+			114 container Left sidebar
+				115 toolbar Navigation Bar
+					116 pop up button (collapsed) Description: Main menu, ID: :rd4:-trigger, Secondary Actions: Expand
+						117 image
+					118 button (collapsed) Description: File, Secondary Actions: Expand
+						119 image
+						120 text File
+					121 button (expanded) Description: Agents, Secondary Actions: Collapse
+						122 text Agents
+					123 button (collapsed) Description: Assets, Secondary Actions: Expand
+						124 image
+						125 text Assets
+					126 button (collapsed) Description: Tools, Secondary Actions: Expand
+						127 image
+						128 text Tools
+					129 button (collapsed) Description: Variables, Secondary Actions: Expand
+						130 image
+						131 text Variables
+				132 container left-panel-container
+					133 container
+						134 heading New chat, Value: 2
+							135 text New chat
+						136 text Shared
+						137 pop up button (collapsed) Description: More options, ID: :rd8:-trigger, Secondary Actions: Expand
+						138 container
+							139 container
+								140 image
+								141 heading What’s next?, Value: 3
+									142 text What’s next?
+								143 container Tidy and polish
+									144 button (collapsed) Tidy and polish, Secondary Actions: Expand
+										145 text Tidy and polish
+								146 container Generate designs
+									147 button (collapsed) Generate designs, Secondary Actions: Expand
+										148 text Generate designs
+								149 container Build with code
+									150 button (collapsed) Build with code, Secondary Actions: Expand
+										151 text Build with code
+								152 container Create plugins and shaders
+									153 button (collapsed) Create plugins and shaders, Secondary Actions: Expand
+										154 text Create plugins and shaders
+							155 container
+								156 container Frame called Frame 1 is selected and can be prompted to make changes
+									157 button Go to selection on canvas: Frame 1
+										158 image
+										159 text Frame 1
+									160 button Remove layer selection from the prompt box
+										161 image
+								162 container
+									163 text The button action for this text area changes between Send and Stop as the agent works.
+									164 text entry area (settable) Description: Prompt for AI agent, ID: code-chat-chat-box-form, Value: 
+
+								165 pop up button (collapsed) Description: Add context, ID: :rdg:-trigger, Secondary Actions: Expand
+								166 button Dictate
+								167 button (disabled) Send
+					168 slider Description: Resize handle, Value: 280
+			169 container Right sidebar
+				170 container
+					171 container
+						172 pop up button (collapsed) Description: Multiplayer tools, ID: self-avatar-with-tools-container, Secondary Actions: Expand
+							173 image
+						174 container Prototype view
+							175 button Description: Present, ID: :re5:
+							176 pop up button (collapsed) Description: Prototype view, ID: :re4:, Secondary Actions: Expand
+						177 button Share
+						178 tab group
+							179 tab (selected, settable, boolean) Design, Value: 1, ID: tab:re8:-0-trigger
+							180 tab (selectable, settable, boolean) Prototype, Value: 0, ID: tab:re8:-1-trigger
+						181 pop up button (collapsed) Description: 196%, zoom and view options, ID: :reb:, Secondary Actions: Expand
+							182 text 196%
+							183 image
+						184 container
+							185 container
+								186 pop up button (collapsed) Description: Frame, Frame Dimension Presets, ID: :ree:-trigger, Secondary Actions: Expand
+									187 text Frame
+									188 image
+								189 checkbox (settable, integer) Description: Toggle ready for dev status, Value: 0, ID: :rev:
+								190 text Toggle ready for dev status
+								191 button Create component
+								192 checkbox (settable, integer) Description: Use as mask, Value: 0, ID: :rf3:
+								193 text Use as mask
+								194 heading Position, Value: 2
+									195 text Position
+								196 container Alignment
+									197 text Alignment
+									198 button (disabled) Align left
+										199 image
+									200 button (disabled) Align horizontal centers
+										201 image
+									202 button (disabled) Align right
+										203 image
+									204 button (disabled) Align top
+										205 image
+									206 button (disabled) Align vertical centers
+										207 image
+									208 button (disabled) Align bottom
+										209 image
+								210 container Position
+									211 text Position
+									212 stepper (settable, integer) Description: X-position, Value: 0
+									213 stepper (settable, integer) Description: Y-position, Value: 0
+								214 container Rotation
+									215 text Rotation
+									216 stepper (settable, integer) Description: Rotation, Value: 0, Details: 0Â°
+									217 button Rotate 90˚ right
+										218 image
+									219 button Flip horizontal
+										220 image
+									221 button Flip vertical
+										222 image
+								223 heading Auto layout, Value: 2
+									224 text Auto layout
+								225 checkbox (settable, integer) Description: Toggle auto layout, Value: 1, ID: :rf4:
+								226 text Toggle auto layout
+								227 container Flow
+									228 text Flow
+									229 Layout
+										230 text Layout
+										231 radio button (settable, integer) Description: Freeform, Value: 0, ID: :rf5:-NONE
+										232 radio button (settable, integer) Description: Vertical, Value: 0, ID: :rf5:-VERTICAL
+										233 radio button (settable, integer) Description: Horizontal, Value: 1, ID: :rf5:-HORIZONTAL
+										234 radio button (settable, integer) Description: Grid, Value: 0, ID: :rf5:-GRID
+									235 checkbox (settable, integer) Description: Wrap, Value: 0, ID: :rf6:
+									236 text Wrap
+								237 container Resizing
+									238 text Resizing
+									239 container
+										240 list
+										241 container Horizontal resizing
+											242 combo box (collapsed, settable) Description: Horizontal resizing, Value: 402, Secondary Actions: Expand
+											243 text Hug
+									244 container
+										245 list
+										246 container Vertical resizing
+											247 combo box (collapsed, settable) Description: Vertical resizing, Value: 254, Secondary Actions: Expand
+											248 text Hug
+									249 checkbox (settable, integer) Description: Lock aspect ratio, Value: 0, ID: :rf7:
+									250 text Lock aspect ratio
+								251 Alignment
+									252 text Alignment
+									253 container
+										254 radio button (settable, integer) Description: Align top left, Value: 1, ID: :rf8:-TOP_LEFT
+										255 radio button (settable, integer) Description: Align top center, Value: 0, ID: :rf8:-TOP_CENTER
+										256 radio button (settable, integer) Description: Align top right, Value: 0, ID: :rf8:-TOP_RIGHT
+										257 radio button (settable, integer) Description: Align left, Value: 0, ID: :rf8:-LEFT
+										258 radio button (settable, integer) Description: Align center, Value: 0, ID: :rf8:-CENTER
+										259 radio button (settable, integer) Description: Align right, Value: 0, ID: :rf8:-RIGHT
+										260 radio button (settable, integer) Description: Align bottom left, Value: 0, ID: :rf8:-BOTTOM_LEFT
+										261 radio button (settable, integer) Description: Align bottom center, Value: 0, ID: :rf8:-BOTTOM_CENTER
+										262 radio button (settable, integer) Description: Align bottom right, Value: 0, ID: :rf8:-BOTTOM_RIGHT
+								263 list
+								264 container Horizontal gap between objects
+									265 combo box (collapsed, settable) Description: Horizontal gap between objects, Value: 10, Secondary Actions: Expand
+								266 pop up button (collapsed) Description: Auto layout settings, Secondary Actions: Expand
+								267 container Horizontal padding
+									268 text field (settable) Description: Horizontal padding, Value: 10
+								269 container Vertical padding
+									270 text field (settable) Description: Vertical padding, Value: 10
+								271 pop up button (collapsed) Description: Individual padding, Secondary Actions: Expand
+								272 checkbox (settable, integer) Description: Clip content, Value: 1, ID: :rfb:
+								273 image
+								274 image
+								275 text Clip content
+								276 heading Appearance, Value: 2
+									277 text Appearance
+								278 checkbox (settable, integer) Description: Hide, Value: 0, ID: :rfc:
+								279 text Hide
+								280 pop up button (collapsed) Description: Apply blend mode, ID: :rff:, Secondary Actions: Expand
+								281 container
+									282 image
+									283 text field (settable) 100%
+								284 container
+									285 text field (settable) Description: Corner radius, Value: 0
+								286 pop up button (collapsed) Description: Individual corners, Secondary Actions: Expand
+								287 heading Fill, Value: 2
+									288 text Fill
+								289 pop up button (collapsed) Description: Fill, Apply styles and variables, Secondary Actions: Expand
+								290 button Add fill
+								291 table
+									292 row (selectable) Solid color hex: FFFFFF Color FFFFFF 100 % Toggle visibility Remove
+										293 cell
+											294 container
+												295 button Solid color hex: FFFFFF
+												296 text Color
+												297 combo box (collapsed, settable) Description: Color, Value: FFFFFF, ID: :rfp:, Secondary Actions: Expand
+												298 text field (settable) %, Value: 100
+												299 text %
+										300 cell
+											301 checkbox (settable, integer) Description: Toggle visibility, Value: 1, ID: :rfv:
+											302 text Toggle visibility
+										303 cell
+											304 button Remove
+								305 button Stroke
+									306 heading Stroke, Value: 2
+										307 text Stroke
+								308 pop up button (collapsed) Description: Stroke, Apply styles and variables, Secondary Actions: Expand
+								309 button Add stroke
+								310 container
+									311 button Effects
+										312 heading Effects, Value: 2
+											313 text Effects
+									314 pop up button (collapsed) Description: Effects, Apply styles, Secondary Actions: Expand
+									315 button Add effect
+								316 button Layout guide
+									317 heading Layout guide, Value: 2
+										318 text Layout guide
+								319 pop up button (collapsed) Description: Layout guide, Apply styles, Secondary Actions: Expand
+								320 button Add layout guide
+								321 button Export
+								322 button Add export settings
+					323 slider Description: Resize handle, Value: 241
+		110 container Application toolbar
+			324 toolbar Editor
+				325 container Move
+					326 checkbox Description: Move, Value: 1
+						327 image
+					328 checkbox (collapsed) Description: Move tools, Value: 0, ID: :r4h:, Secondary Actions: Expand
+				329 container Frame
+					330 checkbox Description: Frame, Value: 0
+						331 image
+					332 checkbox (collapsed) Description: Region tools, Value: 0, ID: :r4m:, Secondary Actions: Expand
+				333 container Rectangle
+					334 checkbox Description: Rectangle, Value: 0
+						335 image
+					336 checkbox (collapsed) Description: Shape tools, Value: 0, ID: :r4r:, Secondary Actions: Expand
+				337 container Pen
+					338 checkbox Description: Pen, Value: 0
+						339 image
+					340 checkbox (collapsed) Description: Creation tools, Value: 0, ID: :r50:, Secondary Actions: Expand
+				341 container Text
+					342 checkbox Description: Text, Value: 0
+						343 image
+					344 checkbox (collapsed) Description: Type tools, Value: 0, ID: :r55:, Secondary Actions: Expand
+				345 container Code
+					346 checkbox Description: Code, Value: 0
+						347 image
+					348 checkbox (collapsed) Description: Code tools, Value: 0, ID: :r5a:, Secondary Actions: Expand
+				349 checkbox Description: Comment, Value: 0
+					350 image
+				351 checkbox Description: Actions, Value: 0
+					352 image
+				353 Toolbelt Mode
+					354 text Toolbelt Mode
+					355 radio button (settable, integer) Description: Draw, Value: 0, ID: :r49:-illustration
+					356 radio button (settable, integer) Description: Design, Value: 1, ID: :r49:-design
+					357 radio button (settable, integer) Description: Motion, Value: 0, ID: :r49:-metronome
+					358 radio button (settable, integer) Description: Dev Mode, Value: 0, ID: :r49:-handoff
+		3 container Help/zoom toolbar
+			4 toolbar Help/zoom toolbar
+				5 pop up button (collapsed) Description: Help, ID: :r2k:, Secondary Actions: Expand
+					6 image
+		359 container
+			360 container Code, now on canvas, ID: :rgd:
+				367 container Description: Code, now on canvas, ID: :rge:
+					368 heading Code, now on canvas, Value: 2
+						369 text Code, now on canvas
+				362 button Close
+				370 text Use 
+				371 text Code
+				372 text  to create a code layer, then start building with a prompt, local folder, or GitHub repository.
+				364 link Description: Learn more, Value: help.figma.com/hc/en-us/articles/44193259600535
+				365 button Got it
+		373 container
+			374 text Dev Mode
+
+The focused UI element is 367 container Description: Code, now on canvas, ID: :rge:

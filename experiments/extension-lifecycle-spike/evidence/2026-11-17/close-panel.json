@@ -1,0 +1,39 @@
+{
+  "experiment": "extension-lifecycle-spike/0.0.1",
+  "browser": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36 Edg/157.0.0.0",
+  "panelInstanceId": "8cb6988b-5806-4a3d-bd1a-c0e135c7439d",
+  "capabilities": {"sidePanel": true, "onOpened": true, "onClosed": true, "storageSession": true},
+  "bootId": "481e7dd8-8881-4ba4-9657-79f2c4f68792",
+  "logs": [
+    {"at": "2026-11-17T08:01:14.101Z", "bootId": "481e7dd8-8881-4ba4-9657-79f2c4f68792", "event": "reset"},
+    {"at": "2026-11-17T08:01:19.007Z", "bootId": "481e7dd8-8881-4ba4-9657-79f2c4f68792", "event": "task-started", "taskId": "bca68b48-991c-4f99-a11f-b4f919ef4a49", "windowId": 1817236195},
+    {"at": "2026-11-17T08:01:19.008Z", "bootId": "481e7dd8-8881-4ba4-9657-79f2c4f68792", "event": "check-issued", "tabId": 1817236446, "role": "settings", "revision": 1},
+    {"at": "2026-11-17T08:01:19.011Z", "bootId": "481e7dd8-8881-4ba4-9657-79f2c4f68792", "event": "observation-accepted", "tabId": 1817236446, "role": "settings", "target": "unique-visible"},
+    {"at": "2026-11-17T08:01:29.026Z", "bootId": "481e7dd8-8881-4ba4-9657-79f2c4f68792", "event": "page-highlight-cleared", "tabId": 1817236446, "reason": "10-second-test-lease-expired"},
+    {"at": "2026-11-17T08:01:31.344Z", "bootId": "481e7dd8-8881-4ba4-9657-79f2c4f68792", "event": "check-issued", "tabId": 1817236446, "role": "settings", "revision": 2},
+    {"at": "2026-11-17T08:01:31.344Z", "bootId": "481e7dd8-8881-4ba4-9657-79f2c4f68792", "event": "observation-accepted", "tabId": 1817236446, "role": "settings", "target": "unique-visible"},
+    {"at": "2026-11-17T08:01:32.612Z", "bootId": "481e7dd8-8881-4ba4-9657-79f2c4f68792", "event": "panel-disconnected", "instanceId": "0ff0c84a-5128-4342-889b-f7b4a889aa9a", "windowId": 1817236195},
+    {"at": "2026-11-17T08:01:32.612Z", "bootId": "481e7dd8-8881-4ba4-9657-79f2c4f68792", "event": "task-paused", "reason": "panel-connection-lost", "taskId": "bca68b48-991c-4f99-a11f-b4f919ef4a49"},
+    {"at": "2026-11-17T08:01:42.339Z", "bootId": "481e7dd8-8881-4ba4-9657-79f2c4f68792", "event": "panel-connected", "instanceId": "8cb6988b-5806-4a3d-bd1a-c0e135c7439d", "windowId": 1817236195}
+  ],
+  "schema": 1,
+  "task": {
+    "id": "bca68b48-991c-4f99-a11f-b4f919ef4a49",
+    "tag": "WG-LIFECYCLE-V1",
+    "revision": 3,
+    "windowId": 1817236195,
+    "owner": null,
+    "status": "paused",
+    "observations": {
+      "settings": {
+        "at": "2026-11-17T08:01:31.344Z",
+        "tabId": 1817236446,
+        "documentId": "C5BC8DDD1A2899B3D79437EC1CEFE83C",
+        "taskId": "bca68b48-991c-4f99-a11f-b4f919ef4a49",
+        "url": "http://127.0.0.1:43117/webguide-lifecycle/settings.html",
+        "target": "unique-visible"
+      }
+    },
+    "reason": "panel-connection-lost"
+  }
+}

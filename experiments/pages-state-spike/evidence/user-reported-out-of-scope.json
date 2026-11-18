@@ -1,0 +1,26 @@
+{
+  "provenance": {
+    "source": "user-pasted-popup-text",
+    "receivedDateAsiaShanghai": "2026-11-16",
+    "evidenceLevel": "用户提供的面板文本，非截图或助手独立浏览器复现",
+    "executionTimeProvided": false,
+    "actualTabUrlProvided": false
+  },
+  "case": "T07",
+  "display": {
+    "notice": "未读取：请打开指定练习仓库的 Pages 设置、工作流详情或测试站点。",
+    "source": "缺少有效观察",
+    "workflow": "缺少有效观察",
+    "content": "缺少有效观察",
+    "outcome": "尚未完成",
+    "next": "在练习仓库的 Pages 设置页检查发布源。",
+    "observations": []
+  },
+  "assessment": {
+    "rejectionDisplayMatchesExpectation": true,
+    "retentionVerified": false,
+    "note": "与上次仅站点观察相比，本次面板为空。未提供操作间隔，不能认定观察在有效期内，也不能归因为范围外检查清空。",
+    "codeTrace": "popup.mjs 范围外 URL 分支直接返回，无清空或存储写入；restore 在弹窗打开时过滤超过 maxAgeMs 的记录。代码检查不等于本次运行原因已查明。",
+    "nextCheck": "一分钟内依次检查站点、关闭重开弹窗且不检查、切换仓库首页再检查；保留各次面板与站点 observedAt，期间不清空、不重载扩展、不重启浏览器。"
+  }
+}

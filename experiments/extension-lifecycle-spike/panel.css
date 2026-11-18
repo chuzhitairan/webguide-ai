@@ -1,0 +1,4 @@
+body{font:14px/1.6 system-ui,sans-serif;color:#172033;background:#f5f7fb;margin:18px}
+h1{font-size:24px;margin:4px 0 12px}h2{font-size:17px}.eyebrow{color:#48649b;font-size:11px;letter-spacing:.08em}
+.buttons{display:flex;flex-wrap:wrap;gap:8px}button{font:inherit;border:1px solid #b5c4da;border-radius:7px;padding:7px 10px;background:white;color:#1e3a6b;cursor:pointer}button:disabled{opacity:.5;cursor:default}
+#status{padding:10px;background:white;border-left:3px solid #2563eb;white-space:pre-wrap}textarea{box-sizing:border-box;width:100%;height:440px;border:1px solid #bdc9da;border-radius:7px;padding:10px;font:11px/1.5 monospace;background:white}

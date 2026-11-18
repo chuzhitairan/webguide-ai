@@ -1,0 +1,45 @@
+{
+  "experiment": "extension-lifecycle-spike/0.0.1",
+  "browser": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36 Edg/157.0.0.0",
+  "panelInstanceId": "8ad61a72-8406-468e-8b00-810ae725807c",
+  "capabilities": {"sidePanel": true, "onOpened": true, "onClosed": true, "storageSession": true},
+  "bootId": "7240f4e0-c538-45f6-baf2-49ccea0e9caa",
+  "logs": [
+    {"at": "2026-11-17T09:12:11.358Z", "bootId": "7240f4e0-c538-45f6-baf2-49ccea0e9caa", "event": "reset"},
+    {"at": "2026-11-17T09:12:12.079Z", "bootId": "7240f4e0-c538-45f6-baf2-49ccea0e9caa", "event": "task-started", "taskId": "113dbcc6-ad02-4e47-a0e3-added5d379db", "windowId": 1817236195},
+    {"at": "2026-11-17T09:12:12.080Z", "bootId": "7240f4e0-c538-45f6-baf2-49ccea0e9caa", "event": "check-issued", "tabId": 1817236458, "role": "site", "revision": 1},
+    {"at": "2026-11-17T09:12:12.082Z", "bootId": "7240f4e0-c538-45f6-baf2-49ccea0e9caa", "event": "observation-accepted", "tabId": 1817236458, "role": "site", "target": "unique-visible"},
+    {"at": "2026-11-17T09:12:15.598Z", "bootId": "7240f4e0-c538-45f6-baf2-49ccea0e9caa", "event": "page-highlight-cleared", "tabId": 1817236458, "reason": "document-hidden"},
+    {"at": "2026-11-17T09:12:20.879Z", "bootId": "7240f4e0-c538-45f6-baf2-49ccea0e9caa", "event": "check-issued", "tabId": 1817236458, "role": "site", "revision": 2},
+    {"at": "2026-11-17T09:12:20.880Z", "bootId": "7240f4e0-c538-45f6-baf2-49ccea0e9caa", "event": "observation-accepted", "tabId": 1817236458, "role": "site", "target": "unique-visible"},
+    {"at": "2026-11-17T09:12:24.353Z", "bootId": "7240f4e0-c538-45f6-baf2-49ccea0e9caa", "event": "page-highlight-cleared", "tabId": 1817236458, "reason": "dom-changed-recheck-required"},
+    {"at": "2026-11-17T09:12:31.978Z", "bootId": "7240f4e0-c538-45f6-baf2-49ccea0e9caa", "event": "check-issued", "tabId": 1817236458, "role": "site", "revision": 3},
+    {"at": "2026-11-17T09:12:31.979Z", "bootId": "7240f4e0-c538-45f6-baf2-49ccea0e9caa", "event": "observation-accepted", "tabId": 1817236458, "role": "site", "target": "unique-visible"},
+    {"at": "2026-11-17T09:12:32.693Z", "bootId": "7240f4e0-c538-45f6-baf2-49ccea0e9caa", "event": "page-highlight-cleared", "tabId": 1817236458, "reason": "document-hidden"},
+    {"at": "2026-11-17T09:12:37.361Z", "bootId": "7240f4e0-c538-45f6-baf2-49ccea0e9caa", "event": "check-issued", "tabId": 1817236458, "role": "site", "revision": 4},
+    {"at": "2026-11-17T09:12:37.362Z", "bootId": "7240f4e0-c538-45f6-baf2-49ccea0e9caa", "event": "observation-accepted", "tabId": 1817236458, "role": "site", "target": "unique-visible"},
+    {"at": "2026-11-17T09:12:38.099Z", "bootId": "7240f4e0-c538-45f6-baf2-49ccea0e9caa", "event": "tab-navigation", "tabId": 1817236458, "allowed": false},
+    {"at": "2026-11-17T09:12:38.125Z", "bootId": "7240f4e0-c538-45f6-baf2-49ccea0e9caa", "event": "page-highlight-cleared", "tabId": 1817236458, "reason": "dom-changed-recheck-required"},
+    {"at": "2026-11-17T09:12:42.746Z", "bootId": "7240f4e0-c538-45f6-baf2-49ccea0e9caa", "event": "check-unavailable", "tabId": 1817236458}
+  ],
+  "schema": 1,
+  "task": {
+    "id": "113dbcc6-ad02-4e47-a0e3-added5d379db",
+    "tag": "WG-LIFECYCLE-V1",
+    "revision": 5,
+    "windowId": 1817236195,
+    "owner": "8ad61a72-8406-468e-8b00-810ae725807c",
+    "status": "active",
+    "observations": {
+      "site": {
+        "at": "2026-11-17T09:12:37.362Z",
+        "tabId": 1817236458,
+        "documentId": "012AC6FA0D9D044702498AD65C045A0C",
+        "taskId": "113dbcc6-ad02-4e47-a0e3-added5d379db",
+        "url": "http://127.0.0.1:43118/webguide-lifecycle/site.html",
+        "target": "unique-visible"
+      }
+    },
+    "reason": "outside-fixture-or-page-not-ready"
+  }
+}

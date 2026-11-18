@@ -1,0 +1,56 @@
+{
+  "method": "CUA read-only DOM evaluation of collector.mjs; NOT chrome.scripting or extension isolation test",
+  "evaluatedAtObservationTime": "2026-11-16T05:37:14.162Z",
+  "individual": [
+    {
+      "kind": "settings",
+      "code": "source-ready",
+      "label": "来源匹配，设置页报告站点已上线"
+    },
+    {
+      "kind": "workflow",
+      "code": "deployed",
+      "label": "目标提交的 Pages 部署成功"
+    },
+    {
+      "kind": "site",
+      "code": "content-verified",
+      "label": "目标站点显示预期内容标记"
+    }
+  ],
+  "combined": {
+    "complete": true,
+    "source": {
+      "code": "source-ready",
+      "label": "来源匹配，设置页报告站点已上线"
+    },
+    "deploy": {
+      "code": "deployed",
+      "label": "目标提交的 Pages 部署成功"
+    },
+    "content": {
+      "code": "content-verified",
+      "label": "目标站点显示预期内容标记"
+    },
+    "linked": true,
+    "next": "三项观察匹配，本次练习通过；这是最近观察的结果，页面变化后请重新检查。",
+    "steps": [
+      {
+        "name": "发布源",
+        "code": "source-ready",
+        "label": "来源匹配，设置页报告站点已上线"
+      },
+      {
+        "name": "工作流",
+        "code": "deployed",
+        "label": "目标提交的 Pages 部署成功"
+      },
+      {
+        "name": "站点内容",
+        "code": "content-verified",
+        "label": "目标站点显示预期内容标记"
+      }
+    ]
+  },
+  "extensionRuntimeTested": false
+}

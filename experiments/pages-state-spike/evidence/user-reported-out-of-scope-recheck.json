@@ -1,0 +1,42 @@
+{
+  "provenance": {
+    "source": "user-pasted-popup-text",
+    "receivedDateAsiaShanghai": "2026-11-16",
+    "evidenceLevel": "用户代测的最终面板文本，非截图或助手独立浏览器复现",
+    "normalization": "将粘贴文本中的 Markdown 站点链接还原为规范 URL；其余观察字段按用户提供内容整理。",
+    "actualTabUrlProvided": false,
+    "intermediateReopenPanelProvided": false,
+    "checkTimeProvided": false
+  },
+  "case": "T07-recheck",
+  "display": {
+    "notice": "未读取：请打开指定练习仓库的 Pages 设置、工作流详情或测试站点。",
+    "source": "缺少有效观察",
+    "workflow": "缺少有效观察",
+    "content": "目标站点显示预期内容标记",
+    "outcome": "尚未完成",
+    "next": "在练习仓库的 Pages 设置页检查发布源。"
+  },
+  "observations": [
+    {
+      "kind": "site",
+      "marker": "WG-SC01-20261116-v1",
+      "observedAt": 1794814260056,
+      "taskId": "SC01-20261116-v1",
+      "url": "https://chuzhitairan.github.io/webguide-ai-walkthrough-20261116/"
+    }
+  ],
+  "assessment": {
+    "rejectionAndRetentionDisplayMatchesExpectation": true,
+    "note": "本次范围外拒绝提示与原站点观察同时存在，未添加范围外观察，整体未完成。最终面板支持本次跨页后保留；未单独提供 T05 不检查重开时的中间面板，不将其记为单独核验。",
+    "previousEmptyObservationCause": "仍未确定；本次结果不能反推上次是否过期、重载或其他原因。",
+    "dataReplay": {
+      "evaluatedAtUTC": "2026-11-16T07:31:00.056Z",
+      "source": "unknown",
+      "deploy": "unknown",
+      "content": "content-verified",
+      "complete": false,
+      "note": "按站点采集时刻核对数据分类；非当前页面实时检查，非对权限或存储 API 的独立复现。"
+    }
+  }
+}

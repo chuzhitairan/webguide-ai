@@ -1,0 +1,80 @@
+{
+  "schemaVersion": 1,
+  "tutorialId": "github.pages.branch",
+  "version": "0.1.0-draft",
+  "title": "发布并核对 GitHub Pages 静态页面",
+  "goal": "按已确认的分支和目录发布，核对配置、目标提交的部署及预期站点内容。",
+  "environment": {"browsers": ["edge"], "pageLanguages": ["en"], "instructionLanguage": "zh-CN"},
+  "adapterId": "github_pages_v1",
+  "parameterProfile": "pages_branch_v1",
+  "sources": [{"id": "github-pages-source", "title": "GitHub Pages 发布源说明", "url": "https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site"}],
+  "steps": [
+    {
+      "id": "open-repository-settings", "pageRole": "repository", "title": "进入仓库设置",
+      "instruction": "在已确认的目标仓库点击 Settings。若已位于该仓库设置或 Pages 页，核对身份后继续。",
+      "action": "click", "target": {"locatorId": "pages.repository-settings-link"},
+      "check": {"type": "adapter", "checkerId": "pages.settings-open"}, "sourceIds": ["github-pages-source"]
+    },
+    {
+      "id": "open-pages-settings", "pageRole": "repository-settings", "title": "进入 Pages 设置",
+      "instruction": "在仓库设置侧栏点击 Pages；入口不可见时说明观察结果并核对权限，不猜测替代入口。",
+      "action": "click", "target": {"locatorId": "pages.pages-settings-link"},
+      "check": {"type": "adapter", "checkerId": "pages.pages-open"}, "sourceIds": ["github-pages-source"]
+    },
+    {
+      "id": "choose-source", "pageRole": "pages-settings", "title": "选择分支发布",
+      "instruction": "在 Source 中选择 Deploy from a branch。若已符合要求，核对后继续。",
+      "action": "select", "target": {"locatorId": "pages.source"},
+      "check": {"type": "adapter", "checkerId": "pages.source-mode"}, "sourceIds": ["github-pages-source"]
+    },
+    {
+      "id": "choose-branch", "pageRole": "pages-settings", "title": "选择目标分支",
+      "instruction": "选择任务确认卡中的目标分支。这一步仅核对选中值。",
+      "action": "select", "target": {"locatorId": "pages.branch"},
+      "check": {"type": "adapter", "checkerId": "pages.branch-selected"}, "sourceIds": ["github-pages-source"]
+    },
+    {
+      "id": "choose-directory", "pageRole": "pages-settings", "title": "选择发布目录",
+      "instruction": "选择任务确认卡中的目录；分支和目录都匹配后再保存。",
+      "action": "select", "target": {"locatorId": "pages.directory"},
+      "check": {"type": "adapter", "checkerId": "pages.directory-selected"}, "sourceIds": ["github-pages-source"]
+    },
+    {
+      "id": "save-configuration", "pageRole": "pages-settings", "title": "确认配置已保存",
+      "instruction": "配置有待保存的修改时点击 Save；已明确保存且匹配时直接核对，不重复保存。无法确认时按提示重查。",
+      "action": "click", "target": {"locatorId": "pages.save-or-saved-status"},
+      "check": {"type": "adapter", "checkerId": "pages.config-saved"}, "sourceIds": ["github-pages-source"]
+    },
+    {
+      "id": "open-deployment", "pageRole": "pages-settings", "title": "打开关联部署",
+      "instruction": "点击 Pages 设置中的关联部署链接；扩展核对打开的是该 run 的工作流页面。",
+      "action": "click", "target": {"locatorId": "pages.deployment-link"},
+      "check": {"type": "adapter", "checkerId": "pages.workflow-open"}, "sourceIds": ["github-pages-source"]
+    },
+    {
+      "id": "inspect-workflow", "pageRole": "pages-workflow", "title": "查看工作流摘要",
+      "instruction": "在刚打开的工作流中查看仓库、提交与状态区域；区域可见不等于部署成功。",
+      "action": "inspect", "target": {"locatorId": "pages.workflow-summary"},
+      "check": {"type": "dom", "assertion": "visible"}, "sourceIds": ["github-pages-source"]
+    },
+    {
+      "id": "wait-deployment", "pageRole": "pages-workflow", "title": "等待目标版本部署",
+      "instruction": "核对工作流与目标提交。运行中等待；失败时查看可见错误，不重复保存配置。",
+      "action": "wait", "target": {"locatorId": "pages.workflow-status"},
+      "check": {"type": "adapter", "checkerId": "pages.deployment-status"}, "sourceIds": ["github-pages-source"]
+    },
+    {
+      "id": "open-site", "pageRole": "pages-workflow", "title": "打开发布站点",
+      "instruction": "点击已确认部署中的站点链接；首次打开前确认站点地址和必要授权，随后核对目标页面。",
+      "action": "click", "target": {"locatorId": "pages.site-link"},
+      "check": {"type": "adapter", "checkerId": "pages.site-open"}, "sourceIds": ["github-pages-source"]
+    },
+    {
+      "id": "verify-content", "pageRole": "published-site", "title": "核对预期内容",
+      "instruction": "检查本次确认的预期内容，随后由规则关联配置、部署和站点证据；能打开网站不等于已经完成。",
+      "action": "inspect", "target": {"locatorId": "pages.site-content"},
+      "check": {"type": "adapter", "checkerId": "pages.content-match"}, "sourceIds": ["github-pages-source"]
+    }
+  ],
+  "finalVerifierId": "github_pages_v1"
+}

@@ -1,0 +1,291 @@
+Browser tab: 1817236034, Title: "Test only: PR review state walkthrough by chuzhitairan · Pull Request #1 · chuzhitairan/webguide-ai-walkthrough-20261116", URL: "https://github.com/chuzhitairan/webguide-ai-walkthrough-20261116/pull/1#pullrequestreview-5914964159".
+1 AXWebArea URL: github.com/chuzhitairan/webguide-ai-walkthrough-20261116/pull/1#pullrequestreview-5914964159, Test only: PR review state walkthrough by chuzhitairan · Pull Request #1 · chuzhitairan/webguide-ai-walkthrough-20261116
+	2 container
+		3 link Description: Skip to content, Value: github.com/chuzhitairan/webguide-ai-walkthrough-20261116/pull/1#start-of-content
+		4 container Global navigation menu
+			5 pop up button Open menu
+			6 link Description: Homepage ( g then d ), Value: github.com/
+			7 container Breadcrumbs
+				8 content list
+					9 container
+						10 link Description: chuzhitairan, Value: github.com/chuzhitairan
+					11 container
+						12 link Description: webguide-ai-walkthrough-20261116, Value: github.com/chuzhitairan/webguide-ai-walkthrough-20261116
+						13 pop up button (collapsed) Switch repository ( alt shift r ), Secondary Actions: Expand
+			14 button Open quick search dialog, type / to search
+				15 text Type 
+				16 text /
+				17 text  to search
+			18 link Description: Chat with Copilot, Value: github.com/copilot, ID: copilot-chat-header-button
+			19 pop up button (collapsed) Open Copilot menu, ID: global-copilot-agent-button, Secondary Actions: Expand
+			20 pop up button (collapsed) Create new..., Secondary Actions: Expand
+			21 link Description: All issues, Value: github.com/issues
+			22 link Description: All pull requests, Value: github.com/pulls
+			23 link Description: All repositories, Value: github.com/repos
+			24 link Description: You have no unread notifications ( g then n ), Value: github.com/notifications
+			25 pop up button Open user navigation menu
+				26 image Tairan Dan
+			27 heading Repository navigation, Value: 2
+				28 text Repository navigation
+			29 container Repository
+				30 content list
+					31 link Description: Code, Value: github.com/chuzhitairan/webguide-ai-walkthrough-20261116
+					32 link Description: Issues, Value: github.com/chuzhitairan/webguide-ai-walkthrough-20261116/issues
+					33 link Description: Pull requests  (1), Value: github.com/chuzhitairan/webguide-ai-walkthrough-20261116/pulls
+					34 link Description: Agents, Value: github.com/chuzhitairan/webguide-ai-walkthrough-20261116/agents?author=chuzhitairan
+					35 link Description: Actions, Value: github.com/chuzhitairan/webguide-ai-walkthrough-20261116/actions
+					36 link Description: Projects, Value: github.com/chuzhitairan/webguide-ai-walkthrough-20261116/projects
+					37 link Description: Wiki, Value: github.com/chuzhitairan/webguide-ai-walkthrough-20261116/wiki
+					38 link Description: Security and quality, Value: github.com/chuzhitairan/webguide-ai-walkthrough-20261116/security
+				39 pop up button (collapsed) More items, Secondary Actions: Expand
+	40 container diff-comparison-viewer-container
+		41 container
+			42 heading Test only: PR review state walkthrough - #1, Value: 1
+				43 text Test only: PR review state walkthrough - #
+			44 button Edit title
+			45 container
+				46 button Try the Overview page
+				47 container
+					48 heading Try the new pull requests Overview page!, Value: 2
+						49 text Try the new pull requests Overview page!
+					50 text Focus on what matters most and take action with confidence.
+					51 button Try Overview
+					52 button Not now
+			53 button (collapsed) Merge status, Secondary Actions: Expand
+			54 pop up button (collapsed) Code, Secondary Actions: Expand
+			55 image Pull request
+			56 text Open
+			57 link Description: chuzhitairan, Value: github.com/chuzhitairan
+			58 text wants to merge 1 commit into
+			59 link Description: main, Value: github.com/chuzhitairan/webguide-ai-walkthrough-20261116/tree/main
+			60 text from
+			61 link Description: chuzhitairan-patch-1, Value: github.com/chuzhitairan/webguide-ai-walkthrough-20261116/tree/chuzhitairan-patch-1
+			62 button Copy head branch name to clipboard
+			63 text Lines changed: 3 additions & 0 deletions
+			64 container Pull request navigation
+				65 link Description: Conversation  (3), Value: github.com/chuzhitairan/webguide-ai-walkthrough-20261116/pull/1
+				66 link Description: Commits  (1), Value: github.com/chuzhitairan/webguide-ai-walkthrough-20261116/pull/1/commits, ID: prs-commits-anchor-tab
+				67 link Description: Checks  (0), Value: github.com/chuzhitairan/webguide-ai-walkthrough-20261116/pull/1/checks
+				68 link Description: Files changed  (1), Value: github.com/chuzhitairan/webguide-ai-walkthrough-20261116/pull/1/changes, ID: prs-files-anchor-tab
+			69 image Pull request
+			70 text Open
+			71 heading Value: 2, Test only: PR review state walkthrough #1 chuzhitairan wants to merge 1 commit into main from chuzhitairan-patch-1 Copy head branch name to clipboard
+				72 link Description: Test only: PR review state walkthrough, Value: github.com/chuzhitairan/webguide-ai-walkthrough-20261116/pull/1#top
+				73 text # 1
+				74 link Description: chuzhitairan, Value: github.com/chuzhitairan
+				75 text wants to merge 1 commit into
+				76 link Description: main, Value: github.com/chuzhitairan/webguide-ai-walkthrough-20261116/tree/main
+				77 text from
+				78 link Description: chuzhitairan-patch-1, Value: github.com/chuzhitairan/webguide-ai-walkthrough-20261116/tree/chuzhitairan-patch-1
+				79 button Copy head branch name to clipboard
+		80 heading Conversation, Value: 2
+			81 text Conversation
+		82 container
+			83 link Description: @chuzhitairan, Value: github.com/chuzhitairan
+			84 container pullrequest-5330905158
+				85 heading chuzhitairan commented 4 minutes ago, Value: 3
+					86 link Description: chuzhitairan, Value: github.com/chuzhitairan
+					87 text commented
+					88 link Description: 4 minutes ago, Value: github.com/chuzhitairan/webguide-ai-walkthrough-20261116/pull/1#issue-6414007082, ID: issue-6414007082-permalink
+				89 pop up button (collapsed) Show options, Secondary Actions: Expand
+					90 image Show options
+				91 container You are the owner of the webguide-ai-walkthrough-20261116 repository.
+					92 text Owner
+				93 text Disposable test PR for WebGuide AI requirements validation. This checks pending versus submitted review comments. No production change; leave unmerged.
+				94 button (collapsed) Description: Add or remove reactions, ID: reaction-add-reaction-button-tooltip-anchor-dcb44b4c, Secondary Actions: Expand
+		95 text Mention @copilot in a comment to make changes to this pull request.
+		96 container
+			97 link Description: @chuzhitairan, Value: github.com/chuzhitairan
+			98 link Description: Add test-only PR review fixture, Value: github.com/chuzhitairan/webguide-ai-walkthrough-20261116/pull/1/commits/eb6a244d7834ea042352cc7a380be11141cbf10d
+			99 button Verified, ID: dialog-show-commit-badge-verified-d584c6d6-dialog
+			100 link Description: eb6a244, Value: github.com/chuzhitairan/webguide-ai-walkthrough-20261116/pull/1/commits/eb6a244d7834ea042352cc7a380be11141cbf10d
+		101 container event-36236780419
+			102 link Description: Copilot PR reviewer, Value: github.com/apps/copilot-pull-request-reviewer
+			103 container
+				104 link Description: Copilot, Value: github.com/apps/copilot-pull-request-reviewer
+				105 text AI  balanced review requested due to automatic review settings 
+				106 link Description: 4 minutes ago, Value: github.com/chuzhitairan/webguide-ai-walkthrough-20261116/pull/1#event-36236780419
+		107 container pullrequestreview-5914956840
+			108 container
+				109 link Description: Copilot PR reviewer, Value: github.com/apps/copilot-pull-request-reviewer
+				110 image Only reviews by reviewers with write access count toward mergeability
+				111 container
+					112 link Description: Copilot, Value: github.com/apps/copilot-pull-request-reviewer
+					113 text AI
+				114 text reviewed 
+				115 link Description: 4 minutes ago, Value: github.com/chuzhitairan/webguide-ai-walkthrough-20261116/pull/1#pullrequestreview-5914956840, ID: pullrequestreview-5914956840-permalink
+			116 container pullrequestreview-5914956840
+				117 heading Copilot AI left a comment, Value: 3
+					118 container
+						119 link Description: Copilot, Value: github.com/apps/copilot-pull-request-reviewer
+						120 text AI
+					121 text left a comment
+				122 pop up button (collapsed) Show options, Secondary Actions: Expand
+					123 image Show options
+				124 text Copilot was unable to review this pull request because the user who requested the review has insufficient remaining quota. Try requesting a review at a lower effort level.
+				125 button (collapsed) Description: Add or remove reactions, ID: reaction-add-reaction-button-tooltip-anchor-24d90ab7, Secondary Actions: Expand
+		126 container pullrequestreview-5914964159
+			127 container
+				128 link Description: chuzhitairan, Value: github.com/chuzhitairan
+				129 container
+					130 link Description: chuzhitairan, Value: github.com/chuzhitairan
+				131 text commented 
+				132 link Description: 1 minute ago, Value: github.com/chuzhitairan/webguide-ai-walkthrough-20261116/pull/1#pullrequestreview-5914964159, ID: pullrequestreview-5914964159-permalink
+				133 link Description: View reviewed changes, Value: github.com/chuzhitairan/webguide-ai-walkthrough-20261116/pull/1/files/eb6a244d7834ea042352cc7a380be11141cbf10d
+			134 container pullrequestreview-5914964159
+				135 heading chuzhitairan left a comment, Value: 3
+					136 link Description: chuzhitairan, Value: github.com/chuzhitairan
+					137 text left a comment
+				138 pop up button (collapsed) Show options, Secondary Actions: Expand
+					139 image Show options
+				140 container You are the owner of the webguide-ai-walkthrough-20261116 repository.
+					141 text Owner
+				142 container You are the author of this pull request.
+					143 text Author
+				144 text WG-SC02-SUBMITTED-20261116: Test walkthrough completed; general comment only.
+				145 button (collapsed) Description: Add or remove reactions, ID: reaction-add-reaction-button-tooltip-anchor-bc975875, Secondary Actions: Expand
+			146 container review-thread-or-comment-id-3083298372
+				147 button (expanded) Comment thread, ID: icon-button-21582966-f9a2-42b6-9ef1-7d68d98a1982, Secondary Actions: Collapse
+				148 link Description: review-example.md, Value: github.com/chuzhitairan/webguide-ai-walkthrough-20261116/pull/1/files/eb6a244d7834ea042352cc7a380be11141cbf10d#diff-663c97fbbc26923ca21fe4d3ef960e5b2cfbc3a46b4083af0d0c268927fd829f
+				149 container discussion_r4581908713
+					150 heading @chuzhitairan chuzhitairan 3 minutes ago, Value: 3
+						151 image @chuzhitairan
+						152 link Description: chuzhitairan, Value: github.com/chuzhitairan
+						153 link Description: 3 minutes ago, Value: github.com/chuzhitairan/webguide-ai-walkthrough-20261116/pull/1#discussion_r4581908713, ID: discussion_r4581908713-permalink
+					154 pop up button (collapsed) Show options, Secondary Actions: Expand
+						155 image Show options
+					156 container You are the owner of the webguide-ai-walkthrough-20261116 repository.
+						157 text Owner
+					158 container You are the author of this pull request.
+						159 text Author
+					160 text WG-SC02-REVIEW-20261116: Test-only comment to verify the pending-to-submitted review transition.
+					161 button (collapsed) Description: Add or remove reactions, ID: reaction-add-reaction-button-tooltip-anchor-909e1fd3, Secondary Actions: Expand
+				162 container
+					163 image @chuzhitairan
+					164 button Reply...
+				165 button Resolve conversation
+		166 heading This branch has not been deployed, Value: 3
+			167 text This branch has not been deployed
+		168 text No deployments
+		169 heading Merge info, Value: 2
+			170 text Merge info
+		171 container
+			172 image Ready to merge
+			173 container Conflicts
+				174 container
+					175 heading No conflicts with base branch, Value: 3
+						176 text No conflicts with base branch
+					177 text Merging can be performed automatically.
+			178 container Copilot can watch this pull request
+				179 container
+					180 heading Copilot can watch this pull request, Value: 3
+						181 text Copilot can watch this pull request
+					182 text Copilot can monitor this pull request for failed Actions workflows and merge conflicts and fix them automatically.
+					183 button Watch and fix
+			184 button Merge pull request
+			185 pop up button (collapsed) Select merge method, Secondary Actions: Expand
+			186 text You can also merge this with the command line.
+			187 button View command line instructions.
+			188 text Still in progress?
+			189 button Convert to draft
+		190 container issuecomment-new
+			191 link Description: @chuzhitairan, Value: github.com/chuzhitairan
+			192 container Add a comment, ID: new_comment_form
+				193 container
+					194 heading Add a comment, Value: 4, ID: previewable-comment-form-component-ccfce41c-c839-4674-8d80-490c2c21874f-title
+						195 text Add a comment
+					196 text Comment
+					197 tab group Add a comment
+						198 tab (selected, settable, boolean) Write, Value: 1, ID: write_tab_previewable-comment-form-component-ccfce41c-c839-4674-8d80-490c2c21874f
+						199 tab (selectable, settable, boolean) Preview, Value: 0, ID: preview_tab_previewable-comment-form-component-ccfce41c-c839-4674-8d80-490c2c21874f
+					200 toolbar
+						201 container
+							202 pop up button (collapsed) Mention Copilot, ID: copilot-md-menu-anchor-new_comment_field, Secondary Actions: Expand
+							203 button Heading, ID: action-bar-627e8a94-a4ea-42a3-93ad-6d8001d1aefd
+							204 button Bold, ID: action-bar-faea455f-7cb5-45ef-a000-43a643ae9607
+							205 button Italic, ID: action-bar-2aec46ea-1aaa-4517-a7a1-401ebd94d213
+							206 button Quote, ID: action-bar-77575783-238d-4324-8215-1f584416f527
+							207 button Code, ID: action-bar-a340814c-98d4-409a-8fe8-3276bbe98e2f
+							208 button Link, ID: action-bar-0fa14c88-8692-4cd5-8fb6-43cbcdde38bf
+							209 button Numbered list, ID: action-bar-f69f6824-0830-4611-850d-400a3a2abd5c
+							210 button Unordered list, ID: action-bar-b42a8a44-2974-4cd1-9fb9-032bf975948c
+							211 button Task list, ID: action-bar-433aa907-a1b2-492e-9697-4ae25c9b1646
+						212 pop up button (collapsed) Menu, ID: action-bar-ea3f0e87-a40c-4b3a-b425-b23e75b8a65f-button, Secondary Actions: Expand
+					213 container Write
+						214 container
+							215 text entry area (settable) Comment, ID: new_comment_field
+						216 link Description: Markdown is supported, Value: docs.github.com/github/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax
+						217 button Paste, drop, or click to add files
+				218 container partial-new-comment-form-actions
+					219 button Close pull request
+					220 button (disabled) Comment
+			221 text Remember, contributions to this repository should follow our 
+			222 link Description: GitHub Community Guidelines, Value: docs.github.com/articles/github-community-guidelines
+			223 text .
+			224 container
+				225 text ProTip!  Add comments to specific lines under 
+				226 link Description: Files changed, Value: github.com/chuzhitairan/webguide-ai-walkthrough-20261116/pull/1/files
+				227 text .
+		228 container partial-discussion-sidebar
+			229 container Description: Select reviewers, ID: pull-request-reviewers-form-5330905158
+				230 pop up button (collapsed) Reviewers, Secondary Actions: Expand
+				231 container
+					232 link Description: Copilot code review, Value: github.com/apps/copilot-pull-request-reviewer
+					233 link Description: Copilot, Value: github.com/apps/copilot-pull-request-reviewer
+				234 text Copilot review effort
+				235 pop up button (collapsed) Balanced, ID: copilot-review-effort-menu-5330905158-175728472-button, Secondary Actions: Expand
+				236 link Description: Copilot left review comments, ID: review-status-copilot-pull-request-reviewer, Value: github.com/chuzhitairan/webguide-ai-walkthrough-20261116/pull/1/changes/BASE..eb6a244d7834ea042352cc7a380be11141cbf10d
+				237 button Re-request Copilot review, ID: re-request-review-copilot-pull-request-reviewer
+				238 text Still in progress?
+				239 button (collapsed) Convert to draft, Secondary Actions: Expand
+			240 container Select assignees
+				241 pop up button (collapsed) Assignees, Secondary Actions: Expand
+				242 text No one—
+				243 button assign yourself
+			244 pop up button (collapsed) Labels, Secondary Actions: Expand
+			245 text None yet
+			246 container Select projects
+				247 pop up button (collapsed) Projects, Secondary Actions: Expand
+				248 text None yet
+			249 container Select milestones
+				250 pop up button (collapsed) Milestone, Secondary Actions: Expand
+				251 text No milestone
+			252 container Link issues
+				253 pop up button (collapsed) Development, Secondary Actions: Expand
+				254 text Successfully merging this pull request may close these issues.
+				255 text None yet
+			256 container
+				257 button Notifications Customize
+					258 text Notifications
+					259 text Customize
+				260 button Unsubscribe
+				261 text You’re receiving notifications because you authored the thread.
+			262 container partial-users-participants
+				263 heading 2 participants, Value: 3
+					264 text 2 participants
+				265 link Description: @chuzhitairan, Value: github.com/chuzhitairan
+				266 link github.com/apps/copilot-pull-request-reviewer
+			267 button (collapsed) Lock conversation, Secondary Actions: Expand
+				268 text Lock conversation
+			269 button (collapsed) Archive pull request, Secondary Actions: Expand
+				270 text Archive pull request
+	271 container
+		272 heading Footer, Value: 2
+			273 text Footer
+		274 link Description: GitHub Homepage, Value: github.com/
+		275 text © 2026 GitHub, Inc.
+		276 container Footer
+			277 heading Footer navigation, Value: 3, ID: sr-footer-heading
+				278 text Footer navigation
+			279 content list Footer navigation
+				280 link Description: Terms, Value: docs.github.com/site-policy/github-terms/github-terms-of-service
+				281 link Description: Privacy, Value: docs.github.com/site-policy/privacy-policies/github-privacy-statement
+				282 link Description: Security, Value: github.com/security
+				283 link Description: Status, Value: githubstatus.com/
+				284 link Description: Community, Value: github.community/
+				285 link Description: Docs, Value: docs.github.com/
+				286 link Description: Contact, Value: support.github.com/?tags=dotcom-footer
+				287 button Manage cookies
+				288 button Do not share my personal information
+
+The focused UI element is 1 AXWebArea URL: github.com/chuzhitairan/webguide-ai-walkthrough-20261116/pull/1#pullrequestreview-5914964159, Test only: PR review state walkthrough by chuzhitairan · Pull Request #1 · chuzhitairan/webguide-ai-walkthrough-20261116

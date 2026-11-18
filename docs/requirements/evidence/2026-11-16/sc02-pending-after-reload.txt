@@ -1,0 +1,164 @@
+Browser tab: 1817236034, Title: "Test only: PR review state walkthrough by chuzhitairan · Pull Request #1 · chuzhitairan/webguide-ai-walkthrough-20261116", URL: "https://github.com/chuzhitairan/webguide-ai-walkthrough-20261116/pull/1/changes#r4581908713".
+1 AXWebArea URL: github.com/chuzhitairan/webguide-ai-walkthrough-20261116/pull/1/changes#r4581908713, Test only: PR review state walkthrough by chuzhitairan · Pull Request #1 · chuzhitairan/webguide-ai-walkthrough-20261116
+	65 container
+		66 container This review comment is pending
+		67 container This user is the owner of the webguide-ai-walkthrough-20261116 repository.
+		68 container This user is the author of this pull request
+	2 container
+		3 link Description: Skip to content, Value: github.com/chuzhitairan/webguide-ai-walkthrough-20261116/pull/1/changes#start-of-content
+		4 container Global navigation menu
+			5 pop up button Open menu
+			6 link Description: Homepage ( g then d ), Value: github.com/
+			7 container Breadcrumbs
+				8 content list
+					9 container
+						10 link Description: chuzhitairan, Value: github.com/chuzhitairan
+					11 container
+						12 link Description: webguide-ai-walkthrough-20261116, Value: github.com/chuzhitairan/webguide-ai-walkthrough-20261116
+						13 pop up button (collapsed) Switch repository ( alt shift r ), Secondary Actions: Expand
+			14 button Open quick search dialog, type / to search
+				15 text Type 
+				16 text /
+				17 text  to search
+			69 link Description: Chat with Copilot, Value: github.com/copilot, ID: copilot-chat-header-button
+			70 pop up button (collapsed) Open Copilot menu, ID: global-copilot-agent-button, Secondary Actions: Expand
+			20 pop up button (collapsed) Create new..., Secondary Actions: Expand
+			21 link Description: All issues, Value: github.com/issues
+			22 link Description: All pull requests, Value: github.com/pulls
+			23 link Description: All repositories, Value: github.com/repos
+			24 link Description: You have no unread notifications ( g then n ), Value: github.com/notifications
+			25 pop up button Open user navigation menu
+				26 image Tairan Dan
+			27 heading Repository navigation, Value: 2
+				28 text Repository navigation
+			29 container Repository
+				30 content list
+					31 link Description: Code, Value: github.com/chuzhitairan/webguide-ai-walkthrough-20261116
+					32 link Description: Issues, Value: github.com/chuzhitairan/webguide-ai-walkthrough-20261116/issues
+					33 link Description: Pull requests  (1), Value: github.com/chuzhitairan/webguide-ai-walkthrough-20261116/pulls
+					34 link Description: Agents, Value: github.com/chuzhitairan/webguide-ai-walkthrough-20261116/agents?author=chuzhitairan
+					35 link Description: Actions, Value: github.com/chuzhitairan/webguide-ai-walkthrough-20261116/actions
+					36 link Description: Projects, Value: github.com/chuzhitairan/webguide-ai-walkthrough-20261116/projects
+					37 link Description: Wiki, Value: github.com/chuzhitairan/webguide-ai-walkthrough-20261116/wiki
+					38 link Description: Security and quality, Value: github.com/chuzhitairan/webguide-ai-walkthrough-20261116/security
+				41 pop up button (collapsed) More items, Secondary Actions: Expand
+	42 container diff-comparison-viewer-container
+		43 container
+			44 heading Test only: PR review state walkthrough - #1, Value: 1
+				45 text Test only: PR review state walkthrough - #
+			46 button Edit title
+			47 container
+				48 pop up button (collapsed) Preview, Secondary Actions: Expand
+				49 container
+					50 heading Welcome to the upgraded Files Changed experience, Value: 2
+						51 text Welcome to the upgraded Files Changed experience
+					52 text It's faster, more accessible, and includes new features like commenting anywhere in changed files and file tree indicators.
+					53 link Description: See what's new, Value: gh.io/new-files-changed-changelog
+					54 button Dismiss
+			55 button (collapsed) Merge status, Secondary Actions: Expand
+			56 pop up button (collapsed) Code, Secondary Actions: Expand
+			57 image Pull request
+			58 text Open
+			59 link Description: chuzhitairan, Value: github.com/chuzhitairan
+			60 text wants to merge 1 commit into
+			61 link Description: main, Value: github.com/chuzhitairan/webguide-ai-walkthrough-20261116/tree/main
+			62 text from
+			63 link Description: chuzhitairan-patch-1, Value: github.com/chuzhitairan/webguide-ai-walkthrough-20261116/tree/chuzhitairan-patch-1
+			64 button Copy head branch name to clipboard
+			71 text Lines changed: 3 additions & 0 deletions
+			72 container Pull request navigation
+				73 link Description: Conversation  (1), Value: github.com/chuzhitairan/webguide-ai-walkthrough-20261116/pull/1
+				74 link Description: Commits  (1), Value: github.com/chuzhitairan/webguide-ai-walkthrough-20261116/pull/1/commits, ID: prs-commits-anchor-tab
+				75 link Description: Checks  (0), Value: github.com/chuzhitairan/webguide-ai-walkthrough-20261116/pull/1/checks
+				76 link Description: Files changed  (1), Value: github.com/chuzhitairan/webguide-ai-walkthrough-20261116/pull/1/changes, ID: prs-files-anchor-tab
+		77 container
+			78 heading Pull request toolbar, Value: 2
+				79 text Pull request toolbar
+			80 button (collapsed) Expand file tree, Secondary Actions: Expand
+			81 button All commits, ID: changes-selector-button
+			82 text 0 of 1 file viewed
+			83 button Submit review  (1)
+				84 text Submit 
+				85 text review
+				86 text  (
+				87 text 1
+				88 text )
+			89 pop up button (collapsed) Open diff view settings, Secondary Actions: Expand
+			90 button (collapsed) Open overview panel, Secondary Actions: Expand
+			91 button (collapsed) Open comments panel, Secondary Actions: Expand
+				92 text  (
+				93 text 1
+				94 text )
+			95 button (collapsed) Open Copilot panel, Secondary Actions: Expand
+		96 container ‎review-example.md‎, ID: diff-663c97fbbc26923ca21fe4d3ef960e5b2cfbc3a46b4083af0d0c268927fd829f
+			97 container
+				98 button Collapse file
+				99 heading ‎review-example.md‎, Value: 3, ID: heading-_r_1v_
+					100 link Description: ‎review-example.md‎, Value: github.com/chuzhitairan/webguide-ai-walkthrough-20261116/pull/1/changes#diff-663c97fbbc26923ca21fe4d3ef960e5b2cfbc3a46b4083af0d0c268927fd829f
+				101 button Copy file name to clipboard
+				102 text Lines changed: 3 additions & 0 deletions
+				103 content list File view
+					104 checkbox Display the source diff, Value: 1
+					105 checkbox Display the rich diff, Value: 0
+				106 button Ask about this diff
+				107 checkbox Description: Not Viewed, Value: 0
+				108 button (collapsed) Comment on this file, Secondary Actions: Expand
+				109 pop up button (collapsed) More options, Secondary Actions: Expand
+			110 container
+				111 container
+					112 button Collapse comment
+					113 heading Comment on file, Value: 2
+						114 text Comment on file
+					115 container ID: r4581908713, Description: chuzhitairan commented 1 minute ago @chuzhitairan's profile chuzhitairan 1m ago This review comment is pending This user is the owner of the webguide-ai-walkthrough-20261116 repository. This user is the author of this pull request Actions for chuzhitairan's comment, 12:14 PM today WG-SC02-REVIEW-20261116: Test-only comment to verify the pending-to-submitted review transition. Reactions
+						116 heading chuzhitairan commented 1 minute ago, Value: 3
+							117 text chuzhitairan commented
+							118 container Nov 16, 2026, 12:14 GMT+8
+								119 text 1 minute ago
+						120 link Description: @chuzhitairan's profile, Value: github.com/chuzhitairan
+						121 link Description: chuzhitairan, Value: github.com/chuzhitairan
+						122 link Description: 1m ago, Value: github.com/chuzhitairan/webguide-ai-walkthrough-20261116/pull/1/changes#r4581908713
+						123 container This review comment is pending
+							124 text Pending
+						125 container This user is the owner of the webguide-ai-walkthrough-20261116 repository.
+							126 text Owner
+						127 container This user is the author of this pull request
+							128 text Author
+						129 pop up button (collapsed) Description: Actions for chuzhitairan's comment, 12:14 PM today, Secondary Actions: Expand
+						130 text WG-SC02-REVIEW-20261116: Test-only comment to verify the pending-to-submitted review transition.
+						131 toolbar Reactions
+							132 pop up button (collapsed) React, Secondary Actions: Expand
+					133 button Write a reply
+				134 table Diff for: review-example.md
+					135 row Original file line number Diff line number Diff line change
+						136 cell
+							137 text Original file line number
+						138 cell
+							139 text Diff line number
+						140 cell
+							141 text Diff line change
+					142 row @@ -0,0 +1,3 @@
+						143 cell
+							144 text @@ -0,0 +1,3 @@
+					145 row 1 + # Review walkthrough test
+						146 cell
+						147 cell
+							148 text 1
+						149 cell
+							150 container
+								151 text + #  Review walkthrough test
+					152 row 2 + WG-SC02-20261116-v1
+						153 cell
+						154 cell
+							155 text 2
+						156 cell
+							157 container
+								158 text + WG-SC02-20261116-v1
+					159 row 3 + Test-only line for checking pending and submitted review states.
+						160 cell
+						161 cell
+							162 text 3
+						163 cell
+							164 container
+								165 text + Test-only line for checking pending and submitted review states.
+
+The focused UI element is 115 container ID: r4581908713, Description: chuzhitairan commented 1 minute ago @chuzhitairan's profile chuzhitairan 1m ago This review comment is pending This user is the owner of the webguide-ai-walkthrough-20261116 repository. This user is the author of this pull request Actions for chuzhitairan's comment, 12:14 PM today WG-SC02-REVIEW-20261116: Test-only comment to verify the pending-to-submitted review transition. Reactions

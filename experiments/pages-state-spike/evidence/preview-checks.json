@@ -1,0 +1,26 @@
+[
+  {
+    "sample": "未配置",
+    "expectedOutcomeVisible": true
+  },
+  {
+    "sample": "未保存",
+    "expectedOutcomeVisible": true
+  },
+  {
+    "sample": "来源已设置",
+    "expectedOutcomeVisible": true
+  },
+  {
+    "sample": "工作流运行中",
+    "expectedOutcomeVisible": true
+  },
+  {
+    "sample": "旧内容",
+    "expectedOutcomeVisible": true
+  },
+  {
+    "sample": "全部匹配",
+    "expectedOutcomeVisible": true
+  }
+]

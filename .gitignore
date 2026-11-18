@@ -1,0 +1,34 @@
+# 本地上游副本、教师资料与临时文件
+/research/repos/
+/软工设计课/
+/tmp/
+/项目提案-WebGuideAI.pdf
+/webguide_ai_architecture.jpg
+
+# 安装、构建和缓存
+node_modules/
+.output/
+.wxt/
+dist/
+coverage/
+*.tsbuildinfo
+__pycache__/
+.venv/
+
+# 凭据、个人环境与未经公开确认的原始资料
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+/private/
+/docs/course/week10/interviews-private/
+.DS_Store
+Thumbs.db
+*.log
+*.pid
+
+# 本地代理工具设置
+.codex/
+.agents/
+.aws/

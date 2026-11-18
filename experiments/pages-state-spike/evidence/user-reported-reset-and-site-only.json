@@ -1,0 +1,45 @@
+{
+  "provenance": {
+    "source": "user-pasted-popup-text",
+    "receivedDateAsiaShanghai": "2026-11-16",
+    "evidenceLevel": "用户提供的两次面板文本核对，非截图或助手独立浏览器复现",
+    "rawObservationsProvided": false,
+    "executionTimeProvided": false
+  },
+  "checks": [
+    {
+      "case": "T01-after-T04",
+      "actionReported": "清空观察",
+      "display": {
+        "notice": "观察已清空。",
+        "source": "缺少有效观察",
+        "workflow": "缺少有效观察",
+        "content": "缺少有效观察",
+        "outcome": "尚未完成",
+        "next": "在练习仓库的 Pages 设置页检查发布源。"
+      },
+      "reportedDisplayMatchesExpectation": true,
+      "limitations": [
+        "用户文本没有包含空数组，不能将原始观察记录成已看到 []",
+        "面板显示清空效果；storage.session 内容与清空后重开持久效果未独立核对"
+      ]
+    },
+    {
+      "case": "T06",
+      "actionReported": "清空后仅检查当前站点",
+      "display": {
+        "notice": "已读取本次页面；没有修改目标网站。",
+        "source": "缺少有效观察",
+        "workflow": "缺少有效观察",
+        "content": "目标站点显示预期内容标记",
+        "outcome": "尚未完成",
+        "next": "在练习仓库的 Pages 设置页检查发布源。"
+      },
+      "reportedDisplayMatchesExpectation": true,
+      "limitations": [
+        "未提供原始观察、URL 和采集时间，不重建或推测这些字段",
+        "结论限于用户提供面板显示的单项不足反例"
+      ]
+    }
+  ]
+}
