@@ -7,7 +7,7 @@
 | 顺序 | 文件 | 当前用途／状态 |
 | --- | --- | --- |
 | 1 | [需求调研报告](course/week10/调研报告.md) | 公开讨论、开源研究与发起人体验支持需求假设；没有独立访谈或产品效果数据 |
-| 2 | [完整系统 SRS v0.2](requirements/WebGuideAI-SRS-v0.2.md) | 全系统需求评审稿；既定方向已确认，展开细则待核读 |
+| 2 | [完整系统 SRS v0.2](requirements/WebGuideAI-SRS-v0.2.md) | 全系统需求评审稿；第 8.1 节展开 NT02 响应与 NT03 隐私两个非功能验收用例，均待执行 |
 | 3 | [版本交付范围](requirements/版本交付范围-2026-11-17.md) | 完整系统与交付次序分开；首场景为 GitHub 协作 |
 | 4 | [SC02 场景规格](requirements/GitHub协作首场景规格-v0.1.md) | 同仓库、已获写权限、单文档练习；终点为正确普通 PR 已提交待评审，14 项场景验收待执行 |
 | 5 | [核心设计](design/WebGuideAI-核心设计-v0.1.md) | 扩展本地运行＋模块化后端；两张生命周期图与职责边界 |
@@ -15,11 +15,11 @@
 | 7 | [工程配置](design/WebGuideAI-工程配置与开发方式-v0.1.md)＋[引导交互](design/WebGuideAI-引导交互-v0.1.md) | TS／React／WXT、Node／Fastify；交互示意和状态已对齐 SC02，依赖与真实 DOM 待验证 |
 | 8 | [11 月 18 日实施计划](design/首轮工程实施计划-2026-11-18.md) | 5 项未执行任务；限定容量／停止的最小实现，先建协作模拟闭环，再验证真实源码读取并扩展 GitHub、AI 与反馈 |
 
-[14 条用户故事](course/week10/用户故事.md)是完整需求的简要阅读入口，按 FR／UC 追溯；[课程交付包](course/week10/README.md)整理讲稿、过程和课堂准备。格式源文件见 [v1 Schema](design/contracts/tutorial.schema.json)、[v2 Schema](design/contracts/tutorial-v2.schema.json)、[协作教程样例](design/contracts/collaboration.tutorial.json)。
+[14 条用户故事](course/week10/用户故事.md)是完整需求的简要阅读入口，按 FR／UC 追溯，附交付优先级与待核读的切片 SP 初估；[课程交付包](course/week10/README.md)整理讲稿、过程和课堂准备。格式源文件见 [v1 Schema](design/contracts/tutorial.schema.json)、[v2 Schema](design/contracts/tutorial-v2.schema.json)、[协作教程样例](design/contracts/collaboration.tutorial.json)。
 
 ## 已有成果与待完成事项
 
-- 已有：需求／设计草案、固定版本的开源研究、Pages 及生命周期局部实验、私有仓库与看板、Draft PR #3。
+- 已有：需求／设计草案、固定版本的开源研究、Pages 及生命周期局部实验、私有仓库与看板；PR #3 已转为可评审，尚未合并。
 - 当前收尾：组长核读范围和需求推论，处理文档与 PR 的具体意见。另一位成员实际批准仍是当前 main 分支保护的合并条件。
 - 后续验证：原型可操作后邀请新手试用；独立访谈按需要补充，四个工作包暂不分派，不阻塞当前文档整理。
 - 尚未完成：正式产品工程、真实 GitHub 协作适配、模型集成、场景验收；教师选题反馈、成员评审与课堂演练也按实际记录。
