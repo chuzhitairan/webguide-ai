@@ -11,9 +11,9 @@
 | 3 | [版本交付范围](requirements/版本交付范围-2026-11-17.md) | 完整系统与交付次序分开；首场景为 GitHub 协作 |
 | 4 | [SC02 场景规格](requirements/GitHub协作首场景规格-v0.1.md) | 同仓库、已获写权限、单文档练习；终点为正确普通 PR 已提交待评审，14 项场景验收待执行 |
 | 5 | [核心设计](design/WebGuideAI-核心设计-v0.1.md) | 扩展本地运行＋模块化后端；两张生命周期图与职责边界 |
-| 6 | [通用运行契约](design/WebGuideAI-运行契约-v0.1.md)＋[协作适配契约](design/GitHub协作适配契约-v0.1.md) | 通用状态／消息与 SC02 页面／提交／PR 证据分别定义；Pages 专有部分保留原范围 |
-| 7 | [工程配置](design/WebGuideAI-工程配置与开发方式-v0.1.md)＋[引导交互](design/WebGuideAI-引导交互-v0.1.md) | TS／React／WXT、Node／Fastify 方向；侧栏＋页面高亮；依赖与真实 DOM 待验证 |
-| 8 | [11 月 18 日实施计划](design/首轮工程实施计划-2026-11-18.md) | 5 项未执行任务，先建立协作模拟闭环，再接真实 GitHub、AI 与反馈 |
+| 6 | [通用运行契约](design/WebGuideAI-运行契约-v0.1.md)＋[协作适配契约](design/GitHub协作适配契约-v0.1.md) | 通用状态／消息与 SC02 证据；已补 8 阶段／12 步对照、Code 源码读取路径、提交去向检查；Pages 专有部分另留 |
+| 7 | [工程配置](design/WebGuideAI-工程配置与开发方式-v0.1.md)＋[引导交互](design/WebGuideAI-引导交互-v0.1.md) | TS／React／WXT、Node／Fastify；交互示意和状态已对齐 SC02，依赖与真实 DOM 待验证 |
+| 8 | [11 月 18 日实施计划](design/首轮工程实施计划-2026-11-18.md) | 5 项未执行任务；限定容量／停止的最小实现，先建协作模拟闭环，再验证真实源码读取并扩展 GitHub、AI 与反馈 |
 
 [14 条用户故事](course/week10/用户故事.md)是完整需求的简要阅读入口，按 FR／UC 追溯；[课程交付包](course/week10/README.md)整理讲稿、过程和课堂准备。格式源文件见 [v1 Schema](design/contracts/tutorial.schema.json)、[v2 Schema](design/contracts/tutorial-v2.schema.json)、[协作教程样例](design/contracts/collaboration.tutorial.json)。
 

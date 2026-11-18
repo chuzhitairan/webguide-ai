@@ -13,6 +13,21 @@
 
 页面内说明按纯文本显示，目标动态取任务卡中的参数；不引入可执行模板或任意变量表达式。多控件表单由适配器按本地已观察阶段选择一个定位器分支，阶段明确且恰有一个可见目标时才指示，否则待确认。它只决定本步指向哪里，不能另行改变全局步骤。
 
+### 业务阶段与教程步骤对照
+
+| SC02-A 业务阶段 | 协作样例的稳定 step id（按执行顺序） |
+| --- | --- |
+| 1 确认任务 | inspect-issue |
+| 2 认领任务 | claim-issue |
+| 3 创建工作分支 | open-branch-menu → name-working-branch → create-working-branch |
+| 4 编辑文档 | open-document-editor → edit-document |
+| 5 提交修改 | commit-document |
+| 6 准备 PR | inspect-comparison |
+| 7 发起 PR | describe-pr → create-pr |
+| 8 核对并交接 | verify-handoff |
+
+本表用于规格追溯和阅读，不新增 stageId 或改变 v1／v2 Schema；运行器按 steps 顺序执行。首轮侧栏可只显示 12 步，后续确需通用分组时再设计格式，不把这份 SC02 对照写进通用协调器。
+
 ## 2. 任务与自动绑定
 
 `CollaborationTarget` 是 TaskTarget 的一个 profile，字段如下。`unknown` 与空集合区分：未读到负责人不是“无人负责”，未读全文件不是“没有其他文件”。
@@ -43,7 +58,7 @@
 | issue／collab.issue | repo+issueNumber | number、state、assignees、loggedInMember；负责人列表完整性 |
 | repository-branch／collab.branch | repo+branch | branch、headSha；分支表单的 sourceBranch/sourceSha、nameMatches、collision 状态（可未知） |
 | repository-file／collab.file | repo+baseSha+headSha+path+side | side=base/head、commitSha、path、contentHash、byteLength、complete；base 另给 beforeCount、markerAbsent、expectedHeadHash，见下文 |
-| file-editor／collab.editor | repo+headBranch+path | contextMatches、editorReadable、dirty=true/false/unknown、previewMatches=true/false/unknown、formStage；不返回输入正文／提交说明 |
+| file-editor／collab.editor | repo+headBranch+path | contextMatches、editorReadable、dirty=true/false/unknown、previewMatches=true/false/unknown、formStage；提交对话框另读 commitMode=current-branch/new-branch/unknown、destinationBranch 或 unknown，不返回输入正文／提交说明 |
 | commit／collab.commit | repo+commitSha | sha、parentShas、branchContext、目标文件读取引用；父提交列表完整性 |
 | comparison／collab.comparison | repo+baseSha+headSha | base/head 分支及完整 tip SHA、completeFiles、files[{oldPath,path,status}]、completeCommits、commitShas、fileObservationIds、formStage、titlePresent、issueReferenceMatches |
 | pull-request／collab.pr | repo+number | author、base/head 仓库和分支、baseSha/headSha、state、isDraft、issueReferenceMatches、reviewRequests、reviewState、checksState；未知字段单列 |
@@ -55,6 +70,14 @@
 采集器按当前步骤按需读取已授权目标页面；补证页可显示明确入口，用户自行导航。未保存输入为 true 或 unknown 时先提醒保存／保留，扩展不自动跳页。提交后核对文件／commit／PR 的补证可以跨标签；不要求当场同时打开所有页。
 
 完整正文只在页面内存用于本地比对，采集返回摘要。128 KiB 是本地文件读取上限，单条消息仍为 64 KiB，不传正文绕过消息限额。折叠／截断／分页未遍历完、文件过大／二进制／重命名、无法读取原始文本或完整 SHA，均返回 unknown 和具体补查位置。首轮不解析隐藏框架内部状态、不申请 GitHub API 令牌；真实 DOM 无法支持的项明确列入适配缺口，不能让 AI 代判。
+
+### 不可变文件的源码读取路径
+
+首个真实 GitHub 适配方案使用用户可见的 **Code 源码视图**：从已核对的提交／比较／PR 对象取得完整 baseSha、headSha 和指定路径，给出相应不可变文件页的补证入口，由用户打开并在需要时切到 Code。采集器重新确认仓库、完整提交身份、路径和源码视图，只在本地读取完整原文；Markdown Preview 或渲染后的段落不作原文来源。GitHub 的视图区别见[非代码文件说明](https://docs.github.com/en/repositories/working-with-files/using-files/working-with-non-code-files)。
+
+Code 视图存在不等于 complete=true：须在真实页面验证完整性，包括空行、Unicode 和末尾换行。不得把行号、折叠提示或加载占位混入正文，也不依据惯例补造末尾换行。无法可靠读取任一部分即 read-incomplete／unknown，提示缺哪一份源码，不反复要求用户重做提交。补证仍属于当前步骤，不另计为业务阶段；编辑器有未保存输入时先提示保留，再由用户决定导航。
+
+真实适配开工时先验证“不可变 SHA 身份＋Code 原文读取”这一条路径；不支持时先解决采集方案再扩展其余页面。页面上下文 fetch／Raw 是后续备选，须分别验证私有仓库授权、重定向／实际来源、响应为原文及读取边界后再修订契约，当前不默认复用登录态发起后台请求。模拟页则显式提供同一不可变版本的源码／预览切换，用来验证视图选择和摘要规则。
 
 PR 文件列表和提交列表必须完整；只看到第一项不能设置 complete。文件比对读取 baseSha 和 headSha 指向的不可变版本（禁止拿最新分支正文冒充某 SHA 的文件）；完整 changed-files 列表仅有指定路径且状态为 modified。比较／PR 版本变化使这些摘要失效。
 
@@ -81,7 +104,9 @@ PR 文件列表和提交列表必须完整；只看到第一项不能设置 comp
 
 缺少结果页面但当前操作前提满足、唯一目标可操作时返回 actionable；正在提交且结果未定返回 wait，提供查现有结果路径；缺关键字段返回 unknown。已知对象冲突／失败返回 blocked。普通已完成步骤可以新查后跳过；返回查看旧步骤遵守 review 模式，不重复网站操作。输入步骤通过不等于保存步骤通过，最终判断不依赖点击记录。
 
-原生表单可能多次局部重绘。`commit-or-saved-status` 在编辑器按钮、提交对话框说明输入、确认按钮、已保存摘要中选择唯一明确的当前阶段；每阶段先核对目标分支。`pr-description` 在标题缺失时指标题，否则指正文；`create-pr-or-existing-link` 在尚无结果时指创建入口，已知 Draft 且其内容证据已满足时可指 Ready for review，普通 PR 只提供实际 PR 链接／摘要。选择规则不能靠“取第一个可见按钮”，读不清阶段即停止指示。
+原生表单可能多次局部重绘。`commit-or-saved-status` 在编辑器按钮、提交对话框说明输入、提交去向、确认按钮、已保存摘要中选择唯一明确的当前阶段；每阶段先核对目标分支。打开提交对话框后，只有 commitMode=current-branch 且 destinationBranch=headBranch 时才指示最终提交；选中 new-branch 时先指示用户改为提交到当前工作分支，去向读不清返回 unknown。选项不可改或当前分支不符时返回 blocked；不要求关闭分支保护。用户已经另建分支并提交时明确报告目标偏离，保留已保存结果入口；只有用户确认改目标、增加 targetRevision 并重查后才能绑定新分支，不静默接纳。
+
+`pr-description` 在标题缺失时指标题，否则指正文；`create-pr-or-existing-link` 在尚无结果时指创建入口，已知 Draft 且其内容证据已满足时可指 Ready for review，普通 PR 只提供实际 PR 链接／摘要。选择规则不能靠“取第一个可见按钮”，读不清阶段即停止指示。提交去向符合只是操作前提，commit-saved 仍需锚点及已保存文件结果。提交选项的平台依据见[编辑文件](https://docs.github.com/en/repositories/working-with-files/managing-files/editing-files)。
 
 ## 5. 终验与版本一致性
 

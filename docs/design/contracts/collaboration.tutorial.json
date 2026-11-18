@@ -166,7 +166,7 @@
       "id": "commit-document",
       "pageRole": "file-editor",
       "title": "提交并核对保存结果",
-      "instruction": "自行预览修改、打开提交表单、填写说明并确认提交到工作分支；随后按提示核对提交与文件结果。",
+      "instruction": "自行预览修改、打开提交表单并填写说明；确认提交到既定的当前工作分支，若选了另建分支先更正，再提交并核对提交与源码结果。",
       "action": "click",
       "target": {
         "locatorId": "collab.commit-or-saved-status"
