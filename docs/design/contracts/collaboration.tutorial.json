@@ -1,0 +1,252 @@
+{
+  "schemaVersion": 2,
+  "tutorialId": "github.collaboration.first-pr",
+  "version": "0.1.0-draft",
+  "title": "认领任务并提交第一个文档 PR",
+  "goal": "在同一仓库完成单文档小修改，核对可评审 PR 并交接；评审和合并另行进行。",
+  "environment": {
+    "browsers": [
+      "edge"
+    ],
+    "pageLanguages": [
+      "en"
+    ],
+    "instructionLanguage": "zh-CN"
+  },
+  "adapterId": "github_collaboration_v1",
+  "parameterProfile": "collaboration_pr_v1",
+  "sources": [
+    {
+      "id": "github-flow",
+      "title": "GitHub flow",
+      "url": "https://docs.github.com/en/get-started/using-github/github-flow"
+    },
+    {
+      "id": "issue-assignment",
+      "title": "分派 Issue",
+      "url": "https://docs.github.com/en/issues/tracking-your-work-with-issues/using-issues/assigning-issues-and-pull-requests-to-other-github-users"
+    },
+    {
+      "id": "github-branches",
+      "title": "管理仓库分支",
+      "url": "https://docs.github.com/en/pull-requests/how-tos/commit-changes/managing-branches-within-your-repository"
+    },
+    {
+      "id": "github-edit-file",
+      "title": "编辑文件",
+      "url": "https://docs.github.com/en/repositories/working-with-files/managing-files/editing-files"
+    },
+    {
+      "id": "github-create-pr",
+      "title": "创建 Pull Request",
+      "url": "https://docs.github.com/en/pull-requests/how-tos/create-pull-requests/creating-a-pull-request"
+    }
+  ],
+  "steps": [
+    {
+      "id": "inspect-issue",
+      "pageRole": "issue",
+      "title": "理解本次任务",
+      "instruction": "核对 Issue、验收条件与成员；Issue 是任务单，PR 是修改提案，Project 是看板。",
+      "action": "inspect",
+      "target": {
+        "locatorId": "collab.issue-summary"
+      },
+      "check": {
+        "type": "adapter",
+        "checkerId": "collab.issue-context"
+      },
+      "sourceIds": [
+        "github-flow"
+      ]
+    },
+    {
+      "id": "claim-issue",
+      "pageRole": "issue",
+      "title": "认领任务",
+      "instruction": "在 Assignees 中指派自己；已经指派则核对后继续，别人负责时先协调。",
+      "action": "click",
+      "target": {
+        "locatorId": "collab.assignees-or-assigned-status"
+      },
+      "check": {
+        "type": "adapter",
+        "checkerId": "collab.issue-assigned"
+      },
+      "sourceIds": [
+        "issue-assignment"
+      ]
+    },
+    {
+      "id": "open-branch-menu",
+      "pageRole": "repository-branch",
+      "title": "从基准分支准备新分支",
+      "instruction": "确认当前为任务基准分支，再打开分支入口。",
+      "action": "click",
+      "target": {
+        "locatorId": "collab.branch-menu"
+      },
+      "check": {
+        "type": "adapter",
+        "checkerId": "collab.branch-form"
+      },
+      "sourceIds": [
+        "github-branches"
+      ]
+    },
+    {
+      "id": "name-working-branch",
+      "pageRole": "repository-branch",
+      "title": "填写工作分支名",
+      "instruction": "在分支表单输入任务卡中的独立分支名；核对来源，不覆盖同名分支。",
+      "action": "input",
+      "target": {
+        "locatorId": "collab.branch-name"
+      },
+      "check": {
+        "type": "adapter",
+        "checkerId": "collab.branch-name-ready"
+      },
+      "sourceIds": [
+        "github-branches"
+      ]
+    },
+    {
+      "id": "create-working-branch",
+      "pageRole": "repository-branch",
+      "title": "创建并核对工作分支",
+      "instruction": "由你点击创建；系统随后核对实际分支。已有正确分支不重复创建。",
+      "action": "click",
+      "target": {
+        "locatorId": "collab.create-branch-or-branch-status"
+      },
+      "check": {
+        "type": "adapter",
+        "checkerId": "collab.branch-ready"
+      },
+      "sourceIds": [
+        "github-branches"
+      ]
+    },
+    {
+      "id": "open-document-editor",
+      "pageRole": "repository-file",
+      "title": "打开指定文档的编辑器",
+      "instruction": "核对工作分支和路径，再点击编辑。",
+      "action": "click",
+      "target": {
+        "locatorId": "collab.edit-file"
+      },
+      "check": {
+        "type": "adapter",
+        "checkerId": "collab.editor-open"
+      },
+      "sourceIds": [
+        "github-edit-file"
+      ]
+    },
+    {
+      "id": "edit-document",
+      "pageRole": "file-editor",
+      "title": "修改指定段落",
+      "instruction": "由你输入任务要求的小修改；输入内容不会被当作已经提交的证据。",
+      "action": "input",
+      "target": {
+        "locatorId": "collab.document-editor"
+      },
+      "check": {
+        "type": "adapter",
+        "checkerId": "collab.edit-context"
+      },
+      "sourceIds": [
+        "github-edit-file"
+      ]
+    },
+    {
+      "id": "commit-document",
+      "pageRole": "file-editor",
+      "title": "提交并核对保存结果",
+      "instruction": "自行预览修改、打开提交表单、填写说明并确认提交到工作分支；随后按提示核对提交与文件结果。",
+      "action": "click",
+      "target": {
+        "locatorId": "collab.commit-or-saved-status"
+      },
+      "check": {
+        "type": "adapter",
+        "checkerId": "collab.commit-saved"
+      },
+      "sourceIds": [
+        "github-edit-file"
+      ]
+    },
+    {
+      "id": "inspect-comparison",
+      "pageRole": "comparison",
+      "title": "核对 PR 的分支和文件差异",
+      "instruction": "进入目标 base 与 head 的比较页；核对只有指定文档及预期改动。比较页尚不是实际 PR。",
+      "action": "inspect",
+      "target": {
+        "locatorId": "collab.comparison-summary"
+      },
+      "check": {
+        "type": "adapter",
+        "checkerId": "collab.comparison-ready"
+      },
+      "sourceIds": [
+        "github-create-pr"
+      ]
+    },
+    {
+      "id": "describe-pr",
+      "pageRole": "comparison",
+      "title": "填写 PR 说明",
+      "instruction": "填写标题和说明，普通引用目标 Issue；确认内容已完成。",
+      "action": "input",
+      "target": {
+        "locatorId": "collab.pr-description"
+      },
+      "check": {
+        "type": "adapter",
+        "checkerId": "collab.pr-description-ready"
+      },
+      "sourceIds": [
+        "github-create-pr"
+      ]
+    },
+    {
+      "id": "create-pr",
+      "pageRole": "comparison",
+      "title": "创建可评审 PR",
+      "instruction": "由你确认并点击创建普通 PR；Draft 可保留进度，但不算本段已交付。",
+      "action": "click",
+      "target": {
+        "locatorId": "collab.create-pr-or-existing-link"
+      },
+      "check": {
+        "type": "adapter",
+        "checkerId": "collab.pr-created"
+      },
+      "sourceIds": [
+        "github-create-pr"
+      ]
+    },
+    {
+      "id": "verify-handoff",
+      "pageRole": "pull-request",
+      "title": "核对并交接评审",
+      "instruction": "核对实际 PR 与本次提交，显示真实评审与检查状态；可由你另行请求真人评审。",
+      "action": "inspect",
+      "target": {
+        "locatorId": "collab.pr-summary"
+      },
+      "check": {
+        "type": "adapter",
+        "checkerId": "collab.pr-handoff"
+      },
+      "sourceIds": [
+        "github-create-pr"
+      ]
+    }
+  ],
+  "finalVerifierId": "github_collaboration_v1"
+}

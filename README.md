@@ -9,6 +9,7 @@ WebGuide AI 帮助用户在真实网页中理解并完成操作，并支持作�
 - [版本交付范围](docs/requirements/版本交付范围-2026-11-17.md)：先完成 GitHub 协作引导，再建设教程创建与维护；[首场景调整](docs/requirements/首场景调整-GitHub协作-2026-11-17.md)。
 - [GitHub 协作首场景规格](docs/requirements/GitHub协作首场景规格-v0.1.md)：首次认领与文档 PR、已有进度、受阻处理及 14 项验收草案。
 - [核心设计](docs/design/WebGuideAI-核心设计-v0.1.md)：扩展本地运行＋模块化后端。
+- [协作适配契约](docs/design/GitHub协作适配契约-v0.1.md)与[首轮实施计划](docs/design/首轮工程实施计划-2026-11-18.md)：教程输入动作、提交／PR 证据及协作模拟页运行基础；尚未实施。
 - [开源研究](research/notes/WebGuideAI-开源项目调研.md)与[源码索引](research/sources.json)：9 个项目的固定版本与复用分析。
 - [贡献流程](CONTRIBUTING.md)、[团队与过程台账](docs/course/week10/团队与过程台账.md)、[课程时间表](课程安排/课程任务与时间节点.md)。
 

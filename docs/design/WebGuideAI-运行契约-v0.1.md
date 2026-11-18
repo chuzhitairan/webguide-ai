@@ -2,11 +2,11 @@
 
 日期：2026-11-17。T03 设计草案，衔接[核心设计](WebGuideAI-核心设计-v0.1.md)与[完整 SRS](../requirements/WebGuideAI-SRS-v0.2.md)。本文定义通用引导运行机制，当前契约样例为 Pages；教程获取、编辑发布和探索模块随后接入同一内容版本，不在此定义其全部业务接口。
 
-场景更新：发起人已将 [GitHub 小组协作入门](../requirements/首场景调整-GitHub协作-2026-11-17.md)调整为首个交付及展示场景。本文的 Pages 参数、能力注册和终验仍仅适用于 Pages；通用消息与会话机制可复用，新场景的任务身份、步骤、能力注册及终验契约尚需补齐，不能直接按现有 Pages 样例实现新首版。
+2026-11-18 场景更新：发起人已将 [GitHub 小组协作入门](../requirements/首场景调整-GitHub协作-2026-11-17.md)调整为首个交付及展示场景。[协作适配契约](GitHub协作适配契约-v0.1.md)已补充 SC02 的任务身份、页面观察、能力注册和终验；本文的 Pages 专有部分保留适用范围，通用消息与会话机制由两种适配器复用。
 
-当前输入为 [SC02 路径与验收草案](../requirements/GitHub协作首场景规格-v0.1.md)。适配修订需覆盖用户输入步骤、工作分支创建、文件／提交／PR 关联、Draft 与普通 PR、编辑器未保存状态及最小证据过滤；本轮不修改 Schema 或假定现有 action 枚举已覆盖这些行为。
+当前输入为 [SC02 路径与验收草案](../requirements/GitHub协作首场景规格-v0.1.md)。格式 v2 在独立 Schema 中新增 input 动作；格式 v1 与 Pages 样例保持兼容。两者都不授权扩展代替用户填表或提交。
 
-阅读顺序：第 1–3 节看数据，第 4–7 节看运行，第 8–10 节看 Pages 和后端边界。结构源文件为[教程 Schema](contracts/tutorial.schema.json)和[Pages 教程样例](contracts/pages.tutorial.json)。这是设计输入，尚未创建正式工程或验证真实 GitHub 定位器。
+阅读顺序：第 1–2 节看通用格式，第 4–7 节看运行；SC02 专有部分看协作适配契约，第 3、8 节为 Pages，第 9 节为共用后端边界。结构源文件为[v1 Schema](contracts/tutorial.schema.json)、[v2 Schema](contracts/tutorial-v2.schema.json)、[Pages 样例](contracts/pages.tutorial.json)和[协作样例](contracts/collaboration.tutorial.json)。这是设计输入，尚未创建正式工程或验证真实 GitHub 定位器。
 
 ## 1. 采用的结构与责任
 
@@ -29,14 +29,14 @@
 | --- | --- |
 | schemaVersion／tutorialId／version | 格式版本、稳定教程 ID、内容版本；三者不与 taskId 混用 |
 | title／goal／environment | 面向用户的说明及浏览器／页面语言范围 |
-| adapterId／parameterProfile | 随扩展打包的适配器与参数格式；当前为 github_pages_v1 和 pages_branch_v1 |
+| adapterId／parameterProfile | 随扩展打包的适配器与参数格式；Pages 为 github_pages_v1／pages_branch_v1，协作为 github_collaboration_v1／collaboration_pr_v1 |
 | sources | 来源 ID、标题、URL；步骤 sourceIds 必须引用其中项目 |
 | steps | 有序步骤；每项有稳定 id、pageRole、说明、动作类型、target、check 和 sourceIds |
 | finalVerifierId | 已注册的最终校验器；不因最后一项步骤通过就完成任务 |
 
-Step 的 action 只有 select、click、inspect、wait，表示用户应做什么，不指挥扩展点击。target 为已注册 locatorId，或受限 CSS＋可选精确文本；后者为后续录制／编辑提供数据入口。CSS 仅在已获准页面内查找主文档目标，不执行代码；首版跨 frame／封闭 Shadow DOM 目标不支持时明确提示。定位结果分 unique-visible、missing、ambiguous、not-visible、unsupported、read-error，只有唯一且可见时可以展示指示。
+Step 的 action 在 v1 中为 select、click、inspect、wait，v2 增加 input，表示用户应做什么，不指挥扩展点击或填表。input 的局部检查最多证明输入／预览条件，持久保存需后续独立结果证据。按 schemaVersion 分派校验器，未知版本明确拒绝，不把 v2 内容塞入 v1。target 为已注册 locatorId，或受限 CSS＋可选精确文本；后者为后续录制／编辑提供数据入口。CSS 仅在已获准页面内查找主文档目标，不执行代码；首版跨 frame／封闭 Shadow DOM 目标不支持时明确提示。定位结果分 unique-visible、missing、ambiguous、not-visible、unsupported、read-error，只有唯一且可见时可以展示指示。
 
-check 有两种：dom 使用 exists／visible／text-equals／value-equals，可用 check.target 指定检查对象，省略时检查步骤 target；adapter 引用已注册的专有 checkerId。dom 断言只证明它检查的局部条件，不能证明保存、部署或业务成功；终验统一交给 github_pages_v1。
+check 有两种：dom 使用 exists／visible／text-equals／value-equals，可用 check.target 指定检查对象，省略时检查步骤 target；adapter 引用已注册的专有 checkerId。dom 断言只证明它检查的局部条件，不能证明保存、部署或业务成功；终验交给当前教程 finalVerifierId 对应的已注册校验器。
 
 step.pageRole 表示当前操作／高亮所在页面，不要求它等于结果页面。每个已注册 checker 声明可读的 readRoles、所需观察种类及关联约束；协调器只向符合声明和目标身份的页面发检查请求。例如从设置页点击部署链接，指示留在设置页链接上，完成条件是关联 run 的工作流页面已打开；不能把任意工作流标签页当作成功。跨页等待期间先撤销旧指示，再在结果页面核对或显示具体导航提示。
 
