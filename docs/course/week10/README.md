@@ -25,11 +25,11 @@
 | --- | --- | --- |
 | 五人组队 | 人数已确认，已在课程群报备；名单待补 | 组长手动添加成员，填团队台账 |
 | 选题与教师确认 | 组长确认尚未取得教师确认 | 记录选题 Issue 与教师意见 |
-| 调研报告与 14 条故事 | 已提交 [待评审 PR #3](https://github.com/chuzhitairan/webguide-ai/pull/3)，故事附优先级与 SP 初估 | 组长核读后请成员集中评审；不以访谈为硬前置 |
+| 调研报告与 14 条故事 | 通过 [PR #3](https://github.com/chuzhitairan/webguide-ai/pull/3) 交付，故事附优先级与 SP 初估 | 组长直接验收；访谈后移，估算在实施时细化 |
 | 独立用户访谈 | 未取得可确认的纪要 | 本轮延期；原型后按需要访谈／试用，再追加真实记录 |
 | 发起人体验与公开研究 | 已有记录 | 报告分别标明来源 |
 | 正式课程仓库及看板 | [私有仓库](https://github.com/chuzhitairan/webguide-ai)、[私有看板](https://github.com/users/chuzhitairan/projects/1)已创建并关联；main 保护已保存核对 | 组长添加成员及必要的看板访问权限 |
-| 调研报告 PR / 人的评审 / 合并 | [PR #3](https://github.com/chuzhitairan/webguide-ai/pull/3) 已转为可评审；尚未有人批准或合并 | 核读并处理其他成员真实 Review 后，按分支保护合并 |
+| 调研报告 PR / 验收 / 合并 | 组长决定直接通过 [PR #3](https://github.com/chuzhitairan/webguide-ai/pull/3)，本轮免成员 Review | 本 PR 合入 main 后完成文档收尾；不记作成员 Approve |
 | 课堂讲解 | Markdown 讲稿已备；主讲人与演练待定 | 计时并补最新调研结果 |
 
 两个课程里程碑：[11 月 20 日调研与初步需求](https://github.com/chuzhitairan/webguide-ai/milestone/1)、[11 月 27 日 SRS 评审](https://github.com/chuzhitairan/webguide-ai/milestone/2)。四个有限工作包已建为 [#4 新手访谈](https://github.com/chuzhitairan/webguide-ai/issues/4)、[#5 熟练用户访谈](https://github.com/chuzhitairan/webguide-ai/issues/5)、[#6 来源核查](https://github.com/chuzhitairan/webguide-ai/issues/6)、[#7 故事与讲稿核查](https://github.com/chuzhitairan/webguide-ai/issues/7)，本轮作为后续可选工作包，暂不分派，不作为文档交付前置。
