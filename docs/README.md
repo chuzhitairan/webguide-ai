@@ -1,10 +1,10 @@
 # 文档入口与当前基线
 
-更新：2026-11-19。
+更新于 2026-11-19。
 
-- **已合并**：调研报告、用户故事及需求与设计基线通过 [PR #3](https://github.com/chuzhitairan/webguide-ai/pull/3) 合入 `main`。
-- **待确认**：完整 SRS v0.2 仍为评审稿，SC02 细则和 14 项场景验收待核对与执行。课堂交付及待办见[课程包](course/week10/README.md)。
-- **开工入口**：[本机运行时和浏览器自动化预检](design/WebGuideAI-工程配置与开发方式-v0.1.md#9-开工前检查与小组接入)已记录，工程暂缓。恢复后从 [11 月 18 日实施计划的任务 1](design/首轮工程实施计划-2026-11-18.md#任务-1共享契约与可复现工具链)开始；真实 GitHub 源码短验证安排在任务 1 起步后、模拟采集与页面接线前。
+- **目前进度**：首轮工程已跑通本机协作练习。[运行说明](../README.md#运行首轮协作练习)包含安装、加载扩展和运行测试的步骤。
+- **需求基线**：调研报告、用户故事及需求与设计基线通过 [PR #3](https://github.com/chuzhitairan/webguide-ai/pull/3) 合入 `main`。SRS v0.2 仍是评审稿，SC02 的 14 项场景验收待执行。
+- **下一轮**：先接入真实 GitHub 协作。[源码短验证](design/首轮工程实施计划-2026-11-18.md#真实-github-源码短验证)记录了需要解决的源码读取问题。
 
 [项目经验入口](experience/README.md)统一记录协作、扩展与演示经验，8 页演示与讲稿见[课堂材料](course/week10/presentation/README.md)。这两项整理对应 [PR #8](https://github.com/chuzhitairan/webguide-ai/pull/8)。
 
@@ -18,17 +18,16 @@
 | 4 | [SC02 场景规格](requirements/GitHub协作首场景规格-v0.1.md) | 同仓库、已获写权限、单文档练习；终点为正确普通 PR 已提交待评审，14 项场景验收待执行 |
 | 5 | [核心设计](design/WebGuideAI-核心设计-v0.1.md) | 扩展本地运行＋模块化后端；两张生命周期图与职责边界 |
 | 6 | [通用运行契约](design/WebGuideAI-运行契约-v0.1.md)＋[协作适配契约](design/GitHub协作适配契约-v0.1.md) | 通用状态／消息与 SC02 证据；已补 8 阶段／12 步对照、Code 源码读取路径、提交去向检查；Pages 专有部分另留 |
-| 7 | [工程配置](design/WebGuideAI-工程配置与开发方式-v0.1.md)＋[引导交互](design/WebGuideAI-引导交互-v0.1.md) | TS／React／WXT、Node／Fastify；交互示意和状态已对齐 SC02，依赖与真实 DOM 待验证 |
-| 8 | [11 月 18 日实施计划](design/首轮工程实施计划-2026-11-18.md) | 5 项未执行任务；先建协作模拟闭环，提早验证真实源码读取能力，随后接入 GitHub、AI 与反馈 |
+| 7 | [工程配置](design/WebGuideAI-工程配置与开发方式-v0.1.md)＋[引导交互](design/WebGuideAI-引导交互-v0.1.md) | TS／React／WXT、Node／Fastify，用于本机练习。真实 GitHub 和 Edge 原生侧栏待验证 |
+| 8 | [首轮实施计划](design/首轮工程实施计划-2026-11-18.md) | 五项任务的实施记录、模拟练习测试结果和真实 GitHub 源码读取的待办 |
 
 [14 条用户故事](course/week10/用户故事.md)按 FR／UC 追溯，附交付优先级和实施时细化的切片 SP 初估。格式源文件见 [v1 Schema](design/contracts/tutorial.schema.json)、[v2 Schema](design/contracts/tutorial-v2.schema.json)、[协作教程样例](design/contracts/collaboration.tutorial.json)。
 
 ## 已有成果与待完成事项
 
-- 已有：固定版本的开源研究、Pages 及生命周期局部实验、私有仓库与看板。
-- 2026-11-18 组长直接验收 PR #3 的文档交付，本次免成员 Review。后续 PR 继续按既有保护规则处理。
-- 后续验证：原型可操作后邀请新手试用；独立访谈按需要补充，四个工作包暂不分派，不阻塞当前文档整理。
-- 尚未完成：正式产品工程、真实 GitHub 协作适配、模型集成和场景验收。教师反馈与课堂演练见[课堂交付状态](course/week10/README.md#11-月-20-日调研与初步需求)。
+- 首轮工程完成了教程校验、扩展会话管理、本机协作练习、后端健康服务和自动化检查。
+- 既有成果包括固定版本的开源研究、Pages 及生命周期局部实验、私有仓库与看板。
+- 真实 GitHub 协作、模型集成、反馈和 SC02 验收列入后续工作。原型可操作后邀请新手试用，按需要补充独立访谈。教师反馈与课堂演练见[课堂交付状态](course/week10/README.md#11-月-20-日调研与初步需求)。
 
 首轮工程、完整首版和全系统是三个不同范围。首轮的模拟页通过不算真实 GitHub 验收；最简反馈仍在完整首版范围，反馈接收／可见性／保留约定须在其实现前补齐，仅有本地反馈草稿不算已交付 FR18。
 

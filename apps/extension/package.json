@@ -1,0 +1,25 @@
+{
+  "name": "@webguide/extension",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wxt --config wxt.test.config.ts",
+    "build": "wxt build",
+    "build:test": "wxt build --config wxt.test.config.ts --mode test",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@noble/hashes": "2.0.1",
+    "@webguide/contracts": "0.0.1",
+    "driver.js": "1.12.1",
+    "react": "19.3.1",
+    "react-dom": "19.3.1"
+  },
+  "devDependencies": {
+    "@types/react": "19.2.2",
+    "@types/react-dom": "19.2.2",
+    "@wxt-dev/module-react": "1.2.2",
+    "wxt": "0.21.5"
+  }
+}

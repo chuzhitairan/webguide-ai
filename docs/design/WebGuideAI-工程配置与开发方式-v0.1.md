@@ -19,14 +19,14 @@
 | 项目 | 拟采用的基线 | 落地方式 |
 | --- | --- | --- |
 | Node.js | 24 LTS；首次工程基线 24.22.3 | 项目记录 `.node-version` 和 CI 版本；不直接替换全局 Node |
-| npm | 11；本机 Node 24.22.3 随附 11.19.1 | 任务 1 确认并记录精确版本；提交单一 package-lock.json，后续干净安装使用 npm ci |
+| npm | 11.19.1 | 根 `package.json` 记录版本，使用 `npm ci` 按同一份锁文件安装 |
 | WXT | 0.21.5 作为首个候选 | React 模块按实际 peerDependencies 配套；不另外固定一套冲突的 Vite |
 | TypeScript／React | TypeScript 5.9 系列、React 19 系列作为候选 | 严格类型检查；扩展使用 Bundler 解析，后端／共享包采用 NodeNext ESM |
 | Fastify | 5 系列作为候选 | 后端先支持健康检查，随后接模型网关；提供 app 工厂以便注入测试 |
 | Driver.js | 从已阅读的 1.12.1 候选开始 | 直接依赖并保留许可；仅通过渲染适配层使用，不复制整个上游工程 |
 | 检查 | Vitest、Playwright、Ajv 2020、ESLint | 使用与选中 WXT／Node 兼容的稳定版本，首次安装时记录确切版本 |
 
-2026-11-19 已通过 NVM 并行安装并运行 Node 24.22.3／npm 11.19.1。本机默认仍为 Node 25.5.0／npm 11.15.0；本次预检直接调用 Node 24 的可执行文件。项目依赖版本在任务 1 核对 `engines`、`peerDependencies` 并通过正式安装、构建后写入清单及锁文件。需要调整运行时补丁时，同步更新本地说明与 CI。
+2026-11-19 已通过 NVM 并行安装并运行 Node 24.22.3／npm 11.19.1。本机默认仍为 Node 25.5.0／npm 11.15.0，项目检查调用 Node 24 的可执行文件。首轮已按锁文件完成干净安装和构建。调整运行时补丁时，同步更新本地说明与 CI。
 
 Node 24 是仍受支持、较成熟的 LTS 选择，并非当日最新主版本。依据：[Node 24.22.3 发布记录](https://nodejs.org/en/blog/release/v24.22.3)、[Node 发布计划](https://github.com/nodejs/Release)。WXT 的安装与测试入口见[安装文档](https://wxt.dev/guide/installation)、[单元测试](https://wxt.dev/guide/essentials/unit-testing)；Fastify 按其[支持策略](https://fastify.dev/docs/latest/Reference/LTS/)核对运行时。
 
@@ -123,7 +123,7 @@ CI 最小入口为 Node 24.22.3＋npm ci＋npm run check。扩展集成检查在
 
 后续接真实 GitHub 协作页面、提交／PR 证据，再接当前步骤 AI 与最简反馈；完成 SC02 全部必要验收后才称首版交付。Pages 为后续教程候选。反馈接收与清除约定需在反馈实现前明确，本地草稿不等于维护者已收到。
 
-当前完成开工前的环境和协作准备，正式工程暂缓。真实网站检查并入对应实现，原生浏览器行为集中兼容验证。
+首轮工程已跑通本机协作练习。真实 GitHub 页面和 Edge 原生侧栏的兼容检查随下一轮继续。
 
 ## 9. 开工前检查与小组接入
 
@@ -132,16 +132,16 @@ CI 最小入口为 Node 24.22.3＋npm ci＋npm run check。扩展集成检查在
 | 项目 | 结果与覆盖范围 |
 | --- | --- |
 | 项目运行时 | NVM 已并行安装 Node 24.22.3／npm 11.19.1，在含中文路径的工作区用该 Node 跑既有两个实验的 26 项 Node 检查，全部通过。 |
-| 依赖解析 | 临时目录中用 `--package-lock-only --ignore-scripts --engine-strict --strict-peer-deps` 通过候选组合解析。WXT 0.21.5、React 模块 1.2.2、Vite 8.3.8、TypeScript 5.9.3、React／React DOM 19.3.1、Fastify 5.12.8、Driver.js 1.12.1。检查工具候选为 Ajv 8.20.0、Vitest 4.1.12、ESLint 9.39.5、Playwright Test 1.62.1。正式安装与构建由任务 1 验证。 |
+| 依赖解析 | 预检用 `--package-lock-only --ignore-scripts --engine-strict --strict-peer-deps` 检查版本组合。首轮已通过 `npm ci` 和 `npm run check`，精确版本以根目录 `package-lock.json` 为准。 |
 | 浏览器自动化 | 使用宿主 Playwright 1.62.1 与新取得的配套 Chromium 151.0.7922.34（修订 1234），在独立临时配置加载本地 MV3 生命周期实验。实际验证了后台与页面连接、高亮出现、主动暂停撤销、恢复，以及关闭扩展测试页后断连暂停并撤销高亮。 |
-| 适用范围 | 本次使用 `panel.html` 作为普通扩展页和自有回环模拟页。正式 WXT 构建、项目自己的 Playwright 回归入口、Edge 原生侧栏及真实 GitHub 采集在相应任务验证。 |
+| 适用范围 | 预检使用实验的 `panel.html` 与本机模拟页。首轮工程已用 `npm run test:e2e` 加载 WXT 构建并跑通练习。Edge 原生侧栏和真实 GitHub 采集待验证。 |
 | 开源复用 | 9 个本地上游副本的 HEAD 均与[来源清单](../../research/sources.json)一致。Driver.js 为渲染依赖候选，具体许可与可移植代码见[源码阅读索引](../../research/notes/源码阅读索引.md)。 |
 
-复现浏览器检查时，使用 Playwright 配套 Chromium 的独立持久化上下文，将解压扩展目录指向 [生命周期实验](../../experiments/extension-lifecycle-spike/README.md)。启动该实验的回环页面，等扩展后台就绪，然后在普通扩展标签页打开 `panel.html`。保持模拟设置页为活动标签，从测试页触发开始、暂停、恢复与断连，检查页面高亮和诊断记录。使用一次性浏览器配置，测试结束后关闭浏览器与本次启动的回环服务。项目自己的可重复入口随任务 5 落地。
+运行 `npm run test:e2e` 可复现首轮协作检查。要单独验证生命周期，可按[实验说明](../../experiments/extension-lifecycle-spike/README.md)启动模拟页，再从普通扩展标签页 `panel.html` 触发开始、暂停、恢复与断连，观察页面高亮及诊断记录。
 
 ### 开工后的接入顺序
 
-1. 组长先完成任务 1，将验证后的精确 Node／npm 版本、清单、根锁文件和安装说明随工程 PR 交付。Windows 成员可用 NVM 选择项目 Node 版本，确认 `node --version` 和 `npm --version` 后从根目录 `npm ci`。正式检查入口可用后，本地与 CI 使用同一版本和命令；共同升级通过独立 PR 验证。
+1. Windows 成员可用 NVM 选择项目 Node 版本，确认 `node --version` 和 `npm --version` 后从根目录运行 `npm ci`。本地与 CI 使用同一版本和检查命令，升级通过独立 PR 验证。
 2. 仅需要浏览器测试的成员配置项目 Playwright 配套 Chromium。版本以项目锁文件为准，隔离测试配置按每次运行创建；在 Windows 检查带空格和中文的路径。原生 Edge 兼容检查保留本机路径。
 3. 共享契约和会话协调由组长统筹。边界确定后，可按实际投入分出模拟页与反例、页面高亮与侧栏、Fastify 健康接口、测试复现与验收记录。每个工作包用 Issue 写清依赖接口、产物与完成条件，沿用[仓库协作约定](../../CONTRIBUTING.md)，当前保留为可选分工。
 4. 首轮用本机 Node 运行 Fastify 健康接口和模拟服务。后端需要数据库等配套服务或统一部署时，再考虑用 Docker Compose 固定服务与版本。浏览器扩展开发仍使用本机浏览器和独立测试配置。

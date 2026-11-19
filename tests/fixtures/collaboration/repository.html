@@ -1,0 +1,8 @@
+<h1>仓库分支</h1><dl><dt>当前分支</dt><dd id="current-branch">{{branch}}</dd><dt>当前提交</dt><dd id="branch-sha">{{sha}}</dd>
+<dt>来源分支</dt><dd id="source-branch">{{sourceBranch}}</dd><dt>来源提交</dt><dd id="source-sha">{{sourceSha}}</dd></dl>
+{{status}}
+<details id="branch-details"><summary id="branch-menu">打开分支菜单</summary><form method="post" action="action/branch">
+<input name="source" type="hidden" value="{{branch}}"><label>新分支名称 <input id="branch-name" name="branch" required></label>
+<button id="create-branch">创建分支</button></form></details>
+<h2>已有分支</h2><ul id="branches">{{branches}}</ul>
+<p><a id="open-file" href="{{fileUrl}}">查看练习文档</a></p>
