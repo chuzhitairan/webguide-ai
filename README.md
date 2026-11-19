@@ -1,26 +1,12 @@
 # WebGuide AI
 
-WebGuide AI 帮助用户在真实网页中理解并完成操作，并支持作者获取、编辑、验证和维护可复用教程。用户按页面内指示自行操作，系统核对步骤与结果，AI 结合上下文解释答疑。
+WebGuide AI 是一款网页操作引导扩展。它在页面上指出操作位置，在侧栏解释步骤，并核对用户操作后的结果。
 
-## 当前入口
-
-先看[文档入口与当前基线](docs/README.md)，它集中列出当前阅读顺序、实际状态和历史材料。
-
-- [第 1–2 次课交付包](docs/course/week10/README.md)：调研报告、14 条用户故事、访谈计划与过程记录；[当前演示材料](docs/course/week10/presentation/README.md)。
-- [项目经验入口](docs/experience/README.md)：协作、扩展与演示经验统一维护；助手工作入口见 [AGENTS.md](AGENTS.md)。
-- [完整系统 SRS v0.2](docs/requirements/WebGuideAI-SRS-v0.2.md)：完整业务与验收要求，当前为评审稿。
-- [版本交付范围](docs/requirements/版本交付范围-2026-11-17.md)：先完成 GitHub 协作引导，再建设教程创建与维护；[首场景调整](docs/requirements/首场景调整-GitHub协作-2026-11-17.md)。
-- [GitHub 协作首场景规格](docs/requirements/GitHub协作首场景规格-v0.1.md)：首次认领与文档 PR、已有进度、受阻处理及 14 项验收草案。
-- [核心设计](docs/design/WebGuideAI-核心设计-v0.1.md)：扩展本地运行＋模块化后端。
-- [协作适配契约](docs/design/GitHub协作适配契约-v0.1.md)与[首轮实施计划](docs/design/首轮工程实施计划-2026-11-18.md)：教程步骤、提交和 PR 的核对规则，以及本机练习的实施记录。
-- [开源研究](research/notes/WebGuideAI-开源项目调研.md)与[源码索引](research/sources.json)：9 个项目的固定版本与复用分析。
-- [贡献流程](CONTRIBUTING.md)、[团队与过程台账](docs/course/week10/团队与过程台账.md)、[课程时间表](课程安排/课程任务与时间节点.md)。
+**当前进度**　已跑通本机协作练习。下一轮接入真实 GitHub，随后加入 AI 答疑和反馈。[需求与项目进度](docs/README.md)
 
 ## 运行首轮协作练习
 
-首轮目标是在一个本机练习仓库里走完认领 Issue、建分支、改文档、提交和发起 PR。扩展在网页上指出当前位置，在侧栏说明接下来做什么。比如，已经在编辑框里填了新文字时，扩展会引导你先提交，再从保存后的文件核对结果。
-
-### 第一次运行
+从认领 Issue 开始，创建工作分支、修改文档、保存提交，再发起 PR。侧栏会告诉你接下来做什么。
 
 1. 使用 Node 24.22.3 和 npm 11.19.1。在仓库根目录运行 `npm ci` 安装项目依赖。
 2. 运行 `npm run check`。这会生成教程校验器、运行检查并构建生产扩展与本机服务。
@@ -29,11 +15,24 @@ WebGuide AI 帮助用户在真实网页中理解并完成操作，并支持作�
 
 侧栏会给出本次要保存的文字。提交后，在提交页打开 base（修改前）和 head（修改后）两份 Code 源码，再在侧栏确认提交。发起 PR 后打开文件差异与提交列表，再回到 PR。如果 PR 仍是草稿，点「Ready for review」。核对通过后，侧栏显示「开发模拟提交已验证」。
 
-### 自动化检查与后端
+### 测试与后端
 
 - 首次执行浏览器测试前运行 `npx playwright install chromium`。然后运行 `npm run test:e2e`；它会启动模拟服务，用独立 Chromium 配置加载练习版扩展，并跑完一次实际的练习。
-- `npm run dev:api` 启动 Fastify 服务。打开 `http://127.0.0.1:43130/health` 可确认服务在运行。真实 GitHub 适配、AI 答疑和反馈收集安排在后续切片。
-- [首轮计划](docs/design/首轮工程实施计划-2026-11-18.md)记录教程、会话、模拟状态和测试是怎样接起来的。
+- `npm run dev:api` 启动后端。打开 `http://127.0.0.1:43130/health` 确认服务在运行。
+
+## 从哪里找文件
+
+| 我想找 | 入口 |
+| --- | --- |
+| 扩展、后端或共享类型 | [浏览器扩展](apps/extension/)、[Fastify 后端](apps/api/)、[共享契约](packages/contracts/) |
+| 自动化测试和练习页 | [浏览器测试](tests/e2e/)、[本机练习页](tests/fixtures/collaboration/) |
+| 产品需求、设计与实施记录 | [项目文档](docs/README.md) |
+| 早期实验和开源借鉴 | [可行性实验](experiments/)、[开源研究](research/README.md) |
+| 如何参与开发 | [贡献流程](CONTRIBUTING.md)、[项目经验](docs/experience/README.md) |
+| 课堂资料 | [课程交付包](docs/course/week10/README.md)、[演示](docs/course/week10/presentation/README.md)、[课程时间表](课程安排/课程任务与时间节点.md) |
+
+<details>
+<summary>项目章程、开发过程和风险记录</summary>
 
 ## 项目章程
 
@@ -75,4 +74,6 @@ WebGuide AI 帮助用户在真实网页中理解并完成操作，并支持作�
 
 ## AI 使用
 
-AI 辅助研究、文档与实现草稿；成员负责理解、核读、真人访谈、需求与设计确认、评审及放行。按[过程台账](docs/course/week10/团队与过程台账.md)持续记录用途、核查和实际修改案例。
+AI 辅助研究、文档与实现草稿；成员负责理解、核读、真人访谈、需求与设计确认、评审及放行。按[过程台账](docs/course/week10/团队与过程台账.md)持续记录用途、核查和实际修改案例。[助手协作说明](AGENTS.md)
+
+</details>
