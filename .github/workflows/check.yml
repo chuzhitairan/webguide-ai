@@ -1,0 +1,32 @@
+name: Engineering checks
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: npm
+      - run: npm install --global npm@11.19.1
+      - run: npm ci
+      - run: npm run check
+      - run: node --test experiments/extension-lifecycle-spike/state.test.mjs experiments/extension-lifecycle-spike/content.test.mjs experiments/pages-state-spike/tests/state.test.mjs
+
+  browser:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: npm
+      - run: npm install --global npm@11.19.1
+      - run: npm ci
+      - run: npx playwright install chromium --with-deps
+      - run: npm run test:e2e

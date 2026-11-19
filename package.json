@@ -1,0 +1,43 @@
+{
+  "name": "webguide-ai",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "engines": {
+    "node": "24.22.3",
+    "npm": "11.19.1"
+  },
+  "packageManager": "npm@11.19.1",
+  "scripts": {
+    "generate:contracts": "node scripts/generate-contracts.mjs",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit -p tsconfig.tests.json && npm run typecheck -w @webguide/extension",
+    "lint": "eslint .",
+    "build:contracts": "npm run build -w @webguide/contracts",
+    "check": "npm run generate:contracts && npm run build:contracts && npm run typecheck && npm run lint && npm test && npm run build:api && npm run build:extension && node scripts/check-build.mjs",
+    "dev:api": "npm run build:api && node --env-file-if-exists=apps/api/.env apps/api/dist/server.js",
+    "dev:fixtures": "node tests/fixtures/collaboration/server.mjs",
+    "dev:extension": "npm run generate:contracts && npm run build:contracts && npm run dev -w @webguide/extension",
+    "build:api": "npm run build -w @webguide/api",
+    "build:extension": "npm run build -w @webguide/extension",
+    "build:extension:test": "npm run build:test -w @webguide/extension",
+    "test:e2e": "npm run generate:contracts && npm run build:contracts && npm run build:extension:test && playwright test"
+  },
+  "devDependencies": {
+    "@eslint/js": "9.39.5",
+    "@types/node": "24.10.1",
+    "ajv": "8.20.0",
+    "esbuild": "0.25.12",
+    "eslint": "9.39.5",
+    "typescript": "5.9.3",
+    "typescript-eslint": "8.50.0",
+    "vitest": "4.1.12",
+    "jsdom": "27.0.1",
+    "@types/jsdom": "21.1.7",
+    "@playwright/test": "1.62.1"
+  }
+}

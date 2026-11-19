@@ -32,3 +32,9 @@ Thumbs.db
 .codex/
 .agents/
 .aws/
+
+# Browser test output and generated schema validators
+.output-test/
+playwright-report/
+test-results/
+/packages/contracts/src/generated/
