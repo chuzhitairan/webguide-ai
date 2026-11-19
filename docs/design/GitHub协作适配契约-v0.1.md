@@ -77,7 +77,7 @@
 
 Code 视图存在不等于 complete=true：须在真实页面验证完整性，包括空行、Unicode 和末尾换行。不得把行号、折叠提示或加载占位混入正文，也不依据惯例补造末尾换行。无法可靠读取任一部分即 read-incomplete／unknown，提示缺哪一份源码，不反复要求用户重做提交。补证仍属于当前步骤，不另计为业务阶段；编辑器有未保存输入时先提示保留，再由用户决定导航。
 
-真实适配开工时先验证“不可变 SHA 身份＋Code 原文读取”这一条路径；不支持时先解决采集方案再扩展其余页面。页面上下文 fetch／Raw 是后续备选，须分别验证私有仓库授权、重定向／实际来源、响应为原文及读取边界后再修订契约，当前不默认复用登录态发起后台请求。模拟页则显式提供同一不可变版本的源码／预览切换，用来验证视图选择和摘要规则。
+把“不可变 SHA 身份＋Code 原文读取”作为[工程启动后的短验证](首轮工程实施计划-2026-11-18.md#真实-github-源码短验证)，在模拟采集与页面接线前尝试。发现缺口时先记录并确定补证路径，再扩展真实 GitHub 适配。页面上下文 fetch／Raw 是后续备选，须分别验证私有仓库授权、重定向／实际来源、响应为原文及读取边界后再修订契约。模拟页显式提供同一不可变版本的源码／预览切换，用来验证视图选择和摘要规则。
 
 PR 文件列表和提交列表必须完整；只看到第一项不能设置 complete。文件比对读取 baseSha 和 headSha 指向的不可变版本（禁止拿最新分支正文冒充某 SHA 的文件）；完整 changed-files 列表仅有指定路径且状态为 modified。比较／PR 版本变化使这些摘要失效。
 
@@ -112,7 +112,7 @@ PR 文件列表和提交列表必须完整；只看到第一项不能设置 comp
 
 `evaluateCollaboration(input: EvaluationInput): Decision` 是本地纯函数，与通用 evaluate 输入一致；由已注册 `github_collaboration_v1` 终验器调用。共同过滤器先剔除不匹配的任务、目标修订、文档、请求、时间与未知／失败观察。
 
-按顺序要求：①Issue 开放、实际指派符合；②确认的提交与工作分支／指定文件匹配；③实际 PR 同仓库、作者=member、base/head=目标且不同；④当前 PR 的 headSha 等于确认的 commitAnchor.sha，完整提交列表包含它；⑤PR 当前 baseSha/headSha 对应的完整单文件差异符合 expectedEdit；⑥普通引用指向同仓库的正确 Issue；⑦PR Open 且非 Draft。全部成立返回 pass，文案为“本段提交已验证，等待成员评审”，显示 PR 与证据时刻。
+按顺序要求：①Issue 开放、实际指派符合；②确认的提交与工作分支／指定文件匹配；③实际 PR 同仓库、作者=member、base/head=目标且不同；④当前 PR 的 headSha 等于确认的 commitAnchor.sha，完整提交列表包含它；⑤PR 当前 baseSha/headSha 对应的完整单文件差异符合 expectedEdit；⑥普通引用指向同仓库的正确 Issue；⑦PR Open 且非 Draft。七项全部成立时在 `reasonCodes` 加 `submission-verified`，`evidenceIds` 保留本轮提交证据。当前无已知交接阻塞时返回 `pass`，正常路径显示“本段提交已验证，等待成员评审”，并展示 PR 与证据时刻。协调器按通用完成守卫写最终结果。
 
 这里采用“锚点等于本次已核对 head”简化首轮版本关联。head 追加提交后，即使原锚点仍在列表，也先失效重查并提示确认新版本；base 更新同样使差异重查。新鲜证据不代表远端原子快照：终验前重查 PR tip 身份，再复用相同不可变 SHA 的文件摘要；检查期间有已知更新则重启本轮检查。
 
@@ -127,9 +127,9 @@ PR 文件列表和提交列表必须完整；只看到第一项不能设置 comp
 | pr-draft | 步骤 checker 在内容证据符合且 Ready 入口唯一可用时返回 actionable；终验始终 unknown，草稿未交付 |
 | pr-closed | blocked；已关闭未合并，不重复新建 |
 | pr-merged | 终验 unknown＋historical-merged；独立展示历史已合并状态，用户选择结束后协调器才写 ended／incomplete |
-| review-changes-requested／checks-failed | 提交证据可成立，但交接提示“需修订／检查失败”，不写等待评审或可以合并；进入 blocked 等待处理后重查 |
+| review-changes-requested／checks-failed | 先核对七项提交证据。全部成立时仍保留 `submission-verified` 和相应证据，并在 `reasonCodes` 加入当前交接阻塞原因；两项同时出现时均保留。终验返回 `blocked`，会话停在交接步骤，用户处理后重查。 |
 
-终验不返回 actionable；普通待操作条件在步骤 checker 中处理，finalVerifier 只返回 pass/wait/blocked/unknown。Reviewer 未配置／未请求／已请求、尚未评审／已批准、CI 未知／运行／通过及 Project 状态独立展示；它们不能替代七项证据。pr-merged 路径由协调器接纳明确结束意图后结束，不由纯校验器写 ended；用户也可保留历史查看。
+终验只返回 `pass`／`wait`／`blocked`／`unknown`。提交证据缺失、过期或冲突时优先报告对应结论，本轮 `reasonCodes` 不含 `submission-verified`。带 `submission-verified` 的 `blocked` 表示当前提交证据齐全、交接待处理，此时协调器保持 `state=blocked`、`result=null`。用户主动退出则遵循通用退出规则，已核对的历史依据保留观察时间。Reviewer 未配置／未请求／已请求、尚未评审／已批准、CI 未知／运行／通过及 Project 状态依实际观察显示。pr-merged 路径由协调器接纳明确结束意图后结束，用户也可保留历史查看。
 
 ## 6. UI 与 AI 投影
 
@@ -141,7 +141,7 @@ PR 文件列表和提交列表必须完整；只看到第一项不能设置 comp
 
 ## 7. 实现顺序与验收归属
 
-先按[更新实施计划](首轮工程实施计划-2026-11-18.md)建立共享加载器、模拟协作适配器和通用运行闭环，再按相同接口接真实 GitHub 定位／采集；最后接 AI、反馈和真人首次试用。模拟页使用独立 fixture profile／adapter，不把模拟内容注册为 GitHub 能力。
+按[更新实施计划](首轮工程实施计划-2026-11-18.md)先建立共享加载器和通用运行闭环，期间提早核对真实 Code 视图的可读性。模拟协作适配器使用独立 fixture profile／adapter；基于短验证结果，沿同一接口接入真实 GitHub 定位与采集，随后集成 AI、反馈并安排真人首次试用。
 
 SC02-AC01–10 主要由目标、采集与校验器实现；AC11–12 由通用协调器、页面代理和 UI 实现；AC02／13 的模型部分及 AC14 的反馈清除在后续切片落实。当前文件定义预期，没有实际通过记录。
 

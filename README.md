@@ -6,7 +6,8 @@ WebGuide AI 帮助用户在真实网页中理解并完成操作，并支持作�
 
 先看[文档入口与当前基线](docs/README.md)，它集中列出当前阅读顺序、实际状态和历史材料。
 
-- [第 1–2 次课交付包](docs/course/week10/README.md)：调研报告、14 条用户故事、访谈计划与课堂讲稿。
+- [第 1–2 次课交付包](docs/course/week10/README.md)：调研报告、14 条用户故事、访谈计划与过程记录；[当前演示材料](docs/course/week10/presentation/README.md)。
+- [项目经验入口](docs/experience/README.md)：协作、扩展与演示经验统一维护；助手工作入口见 [AGENTS.md](AGENTS.md)。
 - [完整系统 SRS v0.2](docs/requirements/WebGuideAI-SRS-v0.2.md)：完整业务与验收要求，当前为评审稿。
 - [版本交付范围](docs/requirements/版本交付范围-2026-11-17.md)：先完成 GitHub 协作引导，再建设教程创建与维护；[首场景调整](docs/requirements/首场景调整-GitHub协作-2026-11-17.md)。
 - [GitHub 协作首场景规格](docs/requirements/GitHub协作首场景规格-v0.1.md)：首次认领与文档 PR、已有进度、受阻处理及 14 项验收草案。

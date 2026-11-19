@@ -1,4 +1,11 @@
 * text=auto eol=lf
 
+# 演示与图片按二进制保存，避免文本换行转换损坏文件。
+*.pdf binary
+*.pptx binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+
 # 原始页面文本保留采集时的空白，不做文案格式清理。
 docs/requirements/evidence/**/*.txt -whitespace
