@@ -74,7 +74,7 @@ export async function build(p){
  shape(s,81,383,269,61,C.pale,C.teal,6,3);text(s,'assign yourself',103,393,240,43,28,C.teal,true);cursor(s,328,428,.66,C.teal);
  text(s,'让团队知道这项任务由你处理',91,484,621,47,24,C.muted);
  shape(s,798,202,417,391,C.white,'none',10);
- text(s,'第 1 / 12 步',822,219,359,31,19,C.teal,true);
+ text(s,'第 2 / 12 步',822,219,359,31,19,C.teal,true);
  text(s,'认领这个 Issue',822,271,365,47,31,C.ink,true);
  text(s,'点击 assign yourself，\n把这项任务分派给自己。',823,333,365,70,24,C.muted);
  line(s,823,424,365);dot(s,824,444,10,C.teal);text(s,'规则核对：待认领',846,429,336,39,22,C.teal,true);
