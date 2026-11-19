@@ -29,7 +29,7 @@ WebGuide AI 是一款网页操作引导扩展。它在页面上指出操作位�
 | 产品需求、设计与实施记录 | [项目文档](docs/README.md) |
 | 早期实验和开源借鉴 | [可行性实验](experiments/)、[开源研究](research/README.md) |
 | 如何参与开发 | [贡献流程](CONTRIBUTING.md)、[项目经验](docs/experience/README.md) |
-| 课堂资料 | [课程交付包](docs/course/week10/README.md)、[演示](docs/course/week10/presentation/README.md)、[课程时间表](课程安排/课程任务与时间节点.md) |
+| 课堂资料 | [时间表、交付包和演示](docs/course/README.md) |
 
 <details>
 <summary>项目章程、开发过程和风险记录</summary>
