@@ -101,11 +101,17 @@ test('在真实扩展中完成模拟协作，草稿与暂停不会产生成功�
     await test.info().attach('协作检查点', { body: JSON.stringify(diagnostic, null, 2), contentType: 'application/json' });
     throw error;
   }
+
+  // 确认后扩展会在当前源码页重新核对。等侧栏指示下一步，再离开源码页。
+  await expect(step()).toHaveText('核对 PR 的分支和文件差异');
   await site.goto(comparison);
+  await expect(step()).toHaveText('填写 PR 说明');
 
   await site.locator('#pr-title').fill('更新练习说明');
   await site.locator('#pr-body').fill('对应练习任务 #1');
   await site.locator('input[name=draft]').check();
+  // 表单已经能提交时，扩展可能还在核对输入。等侧栏可以引导创建 PR 再提交。
+  await expect(step()).toHaveText('创建可评审 PR');
   await site.locator('#create-pr').click();
   await expect(site.locator('#pr-number')).toHaveText('1');
   const pullRequest = site.url();
