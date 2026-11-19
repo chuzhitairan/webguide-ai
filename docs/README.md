@@ -1,6 +1,12 @@
 # 文档入口与当前基线
 
-更新于 2026-11-19。首轮工程已跑通本机协作练习。[运行说明](../README.md#运行首轮协作练习)包含安装、加载扩展和运行测试的步骤。课程安排作为参考，下一轮工程聚焦真实 GitHub 协作。
+更新于 2026-11-19。
+
+- **目前进度**：首轮工程已跑通本机协作练习。[运行说明](../README.md#运行首轮协作练习)包含安装、加载扩展和运行测试的步骤。
+- **需求基线**：调研报告、用户故事及需求与设计基线通过 [PR #3](https://github.com/chuzhitairan/webguide-ai/pull/3) 合入 `main`。SRS v0.2 仍是评审稿，SC02 的 14 项场景验收待执行。
+- **下一轮**：先接入真实 GitHub 协作。[源码短验证](design/首轮工程实施计划-2026-11-18.md#真实-github-源码短验证)记录了需要解决的源码读取问题。
+
+[项目经验入口](experience/README.md)统一记录协作、扩展与演示经验，8 页演示与讲稿见[课堂材料](course/week10/presentation/README.md)。这两项整理对应 [PR #8](https://github.com/chuzhitairan/webguide-ai/pull/8)。
 
 ## 当前应阅读的文件
 
@@ -15,13 +21,13 @@
 | 7 | [工程配置](design/WebGuideAI-工程配置与开发方式-v0.1.md)＋[引导交互](design/WebGuideAI-引导交互-v0.1.md) | TS／React／WXT、Node／Fastify，用于本机练习。真实 GitHub 和 Edge 原生侧栏待验证 |
 | 8 | [首轮实施计划](design/首轮工程实施计划-2026-11-18.md) | 五项任务的实施记录、模拟练习测试结果和真实 GitHub 源码读取的待办 |
 
-[14 条用户故事](course/week10/用户故事.md)是完整需求的简要阅读入口，按 FR／UC 追溯，附交付优先级与待核读的切片 SP 初估；[课程交付包](course/week10/README.md)整理讲稿、过程和课堂准备。格式源文件见 [v1 Schema](design/contracts/tutorial.schema.json)、[v2 Schema](design/contracts/tutorial-v2.schema.json)、[协作教程样例](design/contracts/collaboration.tutorial.json)。
+[14 条用户故事](course/week10/用户故事.md)按 FR／UC 追溯，附交付优先级和实施时细化的切片 SP 初估。格式源文件见 [v1 Schema](design/contracts/tutorial.schema.json)、[v2 Schema](design/contracts/tutorial-v2.schema.json)、[协作教程样例](design/contracts/collaboration.tutorial.json)。
 
 ## 已有成果与待完成事项
 
 - 首轮工程完成了教程校验、扩展会话管理、本机协作练习、后端健康服务和自动化检查。
-- 文档基线已通过 [PR #3](https://github.com/chuzhitairan/webguide-ai/pull/3) 交付，按组长决定由组长直接验收。后续 PR 沿用仓库协作规则。
-- 真实 GitHub 协作、模型集成、反馈和 SC02 验收列入后续工作。教师选题反馈与课堂演练另行跟踪。
+- 既有成果包括固定版本的开源研究、Pages 及生命周期局部实验、私有仓库与看板。
+- 真实 GitHub 协作、模型集成、反馈和 SC02 验收列入后续工作。原型可操作后邀请新手试用，按需要补充独立访谈。教师反馈与课堂演练见[课堂交付状态](course/week10/README.md#11-月-20-日调研与初步需求)。
 
 首轮工程、完整首版和全系统是三个不同范围。首轮的模拟页通过不算真实 GitHub 验收；最简反馈仍在完整首版范围，反馈接收／可见性／保留约定须在其实现前补齐，仅有本地反馈草稿不算已交付 FR18。
 
@@ -31,4 +37,4 @@ SRS 第 10 节的 O01–O06 按受影响模块处理：反馈与教程访问、�
 
 Pages 的 SC01／B01–B12、第一阶段总结、旧业务工作稿及 [11 月 17 日实施计划](design/首轮工程实施计划-2026-11-17.md)保留为历史与场景资料。当前执行入口以本页为准；不批量改写当时的结论或编号。课程原件及[课程时间表](../课程安排/课程任务与时间节点.md)保留教师材料的原意，项目自行调整的推进方式在当前文档中说明。
 
-本轮核对覆盖范围、状态、故事追溯和工作方式，并重跑两个既有实验的 26 项自动测试；未重新联网核验全部历史公开来源，AI 检查不计作成员 Review。
+PR #3 交付前核对了范围、状态、故事追溯和工作方式，并重跑两个既有实验的 26 项自动测试。核对以现有公开来源记录为依据，AI 检查作为辅助验证记录。

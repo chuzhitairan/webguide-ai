@@ -6,7 +6,8 @@ WebGuide AI 帮助用户在真实网页中理解并完成操作，并支持作�
 
 先看[文档入口与当前基线](docs/README.md)，它集中列出当前阅读顺序、实际状态和历史材料。
 
-- [第 1–2 次课交付包](docs/course/week10/README.md)：调研报告、14 条用户故事、访谈计划与课堂讲稿。
+- [第 1–2 次课交付包](docs/course/week10/README.md)：调研报告、14 条用户故事、访谈计划与过程记录；[当前演示材料](docs/course/week10/presentation/README.md)。
+- [项目经验入口](docs/experience/README.md)：协作、扩展与演示经验统一维护；助手工作入口见 [AGENTS.md](AGENTS.md)。
 - [完整系统 SRS v0.2](docs/requirements/WebGuideAI-SRS-v0.2.md)：完整业务与验收要求，当前为评审稿。
 - [版本交付范围](docs/requirements/版本交付范围-2026-11-17.md)：先完成 GitHub 协作引导，再建设教程创建与维护；[首场景调整](docs/requirements/首场景调整-GitHub协作-2026-11-17.md)。
 - [GitHub 协作首场景规格](docs/requirements/GitHub协作首场景规格-v0.1.md)：首次认领与文档 PR、已有进度、受阻处理及 14 项验收草案。
@@ -14,6 +15,7 @@ WebGuide AI 帮助用户在真实网页中理解并完成操作，并支持作�
 - [协作适配契约](docs/design/GitHub协作适配契约-v0.1.md)与[首轮实施计划](docs/design/首轮工程实施计划-2026-11-18.md)：教程步骤、提交和 PR 的核对规则，以及本机练习的实施记录。
 - [开源研究](research/notes/WebGuideAI-开源项目调研.md)与[源码索引](research/sources.json)：9 个项目的固定版本与复用分析。
 - [贡献流程](CONTRIBUTING.md)、[团队与过程台账](docs/course/week10/团队与过程台账.md)、[课程时间表](课程安排/课程任务与时间节点.md)。
+
 ## 运行首轮协作练习
 
 首轮目标是在一个本机练习仓库里走完认领 Issue、建分支、改文档、提交和发起 PR。扩展在网页上指出当前位置，在侧栏说明接下来做什么。比如，已经在编辑框里填了新文字时，扩展会引导你先提交，再从保存后的文件核对结果。
