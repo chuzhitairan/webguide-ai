@@ -20,6 +20,10 @@ jobs:
 
   browser:
     runs-on: ubuntu-latest
+    container:
+      # 镜像版本与项目的 Playwright 版本一致，里面已安装 Chromium 和系统依赖。
+      image: mcr.microsoft.com/playwright:v1.62.1@sha256:c091b21d9fae78c76e85cd4356431e9b018402f172a214fc7d7a5e9a7e29d8ac
+      options: --ipc=host
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -28,5 +32,4 @@ jobs:
           cache: npm
       - run: npm install --global npm@11.19.1
       - run: npm ci
-      - run: npx playwright install chromium --with-deps
       - run: npm run test:e2e
