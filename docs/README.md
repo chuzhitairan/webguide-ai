@@ -1,6 +1,8 @@
 # 文档入口与当前基线
 
-更新：2026-11-18。当前先由组长与助手完成文档核对，不立即分派四个调研工作包。课程安排作为参考；实际完成情况、课堂要求和产品交付分别记录。下一步工程实施暂缓，先核读本次整理结果。
+更新：2026-11-19。当前先由组长与助手完成文档核对，不立即分派四个调研工作包。课程安排作为参考；实际完成情况、课堂要求和产品交付分别记录。下一步工程实施暂缓，先核读本次整理结果。
+
+跨会话经验统一从[项目经验入口](experience/README.md)查找，包含协作、扩展与演示三类；当前 8 页演示与讲稿见[课堂材料](course/week10/presentation/README.md)。
 
 ## 当前应阅读的文件
 
@@ -15,12 +17,12 @@
 | 7 | [工程配置](design/WebGuideAI-工程配置与开发方式-v0.1.md)＋[引导交互](design/WebGuideAI-引导交互-v0.1.md) | TS／React／WXT、Node／Fastify；交互示意和状态已对齐 SC02，依赖与真实 DOM 待验证 |
 | 8 | [11 月 18 日实施计划](design/首轮工程实施计划-2026-11-18.md) | 5 项未执行任务；限定容量／停止的最小实现，先建协作模拟闭环，再验证真实源码读取并扩展 GitHub、AI 与反馈 |
 
-[14 条用户故事](course/week10/用户故事.md)是完整需求的简要阅读入口，按 FR／UC 追溯，附交付优先级与待核读的切片 SP 初估；[课程交付包](course/week10/README.md)整理讲稿、过程和课堂准备。格式源文件见 [v1 Schema](design/contracts/tutorial.schema.json)、[v2 Schema](design/contracts/tutorial-v2.schema.json)、[协作教程样例](design/contracts/collaboration.tutorial.json)。
+[14 条用户故事](course/week10/用户故事.md)是完整需求的简要阅读入口，按 FR／UC 追溯，附交付优先级与待核读的切片 SP 初估；[课程交付包](course/week10/README.md)整理过程记录和课堂准备。格式源文件见 [v1 Schema](design/contracts/tutorial.schema.json)、[v2 Schema](design/contracts/tutorial-v2.schema.json)、[协作教程样例](design/contracts/collaboration.tutorial.json)。
 
 ## 已有成果与待完成事项
 
 - 已有：需求／设计基线、固定版本的开源研究、Pages 及生命周期局部实验、私有仓库与看板；文档通过 [PR #3](https://github.com/chuzhitairan/webguide-ai/pull/3) 交付。
-- 当前决定：2026-11-18 组长直接验收本轮文档，免 PR #3 的成员 Review；本 PR 合入 main 后文档收尾完成。后续 PR 的保护规则保留，工程按实施计划另行推进。
+- 当前决定：2026-11-18 组长直接验收本轮文档，免 PR #3 的成员 Review；PR #3 已合入 main，需求与设计文档收尾完成。后续 PR 的保护规则保留，工程按实施计划另行推进。
 - 后续验证：原型可操作后邀请新手试用；独立访谈按需要补充，四个工作包暂不分派，不阻塞当前文档整理。
 - 尚未完成：正式产品工程、真实 GitHub 协作适配、模型集成、场景验收；教师选题反馈与课堂演练另行跟踪。本轮未安排成员 Review。
 
