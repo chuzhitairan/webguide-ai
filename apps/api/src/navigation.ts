@@ -6,7 +6,7 @@ export interface NavigationInput {
   page: {
     path: string;
     title: string;
-    controls: { id: number; label: string; role: string; region?: string; path?: string }[];
+    controls: { id: number; label: string; role: string; region?: string; path?: string; expanded?: boolean }[];
   };
 }
 
@@ -35,6 +35,7 @@ const body = {
               label: { type: 'string', minLength: 1, maxLength: 120 },
               role: { type: 'string', minLength: 1, maxLength: 24 },
               region: { type: 'string', maxLength: 32 },
+              expanded: { type: 'boolean' },
               path,
             },
           },

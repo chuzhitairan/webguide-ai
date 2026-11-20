@@ -1,29 +1,38 @@
 import { browser } from 'wxt/browser';
-import { issueGoal, repositoryAt } from './issue-goal.js';
-import type { ModelRequest, ModelResponse, PageCommand, PageUpdate } from './protocol.js';
+import { bindGoal, goalPrompt, repositoryAt } from './github-goal.js';
+import type { BoundGoal, Goal, ModelRequest, ModelResponse, PageCommand, PagePhase, PageUpdate } from './protocol.js';
 
 type Tab = { id?: number; windowId: number; url?: string; pendingUrl?: string; status?: string; active: boolean };
 type Port = ReturnType<typeof browser.tabs.connect>;
 export type NavigationStatus = { text: string; done?: boolean };
 
-export function startIssueNavigation(number: string, token: string, report: (status: NavigationStatus) => void): () => void {
+export function startNavigation(requestedGoal: Goal, token: string, report: (status: NavigationStatus) => void): () => void {
   let stopped = false;
   let initialTab: Tab | undefined;
-  let goal: ReturnType<typeof issueGoal>;
+  let goal: BoundGoal | undefined;
   let port: Port | undefined;
   let attachment = 0;
   let requestNumber = 0;
   let pageRevision: number | undefined;
+  let phase: PagePhase | undefined;
+  let forkShown = false;
   let styledDocument: string | undefined;
 
   function show(text: string) {
     report({ text });
   }
 
+  function outsideRepository() {
+    show(forkShown
+      ? '如果你已进入自己的 Fork，可以在副本里的 README 页面重新开始引导。'
+      : '请回到本次引导的 GitHub 仓库，必要时点击扩展图标重新授权。');
+  }
+
   function disconnect() {
     ++attachment;
     ++requestNumber;
     pageRevision = undefined;
+    phase = undefined;
     const previous = port;
     port = undefined;
     previous?.disconnect();
@@ -48,7 +57,7 @@ export function startIssueNavigation(number: string, token: string, report: (sta
       return;
     }
     if (!tab.url || repositoryAt(tab.url)?.toLowerCase() !== goal.repo.toLowerCase()) {
-      show('请回到本次引导的 GitHub 仓库，必要时点击扩展图标重新授权。');
+      outsideRepository();
       return;
     }
     try {
@@ -77,7 +86,7 @@ export function startIssueNavigation(number: string, token: string, report: (sta
           show('页面连接已断开。请重新开始引导。');
         }
       });
-      const command: PageCommand = { kind: 'observe', issuePath: goal.path };
+      const command: PageCommand = { kind: 'observe', goal };
       connection.postMessage(command);
     } catch {
       if (attachment === currentAttachment) show('无法读取当前网页。请在 GitHub 页面点击工具栏的 WebGuide AI 后重试。');
@@ -87,39 +96,61 @@ export function startIssueNavigation(number: string, token: string, report: (sta
   async function receive(connection: Port, update: PageUpdate) {
     if (port !== connection || !goal) return;
     if (update.kind === 'displayed') {
-      if (pageRevision === update.revision) show(update.instruction);
+      if (pageRevision !== update.revision) return;
+      const prefix = update.readmeEntry ? '已找到 README 编辑入口。'
+        : phase === 'fork-required' ? 'GitHub 要求先 Fork。' : '';
+      show(prefix + update.instruction);
       return;
     }
     const currentRequest = ++requestNumber;
     if (update.kind === 'outside') {
       pageRevision = undefined;
-      show('请回到本次引导的 GitHub 仓库。');
+      outsideRepository();
       return;
     }
     pageRevision = update.revision;
-    if (update.reached) {
-      const reached = goal.number;
+    phase = update.phase;
+    if (phase === 'arrived') {
+      const text = goal.kind === 'issue' ? '已打开 Issue #' + goal.number : '已进入 README 编辑器。';
       stop();
-      report({ text: '已打开 Issue #' + reached, done: true });
+      report({ text, done: true });
       return;
     }
-    // 地址先于 GitHub 的详情内容变化。此时只等页面证据，避免把旧列表再发给模型。
-    if (update.page.path.replace(/\/$/, '').toLowerCase() === goal.path.toLowerCase()) {
+    if (phase === 'login-required') {
+      stop();
+      report({ text: '请先登录 GitHub。登录后回到 README 文件页，可重新开始引导。', done: true });
+      return;
+    }
+    // 地址可能先于网页内容变化。等详情渲染后再确认任务是否到达。
+    if (phase === 'waiting-issue' && goal.kind === 'issue') {
       show('正在确认 Issue #' + goal.number + '。如果 GitHub 显示不可访问，请核对编号或权限。');
       return;
     }
+    if (phase === 'waiting-editor') {
+      show('正在确认 README 编辑页面。请留意 GitHub 的登录或权限提示。');
+      return;
+    }
+    if (phase === 'fork-required') {
+      forkShown = true;
+      if (goal.kind === 'readme-entry') {
+        stop();
+        report({ text: '已找到 README 编辑入口。GitHub 要求先 Fork 才能继续。', done: true });
+        return;
+      }
+    }
+    const pageNotice = phase === 'fork-required' ? 'GitHub 要求先 Fork。' : '';
     if (update.page.path.length > 300 || update.page.path.startsWith('//')) {
       show('当前页面地址过长或格式不受支持。请回到仓库页面后重试。');
       return;
     }
     if (!update.page.controls.length) {
-      show('正在等待页面显示可操作控件…');
+      show(pageNotice + '正在等待页面显示可操作控件…');
       return;
     }
-    show('AI 正在查看当前页面…');
+    show(pageNotice + 'AI 正在查看当前页面…');
     const request: ModelRequest = {
       kind: 'choose-navigation', token,
-      goal: '在 GitHub 仓库 ' + goal.repo + ' 打开 Issue #' + goal.number + '。优先使用该仓库的 Issues 入口和列表。',
+      goal: goalPrompt(goal, phase),
       page: update.page,
     };
     try {
@@ -127,13 +158,13 @@ export function startIssueNavigation(number: string, token: string, report: (sta
       // 两次观察即使在同一个标签页，回包顺序也可能颠倒。
       if (port !== connection || requestNumber !== currentRequest) return;
       if ('error' in response) {
-        show(response.error);
+        show(pageNotice + response.error);
         return;
       }
       const command: PageCommand = { kind: 'decision', revision: update.revision, decision: response.decision };
       connection.postMessage(command);
     } catch {
-      if (port === connection && requestNumber === currentRequest) show('暂时无法获取导航建议，请重新开始引导。');
+      if (port === connection && requestNumber === currentRequest) show(pageNotice + '暂时无法获取导航建议，请重新开始引导。');
     }
   }
 
@@ -161,7 +192,7 @@ export function startIssueNavigation(number: string, token: string, report: (sta
 
   void browser.tabs.query({ active: true, currentWindow: true }).then(([tab]) => {
     if (stopped) return;
-    goal = issueGoal(tab?.url, number);
+    goal = bindGoal(tab?.url, requestedGoal);
     if (!goal || tab?.id === undefined) {
       show('请先打开 GitHub 仓库，并在该标签页点击工具栏的 WebGuide AI。');
       return;

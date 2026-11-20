@@ -1,4 +1,4 @@
-import { isAvailableTarget, isVisibleTarget } from './locator.js';
+import { controlLabel, isAvailableTarget, isVisibleTarget } from './locator.js';
 import type { Control, PageSnapshot } from '../navigation/protocol.js';
 
 const maxControls = 140;
@@ -7,14 +7,6 @@ const controlSelector = 'a[href], button, summary, input[type="search"], input[a
 
 function compact(value: string | null | undefined, limit: number): string {
   return value?.replace(/\s+/g, ' ').trim().slice(0, limit) ?? '';
-}
-
-function controlLabel(element: Element, document: Document): string {
-  const name = element.getAttribute('aria-labelledby')?.trim().split(/\s+/)
-    .map(id => document.getElementById(id)?.textContent).join(' ');
-  return compact(name, 120) || compact(element.getAttribute('aria-label'), 120)
-    || compact(element instanceof HTMLElement ? element.innerText ?? element.textContent : element.textContent, 120)
-    || compact(element.getAttribute('title'), 120);
 }
 
 function sameSitePath(element: Element, url: URL): string | undefined {
@@ -30,24 +22,31 @@ function sameSitePath(element: Element, url: URL): string | undefined {
   }
 }
 
-export function readPage(document: Document, url: URL, issuePath: string): { page: PageSnapshot; elements: Map<number, Element> } {
-  const entries: { element: Element; control: Omit<Control, 'id'> }[] = [];
-  const wantedPath = issuePath.toLowerCase();
+export function readPage(document: Document, url: URL, prefer?: (element: Element, path?: string) => boolean):
+  { page: PageSnapshot; elements: Map<number, Element> } {
+  const entries: { element: Element; control: Omit<Control, 'id'>; preferred: boolean }[] = [];
   for (const element of document.querySelectorAll(controlSelector)) {
     const path = sameSitePath(element, url);
     const atLimit = entries.length >= maxControls;
-    // 快照满了以后只检查与目标编号匹配的链接，避免继续读取整页样式。
-    if (atLimit && (path?.toLowerCase() !== wantedPath || entries.some(item => item.control.path?.toLowerCase() === wantedPath))) continue;
+    const preferred = prefer?.(element, path) ?? false;
+    // 快照满了以后，只让任务相关的控件替换普通候选。
+    if (atLimit && (!preferred || (path && entries.some(item => item.preferred && item.control.path === path)))) continue;
     if (!isAvailableTarget(element, document)) continue;
-    const label = controlLabel(element, document);
+    const label = controlLabel(element);
     if (!label) continue;
 
-    // 给快照留出目标 Issue 的位置，避免长列表前面的其他控件耗完名额。
-    if (atLimit) entries.pop();
+    if (atLimit) {
+      let replace = entries.length - 1;
+      while (replace >= 0 && entries[replace].preferred) --replace;
+      if (replace < 0) continue;
+      entries.splice(replace, 1);
+    }
     const role = element.getAttribute('role') || ({ A: 'link', INPUT: 'textbox' }[element.tagName] ?? 'button');
     const container = element.closest('nav, dialog, main, header, footer, [role="dialog"]');
     const region = compact(container?.getAttribute('aria-label'), 32) || container?.tagName.toLowerCase();
-    entries.push({ element, control: { label, role: role.slice(0, 24), region, path } });
+    const expansion = element.getAttribute('aria-expanded');
+    const expanded = expansion === 'true' ? true : expansion === 'false' ? false : undefined;
+    entries.push({ element, preferred, control: { label, role: role.slice(0, 24), region, path, expanded } });
   }
   const heading = [...document.querySelectorAll('main h1, h1')].find(el => isVisibleTarget(el, document) && el.textContent?.trim());
   const title = compact(heading?.textContent ?? document.title, 160);

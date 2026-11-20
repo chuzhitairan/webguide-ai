@@ -8,6 +8,8 @@ export interface Renderer {
 // Driver 负责画出高亮。点击和键盘操作都交给原网页。
 export function createRenderer(): Renderer {
   let ownerDocument: Document | undefined;
+  let activeElement: Element | undefined;
+  let labels: { title: HTMLElement; description: HTMLElement } | undefined;
   const guide = driver({
     animate: false, allowScroll: true, allowClose: false, allowKeyboardControl: false,
     advanceOn: false, overlayClickBehavior: 'none', disableActiveInteraction: false,
@@ -16,7 +18,14 @@ export function createRenderer(): Renderer {
   });
   return {
     show(element, copy) {
+      if (activeElement === element && labels?.title.isConnected) {
+        // 目标相同但模型换了措辞时，直接更新文字，保留正在显示的提示框。
+        labels.title.textContent = copy.title;
+        labels.description.textContent = copy.instruction;
+        return;
+      }
       ownerDocument = element.ownerDocument;
+      activeElement = element;
       // 站内切页可能重写 body 的类名，遮罩样式通过根元素上的标记继续生效。
       ownerDocument.documentElement.classList.add('webguide-guiding');
       const focused = pageFocus(ownerDocument);
@@ -28,6 +37,7 @@ export function createRenderer(): Renderer {
           // 库接受 HTML；提示只作为纯文本写入。
           title: ' ', description: ' ',
           onPopoverRender(popover) {
+            labels = popover;
             popover.title.textContent = copy.title;
             popover.description.textContent = copy.instruction;
           },
@@ -41,6 +51,8 @@ export function createRenderer(): Renderer {
       ownerDocument?.documentElement.classList.remove('webguide-guiding');
       focused?.focus({ preventScroll: true });
       ownerDocument = undefined;
+      activeElement = undefined;
+      labels = undefined;
     },
   };
 }

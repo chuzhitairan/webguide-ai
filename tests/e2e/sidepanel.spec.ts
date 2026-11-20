@@ -16,8 +16,9 @@ test('highlights each model-selected control and confirms the issue after the us
     calls.push(page.path);
     const path = page.path.endsWith('/issues') ? issuePath : '/webguide-test/sample/issues';
     const target = page.controls.find(control => control.path === path);
+    const updatedCopy = calls.length === 2 ? '（已更新）' : '';
     return target
-      ? { kind: 'highlight', targetId: target.id, instruction: '点击 ' + target.label }
+      ? { kind: 'highlight', targetId: target.id, instruction: '点击 ' + target.label + updatedCopy }
       : { kind: 'message', instruction: '没有找到目标。' };
   } });
   await app.listen({ host: '127.0.0.1', port: 43130 });
@@ -66,8 +67,9 @@ test('highlights each model-selected control and confirms the issue after the us
       main.append(button);
     });
     await expect.poll(() => calls.length).toBe(2);
-    await expect(panel.getByRole('status')).toHaveText('点击 Issues');
+    await expect(panel.getByRole('status')).toHaveText('点击 Issues（已更新）');
     await expect(popover).toHaveAttribute('data-test-popover', 'original');
+    await expect(popover).toContainText('点击 Issues（已更新）');
 
     await issues.click();
     const target = site.getByRole('link', { name: 'Improve setup' });

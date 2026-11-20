@@ -20,3 +20,13 @@ export function isAvailableTarget(element: Element, root: Document): boolean {
     && !element.closest('[aria-disabled="true"], [inert], .webguide-popover, .driver-overlay')
     && isVisibleTarget(element, root);
 }
+
+export function controlLabel(element: Element): string {
+  const compact = (value?: string | null) => value?.replace(/\s+/g, ' ').trim().slice(0, 120) ?? '';
+  // GitHub 的部分图标按钮通过独立提示元素提供可访问名称。
+  const referenced = element.getAttribute('aria-labelledby')?.trim().split(/\s+/)
+    .map(id => element.ownerDocument.getElementById(id)?.textContent).join(' ');
+  return compact(referenced) || compact(element.getAttribute('aria-label'))
+    || compact(element instanceof HTMLElement ? element.innerText ?? element.textContent : element.textContent)
+    || compact(element.getAttribute('title'));
+}

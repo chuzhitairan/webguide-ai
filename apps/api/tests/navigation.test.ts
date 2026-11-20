@@ -9,7 +9,7 @@ const payload = {
   page: {
     path: '/octo/project',
     title: 'Repository overview',
-    controls: [{ id: 3, label: 'Issues', role: 'link', path: '/octo/project/issues' }],
+    controls: [{ id: 3, label: 'Issues', role: 'link', path: '/octo/project/issues', expanded: false }],
   },
 };
 const headers = { host: '127.0.0.1:43130', origin, authorization: 'Bearer ' + clientToken };

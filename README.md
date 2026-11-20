@@ -2,7 +2,7 @@
 
 WebGuide AI 是一款网页操作引导扩展。AI 根据当前页面选择要高亮的按钮或链接，扩展显示提示，由用户自己操作。
 
-**当前进度**　实时导航的第一条任务是打开当前 GitHub 仓库里的指定 Issue。模型根据眼前的网页选择下一步，扩展显示高亮，用户点击后继续指路。[浏览器导航原型](docs/design/WebGuideAI-浏览器导航原型.md) · [项目进度](docs/README.md)
+**当前进度**　实时导航可以引导用户打开指定 Issue、找到 README 编辑入口或进入编辑器。模型根据眼前的网页选择下一步，扩展显示高亮，用户自己操作。[浏览器导航原型](docs/design/WebGuideAI-浏览器导航原型.md) · [项目进度](docs/README.md)
 
 ## 本机开发
 
@@ -13,11 +13,13 @@ WebGuide AI 是一款网页操作引导扩展。AI 根据当前页面选择要�
 - 首次执行浏览器测试前运行 `npx playwright install chromium`。随后运行 `npm run test:e2e`，在独立 Chromium 配置中加载生产扩展并检查侧栏。
 - `npm run dev:api` 启动本机后端，可打开 `http://127.0.0.1:43130/health` 确认服务在运行。
 
-## 试用实时 Issue 引导
+## 试用实时引导
 
 1. 按[本机模型设置](docs/design/WebGuideAI-工程配置与开发方式-v0.1.md#6-本机后端与模型配置)配置模型和本机访问令牌，启动后端。
-2. 打开 GitHub 仓库首页或 Issues 列表，在该标签页点击工具栏上的 WebGuide AI。
-3. 在侧栏填入本机访问令牌和仓库里已有的 Issue 编号，点击「开始引导」。按高亮自己操作，直到侧栏显示已打开指定 Issue。
+2. 打开 GitHub 仓库首页、Issues 列表或根目录下的 README.md 文件页，在该标签页点击工具栏上的 WebGuide AI。
+3. 在侧栏填入本机访问令牌，再选择「打开指定 Issue」「找到 README 编辑入口」或「进入 README 编辑器」，然后点击「开始引导」。选择 Issue 时还需填入编号。
+
+找到编辑入口时，侧栏会确认高亮的位置。选择进入编辑器时，扩展会等 GitHub 显示可编辑的 README。若页面要求先 Fork，用户可以在网页上决定是否创建自己的副本。进入副本后可重新开始引导。
 
 旧版固定路线、协作练习和文件核对可在本地 `codex/github-raw-source` 分支查阅。
 

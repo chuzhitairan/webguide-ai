@@ -49,6 +49,10 @@ it('renders guidance markup as text and clears the guide without synthetic click
     expect(document.querySelector('.webguide-popover img')).toBeNull();
     expect(document.documentElement.classList.contains('webguide-guiding')).toBe(true);
     expect(document.querySelector('.webguide-popover button:not([style*="none"])')).toBeNull();
+    const originalPopover = document.querySelector('.webguide-popover');
+    renderer.show(button, { title: 'Next', instruction: 'Same target, new wording' });
+    expect(document.querySelector('.webguide-popover')).toBe(originalPopover);
+    expect(originalPopover?.textContent).toContain('Same target, new wording');
   } finally {
     renderer.clear();
   }

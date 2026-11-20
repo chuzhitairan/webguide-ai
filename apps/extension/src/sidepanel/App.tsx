@@ -1,10 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
 import { browser } from 'wxt/browser';
-import { startIssueNavigation } from '../navigation/browser-session.js';
+import { startNavigation } from '../navigation/browser-session.js';
 import type { NavigationStatus } from '../navigation/browser-session.js';
-import { validIssueNumber } from '../navigation/issue-goal.js';
+import { validIssueNumber } from '../navigation/github-goal.js';
+import type { Goal } from '../navigation/protocol.js';
 
 export function App() {
+  const [task, setTask] = useState<Goal['kind']>('issue');
   const [issue, setIssue] = useState('');
   const [token, setToken] = useState('');
   const [status, setStatus] = useState<NavigationStatus>();
@@ -21,10 +23,10 @@ export function App() {
     };
   }, []);
 
-  const canStart = validIssueNumber(issue.trim()) && !!token.trim();
+  const canStart = (task !== 'issue' || validIssueNumber(issue.trim())) && !!token.trim();
   return <main className="panel">
     <h1>实时网页引导</h1>
-    <p>在当前 GitHub 仓库中查找指定 Issue。页面标题和控件文字会发给已配置的模型。</p>
+    <p>在当前 GitHub 仓库中查找 Issue 或 README 编辑入口。页面标题和控件文字会发给已配置的模型。</p>
     <form onSubmit={event => {
       event.preventDefault();
       if (!canStart) return;
@@ -32,9 +34,15 @@ export function App() {
       setStatus({ text: '正在连接当前网页…' });
       const accessToken = token.trim();
       void browser.storage.session.set({ navigationToken: accessToken }).catch(() => {});
-      stop.current = startIssueNavigation(issue.trim(), accessToken, setStatus);
+      const goal: Goal = task === 'issue' ? { kind: task, number: issue.trim() } : { kind: task };
+      stop.current = startNavigation(goal, accessToken, setStatus);
     }}>
-      <label>Issue 编号<input value={issue} onChange={event => setIssue(event.target.value)} inputMode="numeric" placeholder="例如 17" /></label>
+      <label>引导目标<select value={task} onChange={event => setTask(event.target.value as Goal['kind'])}>
+        <option value="issue">打开指定 Issue</option>
+        <option value="readme-entry">找到 README 编辑入口</option>
+        <option value="readme-editor">进入 README 编辑器</option>
+      </select></label>
+      {task === 'issue' && <label>Issue 编号<input value={issue} onChange={event => setIssue(event.target.value)} inputMode="numeric" placeholder="例如 17" /></label>}
       <label>本机访问令牌<input type="password" value={token} onChange={event => setToken(event.target.value)} autoComplete="off" /></label>
       <div className="actions">
         <button type="submit" disabled={!canStart}>开始引导</button>

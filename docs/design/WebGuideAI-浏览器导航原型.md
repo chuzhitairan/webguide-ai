@@ -47,6 +47,8 @@ AI 从第一个提示就参与选路，可以根据用户自己选择的入口�
 
 2026-11-20，指定 Issue 已在独立 Chromium 中接通同济模型。从 VS Code 仓库首页和 Issues 列表分别开始，模型选出页面中已有的链接，测试点击高亮后，扩展用详情页的标题和编号确认到达。两次引导共发起 9 次模型请求，页面分批渲染时仍会触发额外观察。浏览器回归覆盖慢资源、高亮稳定性和详情延迟渲染。[实测 Issue #348483](https://github.com/microsoft/vscode/issues/348483) · [浏览器回归](../../tests/e2e/sidepanel.spec.ts)
 
+README 引导在公开的 VS Code 仓库从首页找到文件，再高亮文件页的编辑菜单。独立浏览器未登录，展开菜单后只有 GitHub Desktop，扩展提示先登录。Fork 提示、已找到编辑入口和已经进入编辑器的区别，由本机浏览器回归验证。选择进入编辑器时，可以在 Fork 提示页看到下一步，切换到新副本后重新开始引导。[实测 README](https://github.com/microsoft/vscode/blob/main/README.md) · [README 浏览器回归](../../tests/e2e/readme.spec.ts)
+
 | 验证项 | 做法 | 记录什么 |
 | --- | --- | --- |
 | 实时指路 | 在 GitHub 找 README 编辑入口、打开指定 Issue，从仓库首页、文件页或其他中间页开始。 | 首次高亮是否正确，是否到达目标页面，哪一步选错。 |
