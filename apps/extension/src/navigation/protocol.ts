@@ -20,13 +20,21 @@ export interface PageSnapshot {
   controls: Control[];
 }
 
+export interface GuideReview {
+  targetId: number;
+  instruction: string;
+  changedIds: number[];
+}
+
 export type Decision =
-  | { kind: 'highlight'; targetId: number; instruction: string }
-  | { kind: 'message'; instruction: string };
+  | { kind: 'highlight'; targetId: number; instruction: string; reason?: string }
+  | { kind: 'message'; instruction: string; reason?: string }
+  | { kind: 'keep' };
 
 export type PageUpdate =
-  | { kind: 'page'; revision: number; page: PageSnapshot; phase: PagePhase }
+  | { kind: 'page'; revision: number; page: PageSnapshot; phase: PagePhase; review?: GuideReview }
   | { kind: 'displayed'; revision: number; instruction: string; readmeEntry: boolean }
+  | { kind: 'observing' }
   | { kind: 'outside' };
 
 export type PageCommand =
@@ -38,6 +46,7 @@ export interface ModelRequest {
   token: string;
   goal: string;
   page: PageSnapshot;
+  review?: GuideReview;
 }
 
 export type ModelResponse = { decision: Decision } | { error: string };

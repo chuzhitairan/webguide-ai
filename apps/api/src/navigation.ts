@@ -8,6 +8,7 @@ export interface NavigationInput {
     title: string;
     controls: { id: number; label: string; role: string; region?: string; path?: string; expanded?: boolean }[];
   };
+  review?: { targetId: number; instruction: string; changedIds: number[] };
 }
 
 export interface NavigationService {
@@ -17,6 +18,7 @@ export interface NavigationService {
 }
 
 const path = { type: 'string', maxLength: 300, pattern: '^/(?!/)[^?#]*$' };
+const controlId = { type: 'integer', minimum: 1, maximum: 140 };
 const body = {
   type: 'object', additionalProperties: false, required: ['goal', 'page'],
   properties: {
@@ -31,7 +33,7 @@ const body = {
           items: {
             type: 'object', additionalProperties: false, required: ['id', 'label', 'role'],
             properties: {
-              id: { type: 'integer', minimum: 1, maximum: 140 },
+              id: controlId,
               label: { type: 'string', minLength: 1, maxLength: 120 },
               role: { type: 'string', minLength: 1, maxLength: 24 },
               region: { type: 'string', maxLength: 32 },
@@ -40,6 +42,14 @@ const body = {
             },
           },
         },
+      },
+    },
+    review: {
+      type: 'object', additionalProperties: false, required: ['targetId', 'instruction', 'changedIds'],
+      properties: {
+        targetId: controlId,
+        instruction: { type: 'string', minLength: 1, maxLength: 240 },
+        changedIds: { type: 'array', minItems: 1, maxItems: 140, uniqueItems: true, items: controlId },
       },
     },
   },
@@ -60,13 +70,17 @@ function allowOrigin(reply: FastifyReply, origin: string) {
 }
 
 function readDecision(raw: unknown, input: NavigationInput) {
-  if (!raw || typeof raw !== 'object' || !('instruction' in raw) || typeof raw.instruction !== 'string' || !('kind' in raw)) return;
+  if (!raw || typeof raw !== 'object' || !('kind' in raw)) return;
+  if (raw.kind === 'keep' && input.review) return { kind: 'keep' };
+  if (!('instruction' in raw) || typeof raw.instruction !== 'string') return;
   const instruction = raw.instruction.trim();
   if (!instruction || instruction.length > 240) return;
-  if (raw.kind === 'message') return { kind: 'message', instruction };
+  const reason = input.review && 'reason' in raw && typeof raw.reason === 'string' ? raw.reason.trim() : undefined;
+  if (input.review && (!reason || reason.length > 100)) return;
+  if (raw.kind === 'message') return { kind: 'message', instruction, reason };
   if (raw.kind === 'highlight' && 'targetId' in raw && typeof raw.targetId === 'number'
     && input.page.controls.some(control => control.id === raw.targetId)) {
-    return { kind: 'highlight', targetId: raw.targetId, instruction };
+    return { kind: 'highlight', targetId: raw.targetId, instruction, reason };
   }
 }
 
@@ -100,6 +114,13 @@ export function addNavigationRoutes(app: FastifyInstance, service?: NavigationSe
     },
   }, async (request, reply) => {
     if (!service) return reply.code(503).send();
+    const { page, review } = request.body;
+    if (review) {
+      const ids = new Set(page.controls.map(control => control.id));
+      if (!ids.has(review.targetId) || !review.changedIds.every(id => ids.has(id))) {
+        return reply.code(400).send({ error: '复核中的控件编号不在当前页面快照里。' });
+      }
+    }
     try {
       // 模型只能从这次快照里挑编号。任何额外属性都不会发回扩展。
       const action = readDecision(await service.choose(request.body), request.body);

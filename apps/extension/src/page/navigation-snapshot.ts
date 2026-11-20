@@ -23,7 +23,7 @@ function sameSitePath(element: Element, url: URL): string | undefined {
 }
 
 export function readPage(document: Document, url: URL, prefer?: (element: Element, path?: string) => boolean):
-  { page: PageSnapshot; elements: Map<number, Element> } {
+  { page: PageSnapshot; elements: Map<number, Element>; preferredIds: Set<number> } {
   const entries: { element: Element; control: Omit<Control, 'id'>; preferred: boolean }[] = [];
   for (const element of document.querySelectorAll(controlSelector)) {
     const path = sameSitePath(element, url);
@@ -51,10 +51,12 @@ export function readPage(document: Document, url: URL, prefer?: (element: Elemen
   const heading = [...document.querySelectorAll('main h1, h1')].find(el => isVisibleTarget(el, document) && el.textContent?.trim());
   const title = compact(heading?.textContent ?? document.title, 160);
   const elements = new Map<number, Element>();
-  const controls = entries.map(({ element, control }, index) => {
+  const preferredIds = new Set<number>();
+  const controls = entries.map(({ element, control, preferred }, index) => {
     const id = index + 1;
     elements.set(id, element);
+    if (preferred) preferredIds.add(id);
     return { id, ...control };
   });
-  return { page: { path: url.pathname, title, controls }, elements };
+  return { page: { path: url.pathname, title, controls }, elements, preferredIds };
 }

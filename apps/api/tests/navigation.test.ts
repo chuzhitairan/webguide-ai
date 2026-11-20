@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { createApp } from '../src/app.js';
 import { createModelNavigator } from '../src/model-navigation.js';
+import type { NavigationInput } from '../src/navigation.js';
 
 const origin = 'chrome-extension://' + 'a'.repeat(32);
 const clientToken = 'local-test-token-at-least-24-chars';
@@ -42,6 +43,28 @@ describe('实时导航接口', () => {
         expect((await app.inject({ method: 'POST', url: '/api/v1/navigate', headers: requestHeaders, payload: body })).statusCode).toBe(status);
       }
       expect(choose).not.toHaveBeenCalled();
+    } finally {
+      await app.close();
+    }
+  });
+
+  it('只为有效的复核接受保留，并要求调整说明原因', async () => {
+    const keep = { kind: 'keep' };
+    const change = { kind: 'highlight', targetId: 4, instruction: '打开目标 Issue。' };
+    const choose = vi.fn().mockResolvedValueOnce(keep).mockResolvedValueOnce(keep)
+      .mockResolvedValueOnce(change).mockResolvedValueOnce({ ...change, reason: '页面出现了目标 Issue。' });
+    const app = createApp({ choose, clientToken, origins: [origin] });
+    const page = { ...payload.page, controls: [...payload.page.controls,
+      { id: 4, label: 'Target issue', role: 'link', path: '/octo/project/issues/17' }] };
+    const review = { targetId: 3, instruction: '打开 Issues。', changedIds: [4] };
+    const send = (body: NavigationInput) => app.inject({ method: 'POST', url: '/api/v1/navigate', headers, payload: body });
+    try {
+      expect((await send({ ...payload, page, review: { ...review, changedIds: [99] } })).statusCode).toBe(400);
+      expect(choose).not.toHaveBeenCalled();
+      expect((await send(payload)).statusCode).toBe(502);
+      expect((await send({ ...payload, page, review })).json()).toEqual(keep);
+      expect((await send({ ...payload, page, review })).statusCode).toBe(502);
+      expect((await send({ ...payload, page, review })).json()).toMatchObject({ ...change, reason: '页面出现了目标 Issue。' });
     } finally {
       await app.close();
     }

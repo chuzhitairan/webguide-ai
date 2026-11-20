@@ -73,10 +73,18 @@ export function isReadmeEditTarget(element: Element, url: URL, repo: string): bo
     && editName(element) && isAvailableTarget(element, element.ownerDocument);
 }
 
+export function isGoalLink(path: string | undefined, goal: BoundGoal): boolean {
+  if (goal.kind === 'issue') {
+    const candidate = path?.toLowerCase().replace(/\/$/, '');
+    return candidate === goal.path.toLowerCase() || candidate === goal.repo.toLowerCase() + '/issues';
+  }
+  return readmePath(path, goal.repo, 'blob') || readmePath(path, goal.repo, 'edit');
+}
+
 export function isPreferredControl(element: Element, path: string | undefined, url: URL, goal: BoundGoal): boolean {
-  if (goal.kind === 'issue') return path?.toLowerCase() === goal.path.toLowerCase();
-  return readmePath(path, goal.repo, 'blob') || readmePath(path, goal.repo, 'edit')
-    || (readmePath(url.pathname, goal.repo, 'blob') && /^(?:edit (?:this )?file|more edit options)$/i.test(controlLabel(element)))
+  if (isGoalLink(path, goal)) return true;
+  if (goal.kind === 'issue') return false;
+  return (readmePath(url.pathname, goal.repo, 'blob') && /^(?:edit (?:this )?file|more edit options)$/i.test(controlLabel(element)))
     || (readmePath(url.pathname, goal.repo, 'edit') && /^Fork this repository$/i.test(controlLabel(element)));
 }
 

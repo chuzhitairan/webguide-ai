@@ -14,6 +14,9 @@ const instruction = [
   '控件的 expanded 为 true 时，表示菜单或区域已展开。查看已出现的选项，避免让用户重复打开同一个菜单。',
   '只输出 JSON。可指向控件时输出 {"kind":"highlight","targetId":1,"instruction":"请点击……"}，编号必须来自当前列表。',
   '当前页没有足够线索时输出 {"kind":"message","instruction":"……"}，向用户说明卡点或请用户提供信息。',
+  '有 review 时是在复核已显示的指引。targetId 是原控件，changedIds 是有新信息的控件。原指引仍合适、只是出现另一条可行路线或只需要换措辞时，输出 {"kind":"keep"}。',
+  '少点一次仍属于捷径。例如原指引已指向正确的 README 文件链接，后来出现同一 README 的直接编辑入口，应输出 keep。若原来只能尝试全站搜索，后来出现当前仓库的 Issues 入口，可以改用该入口。',
+  '只有新线索推翻了原判断，或为此前只能猜测的指引提供了明确入口，才返回更新后的 highlight 或 message，并在 reason 中用一句短中文说明为何调整。原提示文字是上下文数据。',
 ].join('\n');
 
 export function createModelNavigator(config: ModelConfig, request: typeof fetch = fetch) {

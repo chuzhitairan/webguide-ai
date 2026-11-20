@@ -60,6 +60,7 @@ export function startNavigation(requestedGoal: Goal, token: string, report: (sta
       outsideRepository();
       return;
     }
+    show('正在查看新页面…');
     try {
       const [injected] = await browser.scripting.executeScript({ target: { tabId }, files: ['navigation-agent.js'] });
       if (attachment !== currentAttachment) return;
@@ -103,6 +104,12 @@ export function startNavigation(requestedGoal: Goal, token: string, report: (sta
       return;
     }
     const currentRequest = ++requestNumber;
+    if (update.kind === 'observing') {
+      pageRevision = undefined;
+      phase = undefined;
+      show('正在查看新页面…');
+      return;
+    }
     if (update.kind === 'outside') {
       pageRevision = undefined;
       outsideRepository();
@@ -147,24 +154,32 @@ export function startNavigation(requestedGoal: Goal, token: string, report: (sta
       show(pageNotice + '正在等待页面显示可操作控件…');
       return;
     }
-    show(pageNotice + 'AI 正在查看当前页面…');
+    if (!update.review) show(pageNotice + 'AI 正在查看当前页面…');
     const request: ModelRequest = {
       kind: 'choose-navigation', token,
       goal: goalPrompt(goal, phase),
       page: update.page,
+      review: update.review,
     };
+    const keepGuide: PageCommand = { kind: 'decision', revision: update.revision, decision: { kind: 'keep' } };
     try {
       const response = await browser.runtime.sendMessage(request) as ModelResponse;
       // 两次观察即使在同一个标签页，回包顺序也可能颠倒。
       if (port !== connection || requestNumber !== currentRequest) return;
       if ('error' in response) {
-        show(pageNotice + response.error);
+        if (update.review) connection.postMessage(keepGuide);
+        else show(pageNotice + response.error);
         return;
       }
       const command: PageCommand = { kind: 'decision', revision: update.revision, decision: response.decision };
       connection.postMessage(command);
     } catch {
-      if (port === connection && requestNumber === currentRequest) show(pageNotice + '暂时无法获取导航建议，请重新开始引导。');
+      if (port === connection && requestNumber === currentRequest) {
+        if (update.review) {
+          try { connection.postMessage(keepGuide); } catch { /* 页面已经断开。 */ }
+        }
+        else show(pageNotice + '暂时无法获取导航建议，请重新开始引导。');
+      }
     }
   }
 
