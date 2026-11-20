@@ -48,6 +48,20 @@ test('finds the README edit action through a menu and distinguishes Fork from an
     await submit('readme-entry');
     const file = site.getByRole('link', { name: 'README.md' });
     await expect(file).toHaveClass(/driver-active-element/);
+    // GitHub 首页的 README 预览可能在首次指引之后才渲染。
+    await site.locator('main').evaluate((main, editUrl) => {
+      const inlineEdit = document.createElement('a');
+      inlineEdit.href = editUrl;
+      inlineEdit.textContent = 'Edit README in preview';
+      main.append(inlineEdit);
+    }, edit);
+    const previewEdit = site.getByRole('link', { name: 'Edit README in preview' });
+    await previewEdit.hover();
+    // 等过页面观察器最长的合并窗口，确认同一页没有发起第二次模型判断。
+    await site.waitForTimeout(850);
+    expect(calls).toEqual(['/octo/sample']);
+    await expect(file).toHaveClass(/driver-active-element/);
+    await expect(previewEdit).not.toHaveClass(/driver-active-element/);
     await file.click();
     const more = site.getByRole('button', { name: 'More file actions' });
     await expect(more).toHaveClass(/driver-active-element/);

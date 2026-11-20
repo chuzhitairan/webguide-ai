@@ -66,10 +66,22 @@ test('highlights each model-selected control and confirms the issue after the us
       button.textContent = 'Other action';
       main.append(button);
     });
-    await expect.poll(() => calls.length).toBe(2);
-    await expect(panel.getByRole('status')).toHaveText('点击 Issues（已更新）');
+    // 邻近控件变化后，等待整个观察窗口过去再比对本页的请求与提示。
+    await site.waitForTimeout(850);
+    expect(calls).toEqual(['/webguide-test/sample']);
+    await expect(panel.getByRole('status')).toHaveText('点击 Issues');
     await expect(popover).toHaveAttribute('data-test-popover', 'original');
-    await expect(popover).toContainText('点击 Issues（已更新）');
+    await expect(popover).toContainText('点击 Issues');
+
+    // 如果原按钮真的被页面替换，就重新找仍可操作的控件。
+    await issues.evaluate(link => {
+      const replacement = document.createElement('a');
+      replacement.href = (link as HTMLAnchorElement).href;
+      replacement.textContent = link.textContent;
+      link.replaceWith(replacement);
+    });
+    await expect(issues).toHaveClass(/driver-active-element/);
+    await expect(panel.getByRole('status')).toHaveText('点击 Issues（已更新）');
 
     await issues.click();
     const target = site.getByRole('link', { name: 'Improve setup' });
