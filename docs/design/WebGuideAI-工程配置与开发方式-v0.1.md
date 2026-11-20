@@ -72,27 +72,22 @@ CI 使用 `.node-version` 指定的 Node 版本，执行 `npm ci` 和 `npm run c
 
 ## 5. 页面工具与扩展权限
 
-- 扩展当前使用 `sidePanel` 权限打开侧栏。接入页面读取时再加入当前标签页所需的权限。[Chrome 的 activeTab 权限说明](https://developer.chrome.com/docs/extensions/develop/concepts/activeTab)
-- `apps/extension/src/page/` 提供控件可用性判断、页面变化监听和高亮。Driver.js 只显示单个目标和纯文本提示，用户可以继续操作网页。Driver 样式单独打包，页面工具会在接入实时导航时使用。
+点击工具栏图标打开侧栏，并授权扩展读取当前标签页。引导绑定到开始时的 GitHub 仓库和标签页。[Chrome 的 activeTab 权限说明](https://developer.chrome.com/docs/extensions/develop/concepts/activeTab)
+
+扩展为每次页面观察中的控件分配临时编号。模型返回编号和一句提示。扩展检查页面仍然匹配、控件仍可用，再用 Driver.js 显示高亮。用户自己操作网页。
 
 ## 6. 本机后端与模型配置
 
-当前后端只提供 `GET /health`，返回 `{"status":"ok","ai":"disabled"}`。本机可按 `apps/api/.env.example` 设置 `WG_PORT`，默认地址为 `127.0.0.1:43130`。下一个切片接入实时视觉引导，扩展与本机后端之间的请求格式随该切片确定。[浏览器导航原型](WebGuideAI-浏览器导航原型.md)
+后端监听 `127.0.0.1:43130`。扩展当前使用这个端口。`GET /health` 中的 `ai` 表示模型配置是否齐全。`POST /api/v1/navigate` 接收任务目标和当前页面控件，返回一个控件编号及提示，或一条说明。
+
+1. 参考 `apps/api/.env.example` 填写 `apps/api/.env`。已有配置时保留模型地址、名称和密钥，补齐尚未配置的字段。
+2. 用 `node -e "console.log(require('node:crypto').randomBytes(24).toString('hex'))"` 生成本机访问令牌，写入 `WG_CLIENT_TOKEN`。
+3. 加载扩展，在侧栏展开「本机服务设置」，把显示的 `chrome-extension://…` 填入 `WG_ALLOWED_EXTENSION_ORIGINS`。浏览器中的扩展 ID 变更时同步更新来源。
+4. 运行 `npm run dev:api`。把 `WG_CLIENT_TOKEN` 填到侧栏，模型密钥只由本机服务读取。令牌随当前浏览器会话保存。
 
 原型先用同济大学人工智能服务平台的 `DeepSeek-V4.1-Flash`，通过 `https://agi.tongji.edu.cn/v1/chat/completions` 调用。2026-11-20 用模拟仓库首页和 Issues 列表验证了真实模型能选中 `Issues` 入口和指定编号，并返回可解析 JSON。试用参数保存在本机的 `apps/api/.env`，该文件由 Git 忽略。[模型详情](https://agi.tongji.edu.cn/models/hub/125)
 
 本机关闭代理虚拟网卡后，直连短请求返回 HTTP 200。开启虚拟网卡且已设同济域名直连规则时，正常解析和用 `curl --resolve` 分别指定两个已解析的地址，模型调用都返回 `403` 和「当前网络环境不支持」。Windows 路由只能看到连接进入虚拟网卡。排查这个 403 时，先在代理客户端的连接日志里确认是否匹配了直连规则。若其他校内服务出现域名解析错误，再比较虚拟网卡开关前后的 DNS 结果。当前可用的办法是调用同济模型时关闭虚拟网卡。
-
-以下配置来自原固定教程答疑设计，供接入模型时参考。
-
-| 所在位置 | 内容 | 生命周期 |
-| --- | --- | --- |
-| 后端未入库的 .env | WG_HOST=127.0.0.1、WG_PORT=43130、WG_CLIENT_TOKEN、WG_ALLOWED_EXTENSION_ORIGINS、WG_MODEL_MODE、模型地址／名称／密钥 | 后端加载；.env.example 只有说明与空占位，缺必要值拒绝启用模型接口 |
-| 扩展设置页 | 固定本机后端地址、开发访问令牌 | 当前浏览器 storage.session；令牌不放构建环境变量、教程、页面消息或反馈 |
-
-扩展 service worker 发后端请求，页面代理不持有令牌。模型接口必须验证 Bearer 访问令牌、Host 和请求大小；Origin 存在时必须在允许的扩展 origin 列表中，浏览器预检只回显精确允许项，不使用通配符。Origin 缺失不能代替令牌认证，CORS 本身也不是身份认证；拒绝客户端自行指定模型上游地址。扩展打包后的变量可被读取，不能把模型密钥写进 VITE_*／WXT_* 等前端变量。
-
-首轮开发令牌通过本机配置渠道传递，扩展重载／浏览器重启后按实际丢失情况重新填写。公开部署、作者账户和团队权限属于后续设计，不以这一令牌方案对外提供服务。健康检查只报告运行状态，不返回令牌、模型地址或请求内容。
 
 ## 7. 旧教程运行限制记录
 

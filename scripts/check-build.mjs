@@ -6,11 +6,11 @@ const production = 'apps/extension/.output/chrome-mv3';
 const manifest = JSON.parse(await readFile(join(production, 'manifest.json'), 'utf8'));
 assert.equal(manifest.manifest_version, 3);
 assert.ok(manifest.side_panel?.default_path && manifest.background?.service_worker);
-assert.equal(manifest.host_permissions?.length ?? 0, 0);
+assert.deepEqual(manifest.host_permissions, ['http://127.0.0.1/*']);
 assert.equal(manifest.content_scripts?.length ?? 0, 0);
-assert.deepEqual(manifest.permissions, ['sidePanel']);
+assert.deepEqual(new Set(manifest.permissions), new Set(['sidePanel', 'activeTab', 'scripting', 'storage']));
 assert.ok(!(await readdir(production)).includes('page-agent.js'), '旧协作练习的页面脚本仍在扩展包里');
-for (const path of ['assets/page-agent-style.css', manifest.side_panel.default_path, manifest.background.service_worker]) {
+for (const path of ['navigation-agent.js', 'assets/page-agent-style.css', manifest.side_panel.default_path, manifest.background.service_worker]) {
   await readFile(join(production, path));
 }
 
@@ -20,7 +20,7 @@ async function checkFolder(dir) {
     if (entry.isDirectory()) await checkFolder(path);
     else if (/\.(?:js|html|json)$/.test(entry.name)) {
       const source = await readFile(path, 'utf8');
-      assert.doesNotMatch(source, /fixture-team\/guide|fixture\.collaboration\.first-pr|127\.0\.0\.1/, path);
+      assert.doesNotMatch(source, /fixture-team\/guide|fixture\.collaboration\.first-pr|127\.0\.0\.1:43131/, path);
       assert.doesNotMatch(source, /\beval\s*\(|\bnew\s+Function\s*\(/, path);
     }
   }

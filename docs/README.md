@@ -4,7 +4,7 @@
 
 **当前方向**　把扩展做成 AI 浏览器导航的运行层。AI 根据当前页面选择高亮目标和提示，扩展在网页上显示，用户自己操作。优先验证实时指路和经验复用。[浏览器导航原型](design/WebGuideAI-浏览器导航原型.md)
 
-**已有进度**　`codex/ai-navigation` 已整理出扩展侧栏、通用页面工具和本机服务。下一步接入实时模型。固定路线、协作练习和文件核对可在旧分支 `codex/github-raw-source` 查阅。[浏览器导航原型](design/WebGuideAI-浏览器导航原型.md)
+**已有进度**　`codex/ai-navigation` 已接通指定 Issue 的实时指路。浏览器回归覆盖从仓库首页到 Issue 详情。下一条验证场景是找到 README 编辑入口。固定路线、协作练习和文件核对可在旧分支 `codex/github-raw-source` 查阅。[浏览器导航原型](design/WebGuideAI-浏览器导航原型.md)
 
 ## 接手原型先看这里
 

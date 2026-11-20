@@ -8,3 +8,14 @@ body { margin: 0; }
 .panel { padding: 22px 18px 28px; max-width: 44rem; margin: 0 auto; }
 h1 { margin: 0; font-size: 1.65rem; line-height: 1.22; }
 p { margin: .5rem 0 0; }
+form { display: grid; gap: .75rem; margin-top: 1rem; }
+label { display: grid; gap: .25rem; font-weight: 600; }
+input, button { font: inherit; }
+input { min-width: 0; padding: .4rem .5rem; border: 1px solid #849a92; border-radius: .35rem; }
+button { padding: .35rem .75rem; border: 1px solid #164b3f; border-radius: .35rem; background: #fbfcf8; color: #183e38; cursor: pointer; }
+button[type="submit"]:enabled { background: #155e4a; color: white; }
+button:disabled { opacity: .55; cursor: default; }
+.actions { display: flex; flex-wrap: wrap; gap: .6rem; }
+.status { margin-top: 1rem; font-weight: 600; }
+details { margin-top: 1rem; }
+code { overflow-wrap: anywhere; }
