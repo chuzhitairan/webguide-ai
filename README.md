@@ -1,38 +1,33 @@
 # WebGuide AI
 
-WebGuide AI 是一款网页操作引导扩展。它在页面上指出操作位置，在侧栏解释步骤，并核对用户操作后的结果。
+WebGuide AI 是一款网页操作引导扩展。AI 根据当前页面选择要高亮的按钮或链接，扩展显示提示，由用户自己操作。
 
-**当前进度**　已跑通本机协作练习。下一轮接入真实 GitHub，随后加入 AI 答疑和反馈。[需求与项目进度](docs/README.md)
+**当前进度**　实时导航分支已有扩展侧栏、页面工具和本机服务。下一步接入模型，先用 GitHub 的指定 Issue 验证。[浏览器导航原型](docs/design/WebGuideAI-浏览器导航原型.md) · [项目进度](docs/README.md)
 
-## 运行首轮协作练习
+## 本机开发
 
-从认领 Issue 开始，创建工作分支、修改文档、保存提交，再发起 PR。侧栏会告诉你接下来做什么。
+1. 使用 Node 24.22.3 和 npm 11.19.1。在仓库根目录运行 `npm ci`。
+2. 运行 `npm run check`，检查类型、运行测试并构建扩展与本机服务。
+3. 在 Chrome 或 Edge 的扩展管理页打开开发者模式，加载 `apps/extension/.output/chrome-mv3`。点击扩展图标可以打开实时引导侧栏。
 
-1. 使用 Node 24.22.3 和 npm 11.19.1。在仓库根目录运行 `npm ci` 安装项目依赖。
-2. 运行 `npm run check`。这会生成教程校验器、运行检查并构建生产扩展与本机服务。
-3. 在一个终端运行 `npm run dev:fixtures`。另一个终端运行 `npm run build:extension:test`，生成练习版扩展。
-4. 在 Edge 打开扩展管理页，启用开发人员模式，用「加载解压缩的扩展」选择 `apps/extension/.output-test/chrome-mv3`。打开[练习 Issue](http://127.0.0.1:43131/fixture-team/guide/issue?number=1)，点击工具栏扩展按钮，再点「开始练习」。
+- 首次执行浏览器测试前运行 `npx playwright install chromium`。随后运行 `npm run test:e2e`，在独立 Chromium 配置中加载生产扩展并检查侧栏。
+- `npm run dev:api` 启动本机后端，可打开 `http://127.0.0.1:43130/health` 确认服务在运行。
 
-侧栏会给出本次要保存的文字。提交后，在提交页打开 base（修改前）和 head（修改后）两份 Code 源码，再在侧栏确认提交。发起 PR 后打开文件差异与提交列表，再回到 PR。如果 PR 仍是草稿，点「Ready for review」。核对通过后，侧栏显示「开发模拟提交已验证」。
-
-### 测试与后端
-
-- 首次执行浏览器测试前运行 `npx playwright install chromium`。然后运行 `npm run test:e2e`；它会启动模拟服务，用独立 Chromium 配置加载练习版扩展，并跑完一次实际的练习。
-- `npm run dev:api` 启动后端。打开 `http://127.0.0.1:43130/health` 确认服务在运行。
+旧版固定路线、协作练习和文件核对可在本地 `codex/github-raw-source` 分支查阅。
 
 ## 从哪里找文件
 
 | 我想找 | 入口 |
 | --- | --- |
-| 扩展、后端或共享类型 | [浏览器扩展](apps/extension/)、[Fastify 后端](apps/api/)、[共享契约](packages/contracts/) |
-| 自动化测试和练习页 | [浏览器测试](tests/e2e/)、[本机练习页](tests/fixtures/collaboration/) |
+| 扩展与后端 | [浏览器扩展](apps/extension/) · [Fastify 后端](apps/api/) |
+| 自动化测试 | [浏览器测试](tests/e2e/) |
 | 产品需求、设计与实施记录 | [项目文档](docs/README.md) |
 | 早期实验和开源借鉴 | [可行性实验](experiments/)、[开源研究](research/README.md) |
 | 如何参与开发 | [贡献流程](CONTRIBUTING.md)、[项目经验](docs/experience/README.md) |
 | 课堂资料 | [时间表、交付包和演示](docs/course/README.md) |
 
 <details>
-<summary>项目章程、开发过程和风险记录</summary>
+<summary>原项目章程、开发过程和风险记录</summary>
 
 ## 项目章程
 

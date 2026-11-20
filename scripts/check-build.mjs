@@ -8,7 +8,9 @@ assert.equal(manifest.manifest_version, 3);
 assert.ok(manifest.side_panel?.default_path && manifest.background?.service_worker);
 assert.equal(manifest.host_permissions?.length ?? 0, 0);
 assert.equal(manifest.content_scripts?.length ?? 0, 0);
-for (const path of ['page-agent.js', 'assets/page-agent-style.css', 'sidepanel.html', manifest.background.service_worker]) {
+assert.deepEqual(manifest.permissions, ['sidePanel']);
+assert.ok(!(await readdir(production)).includes('page-agent.js'), '旧协作练习的页面脚本仍在扩展包里');
+for (const path of ['assets/page-agent-style.css', manifest.side_panel.default_path, manifest.background.service_worker]) {
   await readFile(join(production, path));
 }
 
@@ -24,4 +26,4 @@ async function checkFolder(dir) {
   }
 }
 await checkFolder(production);
-console.log('生产包验证通过：入口完整，无模拟站点或运行时校验编译。');
+console.log('生产包验证通过：侧栏、后台和高亮样式齐全，未打包旧协作练习。');

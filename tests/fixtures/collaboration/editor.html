@@ -1,9 +1,0 @@
-<h1>编辑练习文档</h1><dl><dt>当前分支</dt><dd id="current-branch">{{branch}}</dd><dt>文件路径</dt><dd id="file-path">{{path}}</dd></dl>
-<form method="post" action="action/commit"><input type="hidden" name="branch" value="{{branch}}"><input type="hidden" name="path" value="{{path}}"><input type="hidden" name="previous" value="{{sha}}">
-<label>文档内容<textarea rows="7" id="document-editor" name="content">&#10;{{content}}</textarea></label>
-<button type="button" id="open-commit" onclick="this.hidden=true;document.getElementById('commit-form').hidden=false">打开提交表单</button>
-<fieldset id="commit-form" hidden><legend>提交修改</legend><label>提交说明 <input id="commit-message" name="message" required></label>
-<label><input id="commit-current" type="radio" name="mode" value="current-branch" checked> 提交到当前分支 {{branch}}</label>
-<label><input id="commit-new" type="radio" name="mode" value="new-branch"> 另建分支</label>
-<label>新分支名 <input id="new-branch-name" name="newBranch"></label>
-<button id="confirm-commit">确认提交</button></fieldset></form>

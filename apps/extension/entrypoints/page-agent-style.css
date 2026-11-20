@@ -3,6 +3,7 @@
 .webguide-popover { font-family: system-ui, sans-serif; }
 
 /* 提示框只显示文字，覆盖到的网页控件仍由用户操作。 */
-.driver-active .driver-overlay path,
+.webguide-guiding .driver-overlay,
+.webguide-guiding .driver-overlay path,
 .webguide-popover,
 .webguide-popover * { pointer-events: none !important; }

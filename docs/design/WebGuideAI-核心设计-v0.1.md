@@ -1,10 +1,12 @@
 # WebGuide AI 核心设计 v0.1
 
+当前的实时视觉引导和经验复用见[浏览器导航原型](WebGuideAI-浏览器导航原型.md)。本页记录原教程方案，以及继续可用的扩展和后端分工。
+
 日期：2026-11-17。状态：T02 首轮设计稿；发起人已选择方案 A“扩展本地运行＋模块化后端”，并接受 TypeScript＋React＋WXT 扩展、Node.js＋Fastify 后端的选型方向。具体模块和状态转换待审阅；[运行契约 v0.1](WebGuideAI-运行契约-v0.1.md)已给出 T03 的教程格式、会话、消息和校验器草案，依赖版本及工程配置仍待落定。
 
-输入：[整体 SRS v0.2](../requirements/WebGuideAI-SRS-v0.2.md)、[交付范围](../requirements/版本交付范围-2026-11-17.md)、[技术约束](第二阶段技术约束核对-2026-11-16.md)与[本地开源调研](../../research/notes/WebGuideAI-开源项目调研.md)。后续直接修订本文件，作为统一核心设计入口。
+输入：[整体 SRS v0.2](../requirements/WebGuideAI-SRS-v0.2.md)、[交付范围](../requirements/版本交付范围-2026-11-17.md)、[技术约束](第二阶段技术约束核对-2026-11-16.md)与[本地开源调研](../../research/notes/WebGuideAI-开源项目调研.md)。
 
-场景更新（2026-11-18）：首个交付及展示为 [GitHub 小组协作入门](../requirements/首场景调整-GitHub协作-2026-11-17.md)，下文首版模块、跨页原则与用户会话走读已对齐 SC02，Pages 适配仅保留为后续候选。[协作适配契约](GitHub协作适配契约-v0.1.md)与[v2 教程样例](contracts/collaboration.tutorial.json)已形成，真实定位及采集仍待实现验证。
+2026-11-18 的场景选择是 GitHub 小组协作入门，下文的模块和会话示例据此按 SC02 展开。实现情况和真实网站验证进度见首轮记录。[场景调整](../requirements/首场景调整-GitHub协作-2026-11-17.md) · [协作适配契约](GitHub协作适配契约-v0.1.md) · [v2 教程样例](contracts/collaboration.tutorial.json) · [首轮实施记录](首轮工程实施计划-2026-11-18.md)
 
 ## 1. 设计目标与选择记录
 

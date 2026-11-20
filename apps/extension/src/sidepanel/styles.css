@@ -6,23 +6,5 @@
 }
 body { margin: 0; }
 .panel { padding: 22px 18px 28px; max-width: 44rem; margin: 0 auto; }
-header { border-bottom: 2px solid #204f4b; padding-bottom: 12px; }
-header span { color: #21624e; font-size: .9rem; font-weight: 700; }
-h1 { margin: 3px 0 0; font-size: 1.65rem; line-height: 1.22; }
-h2 { margin: 0 0 .5rem; font-size: 1.12rem; }
-p { margin: .4rem 0 .75rem; }
-.intro, .muted { color: #3d5757; }
-.card { margin: 16px 0; background: #fffefa; border: 1px solid #c8d4cb; border-radius: 9px; padding: 14px; }
-.state { color: #14624e; font-weight: 700; margin: 0 0 .4rem; }
-.step-index { color: #3d5757; font-size: .85rem; margin: 0 0 .25rem; }
-.notice { color: #7b3518; }
-.success { color: #14624e; font-weight: 700; }
-.evidence { padding-left: 1.25rem; }
-.practice { padding-top: 12px; border-top: 1px solid #abbeb6; overflow-wrap: anywhere; }
-.actions { display: flex; gap: 7px; flex-wrap: wrap; margin: .6rem 0; }
-button { font: inherit; padding: 6px 9px; border: 1px solid #abbeb6; border-radius: 5px; background: #fbfcf8; color: #183e38; cursor: pointer; }
-button:disabled { opacity: .55; cursor: default; }
-button.primary { background: #155e4a; border-color: #155e4a; color: #fff; font-weight: 700; }
-.link-button { border: 0; background: transparent; text-decoration: underline; }
-a { color: #135e4b; }
-:focus-visible { outline: 3px solid #b26a32; outline-offset: 2px; }
+h1 { margin: 0; font-size: 1.65rem; line-height: 1.22; }
+p { margin: .5rem 0 0; }

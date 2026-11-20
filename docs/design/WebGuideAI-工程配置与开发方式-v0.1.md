@@ -1,14 +1,14 @@
 # WebGuide AI 工程配置与开发方式 v0.1
 
-日期：2026-11-17。承接[核心设计](WebGuideAI-核心设计-v0.1.md)、[运行契约](WebGuideAI-运行契约-v0.1.md)及[引导交互稿](WebGuideAI-引导交互-v0.1.md)。本文将已接受的技术方向落实为工程建议，供首轮实施计划使用；本次只形成设计文件。
+初稿于 2026-11-17，工程状态更新于 2026-11-20。本页说明已有工程如何运行。实时引导沿用这里的扩展和后端，具体职责及本轮目标见[浏览器导航原型](WebGuideAI-浏览器导航原型.md)。
 
 ## 1. 采用方式及理由
 
-采用 **npm workspaces 单仓库，扩展本地运行，Fastify 后端作为单个进程**。扩展负责观察、规则、会话和高亮；后端接模型及后续内容管理。共享包只放跨端契约，不依赖浏览器或服务器。
+采用 **npm workspaces 单仓库，扩展本地运行，Fastify 后端作为单个进程**。扩展负责观察页面和显示提示，后端负责与模型通信。
 
 | 选择 | 本项目取舍 |
 | --- | --- |
-| npm workspaces | 当前已有 npm，扩展／后端共享类型和检查入口，减少工具安装；暂不增加构建调度平台 |
+| npm workspaces | 扩展和后端共用一份锁文件与检查入口 |
 | 扩展与后端分仓 | 边界独立，但当前一人主导、契约仍在共同演进，同步版本和 CI 的成本较高 |
 | Java 后端 | 能对应一类实习方向，但当前需要先完成浏览器引导，已选 TypeScript／Node.js，共享类型和调试更直接；后续接口不依赖 Node 专有传输 |
 
@@ -16,15 +16,15 @@
 
 ## 2. 版本与依赖
 
-| 项目 | 拟采用的基线 | 落地方式 |
+| 项目 | 项目基线 | 落地方式 |
 | --- | --- | --- |
 | Node.js | 24 LTS；首次工程基线 24.22.3 | 项目记录 `.node-version` 和 CI 版本；不直接替换全局 Node |
 | npm | 11.19.1 | 根 `package.json` 记录版本，使用 `npm ci` 按同一份锁文件安装 |
-| WXT | 0.21.5 作为首个候选 | React 模块按实际 peerDependencies 配套；不另外固定一套冲突的 Vite |
-| TypeScript／React | TypeScript 5.9 系列、React 19 系列作为候选 | 严格类型检查；扩展使用 Bundler 解析，后端／共享包采用 NodeNext ESM |
-| Fastify | 5 系列作为候选 | 后端先支持健康检查，随后接模型网关；提供 app 工厂以便注入测试 |
-| Driver.js | 从已阅读的 1.12.1 候选开始 | 直接依赖并保留许可；仅通过渲染适配层使用，不复制整个上游工程 |
-| 检查 | Vitest、Playwright、Ajv 2020、ESLint | 使用与选中 WXT／Node 兼容的稳定版本，首次安装时记录确切版本 |
+| WXT | 0.21.5 | React 模块按依赖声明配套 |
+| TypeScript／React | TypeScript 5.9.3、React 19.3.1 | 扩展使用 Bundler 解析，后端采用 NodeNext ESM |
+| Fastify | 5.12.8 | 已有健康检查接口，后端提供 app 工厂用于测试 |
+| Driver.js | 1.12.1 | 由渲染层负责高亮和气泡，保留第三方许可 |
+| 检查 | Vitest、Playwright、ESLint | 精确版本见根目录 `package-lock.json` |
 
 2026-11-19 已通过 NVM 并行安装并运行 Node 24.22.3／npm 11.19.1。本机默认仍为 Node 25.5.0／npm 11.15.0，项目检查调用 Node 24 的可执行文件。首轮已按锁文件完成干净安装和构建。调整运行时补丁时，同步更新本地说明与 CI。
 
@@ -32,64 +32,58 @@ Node 24 是仍受支持、较成熟的 LTS 选择，并非当日最新主版本�
 
 ## 3. 目录与依赖方向
 
-在当前工作区根目录增加正式工程目录，需求与设计继续留在现有位置；不是把 experiments 升级为源码。
+以下是已有的仓库目录和职责。
 
 ```text
 软件工程课程设计/
 ├─ apps/
-│  ├─ extension/                 WXT、侧栏、页面代理、会话协调器
-│  └─ api/                       Fastify、本机模型网关及后续平台模块
-├─ packages/
-│  └─ contracts/                 类型、教程校验、有限能力注册表描述
-├─ tests/
-│  ├─ fixtures/                  自有模拟页与演示教程
-│  └─ e2e/                       独立 Chromium 的扩展集成检查
-├─ scripts/                      契约生成、产物核对等少量脚本
-├─ docs/                         保留现有需求／设计；后续补操作说明
+│  ├─ extension/                 WXT、侧栏、元素检查、页面观察、高亮
+│  └─ api/                       Fastify 健康服务，后续从这里接入模型
+├─ tests/e2e/                    独立 Chromium 的扩展加载检查
+├─ scripts/                      扩展构建产物检查
+├─ docs/                         需求、设计和开发记录
 ├─ research/                     保留资料；repos/ 不加入产品版本控制
 ├─ experiments/                  保留实验历史，不被产品 import
 └─ package.json / package-lock.json / 配置文件
 ```
 
-依赖只有 extension → contracts、api → contracts；contracts 不反向导入 apps。各应用内部按功能组织，先不拆出只有几个函数的独立包。共享包先构建到 dist，再构建两个应用，避免后端误依赖前端的路径别名。
+扩展和后端可分别运行和构建。接入模型时再定义两端共用的请求与响应格式。
 
 2026-11-18 更新：课程 Git 仓库已经建立，文档基线通过组长直接验收的 PR #3 交付；工程实施沿用现有仓库，从合入 main 的基线创建独立 codex/ 分支，不重复初始化。可提交范围为 apps、packages、scripts、tests、docs、必要根配置与研究摘要。research/repos、课程原件、tmp、浏览器配置、构建输出、依赖、日志与 .env 排除；已有课程文件保持原位。提交前核对实际暂存清单，不运行无差别 git add .。
 
-教程 v1／v2 Schema、Pages 与协作样例以 docs/design/contracts 下文件为唯一设计源，构建时读取并生成产物；不另留一份人工维护的相同 JSON。当前具体适配见[协作契约](GitHub协作适配契约-v0.1.md)，执行顺序见[11 月 18 日计划](首轮工程实施计划-2026-11-18.md)。以后作者平台接管发布内容时再定义内容迁移，不在首轮建立平台数据库。
+固定路线的 Schema 和样例保存在 `docs/design/contracts/`，可结合旧版代码查阅。[协作契约](GitHub协作适配契约-v0.1.md) · [当前开发顺序](../requirements/版本交付范围-2026-11-17.md#当前开发顺序)
 
 ## 4. 构建与开发入口
 
-拟提供下列根脚本；脚本是后续工程交付约定，目前尚不存在。
+下列脚本已在根目录 `package.json` 定义，在仓库根目录运行。首次安装用 `npm ci`。
 
 | 命令 | 含义 |
 | --- | --- |
 | npm run dev:extension | WXT 开发模式，默认不自动打开浏览器 |
 | npm run dev:api | 仅监听 127.0.0.1:43130；端口占用明确报错 |
-| npm run dev:fixtures | 自有页面在 127.0.0.1:43131 提供，仅开发／测试使用 |
-| npm run check | 按契约生成、类型、静态检查、单元测试、生产构建的顺序运行 |
-| npm run test:e2e | 先构建测试扩展，再在独立持久化 Chromium 配置中运行集成检查 |
+| npm run check | 依次运行类型检查、静态检查、单元测试、生产构建和产物核对 |
+| npm run test:e2e | 构建生产扩展，在独立 Chromium 配置中检查侧栏 |
 
 WXT 设置关闭自动启动浏览器，避免进入个人 Edge 配置；需要调试时显式选择独立配置。正式 Edge 加载仍是发布前的兼容检查，不把它分解成连续要求用户操作的小实验。[WXT 浏览器启动配置](https://wxt.dev/guide/essentials/config/browser-startup)提供关闭自动启动的入口；[Playwright 扩展文档](https://playwright.dev/docs/chrome-extensions)说明使用其配套 Chromium 与持久化上下文，不能依赖个人 Edge 的命令行加载。
 
-CI 最小入口为 Node 24.22.3＋npm ci＋npm run check。扩展集成检查在单独作业安装配套 Chromium 后运行；先验证浏览器／扩展能启动，启动失败必须标为检查受阻，不能改成跳过后宣称通过。Windows 路径含中文与空格的运行由本机检查覆盖。
+CI 使用 `.node-version` 指定的 Node 版本，执行 `npm ci` 和 `npm run check`。浏览器作业使用锁定版本的 Playwright 容器，执行 `npm run test:e2e`。Windows 含中文与空格的路径由本机检查覆盖。
 
-生产构建输出 apps/extension/.output/chrome-mv3；测试构建使用独立 outDir .output-test，避免模拟页权限与开发教程覆盖待交付包。原生侧栏连接关联工具栏打开动作的窗口与一次性打开上下文，校验扩展发送端和对应凭据，不凭任意消息中的 windowId 接管任务；测试用普通扩展标签页则从浏览器 sender.tab 核对窗口。
+构建输出为 `apps/extension/.output/chrome-mv3`。浏览器测试通过普通扩展标签页打开同一个侧栏页面。
 
-## 5. 教程校验、注入与高亮
+## 5. 页面工具与扩展权限
 
-- JSON Schema 2020-12 使用 Ajv 的对应实现，在 **构建时生成独立校验函数**，随扩展打包。扩展运行时不编译 Schema，不依赖 eval／new Function；语义检查再核对 ID、来源和实际能力注册。Fastify HTTP 载荷校验与教程 Schema 分开，不把 2020-12 文件直接交给默认 HTTP 校验器。
-- 页面代理采用 WXT 未列入 manifest 的脚本入口，独立 CSS 入口打包 Driver 样式；协调器在授权后动态注册并处理既有页面注入。输出脚本／样式路径由构建产物检查固定，注册与手动注入共同保持一文档一实例。
-- 默认权限为 sidePanel、storage、scripting；GitHub、发布站点及本机后端按需授权。optional_host_permissions 可声明 github.com 和 *.github.io 的请求上界，但每次只请求实际目标主机；host_permissions 不默认授予全部这些站点。主机模式不限制端口，程序再核对精确后端地址。
-- 开发／测试构建另声明 127.0.0.1 的模拟页能力，生产构建不注册或启动演示教程。所有构建都不自动读取浏览器其他标签或其他仓库。
-- Driver.js 仅接收已经解析的唯一可见 Element 和转义后的纯文本说明，使用单目标 highlight，不调用其整套点击推进。允许正常页面交互、不抢输入焦点、不使用库的“下一步”改会话；暂停、失效和销毁由本地协调器控制。
-
-[Ajv 格式支持](https://ajv.js.org/json-schema.html)、[独立代码生成](https://ajv.js.org/standalone.html)支持构建时校验方案；[WXT 未列出入口](https://wxt.dev/guide/essentials/entrypoints#unlisted-scripts)、[Driver 配置](https://driverjs.com/docs/configuration)支持渲染分工。实际编译路径、样式作用域和页面事件兼容性纳入首轮自动化检查。
+- 扩展当前使用 `sidePanel` 权限打开侧栏。接入页面读取时再加入当前标签页所需的权限。[Chrome 的 activeTab 权限说明](https://developer.chrome.com/docs/extensions/develop/concepts/activeTab)
+- `apps/extension/src/page/` 提供控件可用性判断、页面变化监听和高亮。Driver.js 只显示单个目标和纯文本提示，用户可以继续操作网页。Driver 样式单独打包，页面工具会在接入实时导航时使用。
 
 ## 6. 本机后端与模型配置
 
-首轮只交付 GET /health → {status:"ok", ai:"disabled"}，不需要模型密钥即可开发引导。随后实现运行契约的 POST /api/v1/answers，再选择实际模型；不把模拟回答展示为真实模型答复。
+当前后端只提供 `GET /health`，返回 `{"status":"ok","ai":"disabled"}`。本机可按 `apps/api/.env.example` 设置 `WG_PORT`，默认地址为 `127.0.0.1:43130`。下一个切片接入实时视觉引导，扩展与本机后端之间的请求格式随该切片确定。[浏览器导航原型](WebGuideAI-浏览器导航原型.md)
 
-后续配置键分两处：
+原型先用同济大学人工智能服务平台的 `DeepSeek-V4.1-Flash`，通过 `https://agi.tongji.edu.cn/v1/chat/completions` 调用。2026-11-20 用模拟仓库首页和 Issues 列表验证了真实模型能选中 `Issues` 入口和指定编号，并返回可解析 JSON。试用参数保存在本机的 `apps/api/.env`，该文件由 Git 忽略。[模型详情](https://agi.tongji.edu.cn/models/hub/125)
+
+本机关闭代理虚拟网卡后，直连短请求返回 HTTP 200。开启虚拟网卡且已设同济域名直连规则时，正常解析和用 `curl --resolve` 分别指定两个已解析的地址，模型调用都返回 `403` 和「当前网络环境不支持」。Windows 路由只能看到连接进入虚拟网卡。排查这个 403 时，先在代理客户端的连接日志里确认是否匹配了直连规则。若其他校内服务出现域名解析错误，再比较虚拟网卡开关前后的 DNS 结果。当前可用的办法是调用同济模型时关闭虚拟网卡。
+
+以下配置来自原固定教程答疑设计，供接入模型时参考。
 
 | 所在位置 | 内容 | 生命周期 |
 | --- | --- | --- |
@@ -100,7 +94,9 @@ CI 最小入口为 Node 24.22.3＋npm ci＋npm run check。扩展集成检查在
 
 首轮开发令牌通过本机配置渠道传递，扩展重载／浏览器重启后按实际丢失情况重新填写。公开部署、作者账户和团队权限属于后续设计，不以这一令牌方案对外提供服务。健康检查只报告运行状态，不返回令牌、模型地址或请求内容。
 
-## 7. 初始限制及其验证位置
+## 7. 旧教程运行限制记录
+
+以下参数用于原固定教程，保留作设计参考。
 
 | 参数 | 设计初值 | 处理方式 |
 | --- | --- | --- |
@@ -119,11 +115,9 @@ CI 最小入口为 Node 24.22.3＋npm ci＋npm run check。扩展集成检查在
 
 ## 8. 首轮切片与团队任务
 
-首轮交付为正式工程与协作模拟闭环：共享 v1/v2 校验、协调器、模拟适配器、独立健康后端、高亮与侧栏，按[11 月 18 日实施计划](首轮工程实施计划-2026-11-18.md)的 5 个任务推进。模拟教程只在开发／测试构建启用，不代表真实 GitHub 已支持。
+原协作练习、固定路线和文件核对集中保留在本地 `codex/github-raw-source` 分支。[11 月 18 日实施记录](首轮工程实施计划-2026-11-18.md)
 
-后续接真实 GitHub 协作页面、提交／PR 证据，再接当前步骤 AI 与最简反馈；完成 SC02 全部必要验收后才称首版交付。Pages 为后续教程候选。反馈接收与清除约定需在反馈实现前明确，本地草稿不等于维护者已收到。
-
-首轮工程已跑通本机协作练习。真实 GitHub 页面和 Edge 原生侧栏的兼容检查随下一轮继续。
+下一轮用两条 GitHub 短路线验证 AI 能否根据当前页面选择要高亮的控件，并跟上用户操作。完整 SC02 协作、提交和 PR 核对、反馈及作者工具按各自场景安排。[当前开发顺序](../requirements/版本交付范围-2026-11-17.md#当前开发顺序)
 
 ## 9. 开工前检查与小组接入
 
@@ -137,7 +131,7 @@ CI 最小入口为 Node 24.22.3＋npm ci＋npm run check。扩展集成检查在
 | 适用范围 | 预检使用实验的 `panel.html` 与本机模拟页。首轮工程已用 `npm run test:e2e` 加载 WXT 构建并跑通练习。Edge 原生侧栏和真实 GitHub 采集待验证。 |
 | 开源复用 | 9 个本地上游副本的 HEAD 均与[来源清单](../../research/sources.json)一致。Driver.js 为渲染依赖候选，具体许可与可移植代码见[源码阅读索引](../../research/notes/源码阅读索引.md)。 |
 
-运行 `npm run test:e2e` 可复现首轮协作检查。要单独验证生命周期，可按[实验说明](../../experiments/extension-lifecycle-spike/README.md)启动模拟页，再从普通扩展标签页 `panel.html` 触发开始、暂停、恢复与断连，观察页面高亮及诊断记录。
+原版可从 `codex/github-raw-source` 运行首轮协作检查。要单独验证页面生命周期，可按[实验说明](../../experiments/extension-lifecycle-spike/README.md)运行。
 
 ### 开工后的接入顺序
 

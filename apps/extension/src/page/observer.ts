@@ -1,8 +1,6 @@
-import type { RuntimeEvent } from '@webguide/contracts';
+type InvalidationReason = 'page-left' | 'target-changed';
 
-type InvalidationReason = Extract<RuntimeEvent, { type: 'LOCATION_INVALIDATED' }>['reason'];
-
-// 只在当前请求的有限租期内订阅页面变化。撤销监听与高亮在同一事件回调中完成。
+// 引导开始时订阅页面变化，调用方在引导结束或离开页面后停止监听。
 export function watchPage(
   document: Document,
   checkTarget: () => void,
@@ -21,7 +19,7 @@ export function watchPage(
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'hidden') leavePage();
   }, options);
-  // 表单提交去向等属性可以只存在于控件的 JS 状态中，不一定触发 DOM mutation。
+  // 控件状态变化也可能只发出事件，不修改 DOM 属性。
   document.addEventListener('change', changeTarget, options);
   document.addEventListener('toggle', changeTarget, options);
   document.addEventListener('input', () => {
