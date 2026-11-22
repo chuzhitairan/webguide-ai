@@ -2,6 +2,8 @@
 
 更新于 2026-11-22。本页记录浏览器导航的产品方向及早期原型结果。`codex/ai-navigation` 保存 GitHub 和 Figma 的预设原型，`codex/navigation-harness` 已清理到可独立验证的工程基础。固定路线与 GitHub 文件核对保存在 `codex/github-raw-source`。[开发顺序](../requirements/版本交付范围-2026-11-17.md#当前开发顺序)
 
+新一轮的页面观察、模型循环和验收设计集中在评审稿。[导航 Harness 设计](WebGuideAI-导航-Harness-设计.md)
+
 ## 原型希望用户看到什么
 
 用户打开扩展，说「带我找到这个仓库 README 的编辑入口」。AI 看当前页面，决定该高亮哪个链接、菜单或按钮，以及旁边该提示什么。扩展在网页上显示高亮和气泡，用户自己操作。用户可以从已经打开的 README 开始，也可以在途中自行切换页面，AI 根据眼前的状态重新判断。
