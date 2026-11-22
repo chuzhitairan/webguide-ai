@@ -2,16 +2,22 @@
 
 WebGuide AI 是一款网页操作引导扩展。AI 根据当前页面选择要高亮的位置，扩展显示提示，由用户自己操作。
 
-**当前进度**　`codex/navigation-harness` 保留可独立验证的工程基础，包括扩展侧栏、本机服务、页面观察和高亮组件。GitHub 和 Figma 的实时引导原型可在 `codex/ai-navigation` 试用。[项目进度](docs/README.md)
+**当前进度**　`codex/navigation-harness` 已接通自然语言目标、按需补看、高亮指引和结果核对。首轮用模拟网页和模型验证。GitHub 和 Figma 的旧预设原型可在 `codex/ai-navigation` 试用。[项目进度](docs/README.md)
 
 ## 本机开发
 
 1. 使用 Node 24.22.3 和 npm 11.19.1。在仓库根目录运行 `npm ci`。
 2. 运行 `npm run check`，检查类型、运行测试并构建扩展与本机服务。
-3. 在 Chrome 或 Edge 的扩展管理页打开开发者模式，加载 `apps/extension/.output/chrome-mv3`。点击扩展图标可以打开基础侧栏。
+3. 在 Chrome 或 Edge 的扩展管理页打开开发者模式，加载 `apps/extension/.output/chrome-mv3`。已有本机安装时可点击「重新加载」。
 
-- 首次执行浏览器测试前运行 `npx playwright install chromium`。随后运行 `npm run test:e2e`，在独立 Chromium 配置中加载生产扩展并检查侧栏。
+- 首次执行浏览器测试前运行 `npx playwright install chromium`。随后运行 `npm run test:e2e`，在独立 Chromium 中验证侧栏和模拟引导。
 - `npm run dev:api` 启动本机后端，可打开 `http://127.0.0.1:43130/health` 确认服务在运行。
+
+## 试用新引导
+
+1. 参考 `apps/api/.env.example` 配置 `apps/api/.env`。之前用过同济模型和本机访问令牌，可以沿用配置。侧栏的「本机服务设置」显示当前扩展来源。
+2. 在仓库根目录运行 `npm run dev:api`。当前扩展使用本机默认端口 `43130`。
+3. 在练习网页点击工具栏上的 WebGuide AI 图标。输入本机访问令牌，再用自己的话写目标，例如「带我找到这个页面的导出设置」，点击「开始引导」。页面上的点击、输入和滚动由你自己完成。
 
 ## 试用旧版实时引导
 

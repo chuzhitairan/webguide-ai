@@ -7,3 +7,17 @@
 body { margin: 0; }
 .panel { padding: 22px 18px 28px; max-width: 44rem; margin: 0 auto; }
 h1 { margin: 0; font-size: 1.65rem; line-height: 1.22; }
+p { margin: .7rem 0; }
+form, label { display: grid; gap: .35rem; }
+form { gap: .75rem; }
+label { font-weight: 600; }
+textarea, input, button { box-sizing: border-box; font: inherit; }
+textarea, input { min-width: 0; padding: .45rem .55rem; border: 1px solid #849a92; border-radius: .35rem; }
+textarea { resize: vertical; }
+button { padding: .35rem .75rem; border: 1px solid #164b3f; border-radius: .35rem; background: #fbfcf8; color: #183e38; cursor: pointer; }
+button[type="submit"]:enabled { background: #155e4a; color: white; }
+button:disabled { opacity: .55; cursor: default; }
+.actions { display: flex; flex-wrap: wrap; gap: .6rem; }
+[role="status"] { font-weight: 600; }
+details { margin-top: 1rem; }
+code { overflow-wrap: anywhere; }

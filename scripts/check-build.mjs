@@ -6,12 +6,12 @@ const production = 'apps/extension/.output/chrome-mv3';
 const manifest = JSON.parse(await readFile(join(production, 'manifest.json'), 'utf8'));
 assert.equal(manifest.manifest_version, 3);
 assert.ok(manifest.side_panel?.default_path && manifest.background?.service_worker);
-assert.deepEqual(manifest.host_permissions ?? [], []);
+assert.deepEqual(manifest.host_permissions, ['http://127.0.0.1/*']);
 assert.equal(manifest.content_scripts?.length ?? 0, 0);
-assert.deepEqual(manifest.permissions, ['sidePanel']);
-const scripts = (await readdir(production)).filter(name => name.endsWith('.js'));
-assert.deepEqual(scripts, [manifest.background.service_worker], '扩展根目录只应包含后台脚本');
-for (const path of ['assets/page-agent-style.css', manifest.side_panel.default_path, manifest.background.service_worker]) {
+assert.deepEqual(new Set(manifest.permissions), new Set(['sidePanel', 'activeTab', 'scripting', 'storage']));
+const scripts = (await readdir(production)).filter(name => name.endsWith('.js')).sort();
+assert.deepEqual(scripts, [manifest.background.service_worker, 'guide-page.js'].sort());
+for (const path of ['guide-page.js', 'assets/page-agent-style.css', manifest.side_panel.default_path, manifest.background.service_worker]) {
   await readFile(join(production, path));
 }
 

@@ -9,6 +9,7 @@ export default defineConfig({
   manifest: {
     name: 'WebGuide AI',
     action: { default_title: '打开 WebGuide AI' },
-    permissions: ['sidePanel'],
+    permissions: ['sidePanel', 'activeTab', 'scripting', 'storage'],
+    host_permissions: ['http://127.0.0.1/*'],
   },
 });

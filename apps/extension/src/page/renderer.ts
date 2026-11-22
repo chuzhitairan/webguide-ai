@@ -37,7 +37,7 @@ export function createRenderer(): Renderer {
       // 让气泡越过栏的边缘，给同栏控件留出空间。
       const inset = bounds ? (towardRight ? bounds.right - target.right : target.left - bounds.left) : 0;
       guide.setConfig({ ...guide.getConfig(), popoverOffset: bounds ? Math.max(0, inset) + 10 : undefined });
-      guide.highlight({
+      highlightWithoutChangingPageAria(element, () => guide.highlight({
         element,
         // 保留整页普通操作，用户可以按自己的路线继续。
         allowedElements: [element.ownerDocument.body],
@@ -53,7 +53,7 @@ export function createRenderer(): Renderer {
             stopCheckingPlacement = sidebar ? watchSidebarPlacement(popover.wrapper, sidebar) : undefined;
           },
         },
-      });
+      }));
       focused?.focus({ preventScroll: true });
     },
     clear() {
@@ -68,6 +68,18 @@ export function createRenderer(): Renderer {
       labels = undefined;
     },
   };
+}
+
+function highlightWithoutChangingPageAria(element: Element, highlight: () => void) {
+  // Driver 见到网页已有的 ARIA 属性就不会接管它们。
+  // 缺省值 false 可防止气泡被误认成网页菜单已经展开。
+  const hadAria = ['aria-haspopup', 'aria-expanded', 'aria-controls'].some(name => element.hasAttribute(name));
+  if (!hadAria) element.setAttribute('aria-haspopup', 'false');
+  try {
+    highlight();
+  } finally {
+    if (!hadAria && element.getAttribute('aria-haspopup') === 'false') element.removeAttribute('aria-haspopup');
+  }
 }
 
 function watchSidebarPlacement(popover: HTMLElement, sidebar: Element): () => void {

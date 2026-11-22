@@ -1,7 +1,8 @@
 type PageEvent = 'page-left' | 'user-action';
 
 const actionable = 'a[href], button, input, select, textarea, summary, [role="button"], [role="link"],'
-  + ' [role="menuitem"], [role="tab"], [role="treegrid"] [role="row"], [contenteditable="true"]';
+  + ' [role="menuitem"], [role="menuitemcheckbox"], [role="menuitemradio"], [role="tab"],'
+  + ' [role="row"], [role="treeitem"], [role="option"], [role="switch"], [contenteditable="true"]';
 
 // 引导开始时订阅页面变化，调用方在引导结束或离开页面后停止监听。
 export function watchPage(
@@ -15,11 +16,31 @@ export function watchPage(
   const options = { signal: controller.signal, capture: true };
   const leavePage = () => notify('page-left');
   const userAction = (event: Event) => {
-    const target = event.target;
-    if (event.isTrusted && target instanceof view.Element && target.closest(actionable)) notify('user-action');
+    if (event.isTrusted && event.composedPath().some(node => node instanceof view.Element && node.matches(actionable))) {
+      notify('user-action');
+    }
   };
-  const observer = new view.MutationObserver(checkTarget);
-  observer.observe(document, { subtree: true, childList: true, attributes: true, characterData: true });
+  const registered = new WeakSet<Document | ShadowRoot>();
+  const watchOptions = { subtree: true, childList: true, attributes: true, characterData: true };
+  const observer = new view.MutationObserver(changes => {
+    for (const change of changes) {
+      for (const child of change.addedNodes) if (child instanceof view.Element) findShadowRoots(child);
+    }
+    checkTarget();
+  });
+
+  function observe(root: Document | ShadowRoot) {
+    if (registered.has(root)) return;
+    registered.add(root);
+    observer.observe(root, watchOptions);
+    findShadowRoots(root);
+  }
+
+  function findShadowRoots(root: Document | ShadowRoot | Element) {
+    if (root instanceof view!.Element && root.shadowRoot) observe(root.shadowRoot);
+    for (const element of root.querySelectorAll('*')) if (element.shadowRoot) observe(element.shadowRoot);
+  }
+  observe(document);
 
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'hidden') leavePage();

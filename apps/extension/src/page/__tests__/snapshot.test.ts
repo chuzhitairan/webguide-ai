@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
-import { readPage } from '../snapshot.js';
+import { createObservation } from '../snapshot.js';
 
 beforeEach(() => {
   vi.spyOn(Element.prototype, 'getBoundingClientRect').mockReturnValue(new DOMRect(10, 10, 120, 24));
@@ -11,16 +11,170 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-it('观察可操作控件，保留可访问名称，从摘要中省略输入值和链接查询参数', () => {
+it('观察控件的名称和可用状态，省略隐藏节点、表单内容和链接地址', () => {
   document.body.innerHTML = '<main><h1>Projects</h1><span id="menu">Navigation</span>'
     + '<button aria-labelledby="menu" aria-expanded="true"><svg></svg></button><button hidden>Hidden</button>'
-    + '<button disabled>Disabled</button><input value="private"><input type="search" aria-label="Search projects" value="private query">'
+    + '<button disabled>Disabled</button><input value="private email">'
+    + '<label>Search projects <input type="search" value="private query"></label>'
+    + '<button>Options<span style="display:none"> private drafts</span></button>'
+    + '<label>Theme <select><option>private theme</option></select></label>'
+    + '<textarea aria-label="Notes">private notes</textarea>'
     + '<a href="https://example.com/projects/recent?q=private">Recent projects</a></main>';
-  const { page, elements } = readPage(document, new URL('https://example.com/projects?token=private'));
-  expect(page).toEqual({ path: '/projects', title: 'Projects', controls: [
-    { id: 1, label: 'Navigation', role: 'button', region: 'main', expanded: true },
-    { id: 2, label: 'Search projects', role: 'textbox', region: 'main' },
-    { id: 3, label: 'Recent projects', role: 'link', region: 'main', path: '/projects/recent' },
-  ] });
-  expect(elements.get(1)).toBe(document.querySelector('button'));
+
+  const observation = createObservation(document);
+  const page = observation.page();
+  const navigation = page.nodes.find(node => node.label === 'Navigation');
+
+  expect(page.title).toBe('Projects');
+  expect(page.site).toBe(document.location.hostname);
+  expect(page.nodes).toEqual(expect.arrayContaining([
+    expect.objectContaining({ label: 'Navigation', role: 'button', expanded: true }),
+    expect.objectContaining({ label: 'Disabled', available: false }),
+    expect.objectContaining({ label: 'Search projects', role: 'searchbox' }),
+    expect.objectContaining({ label: 'Options', role: 'button' }),
+    expect.objectContaining({ label: 'Theme', role: 'combobox' }),
+    expect.objectContaining({ label: 'Recent projects', role: 'link' }),
+  ]));
+  expect(JSON.stringify(page)).not.toMatch(/Hidden|private|example\.com/);
+  expect(observation.resolve(navigation!.id)?.element).toBe(document.querySelector('button'));
+});
+
+it('在指定区域找到首读未返回的控件，保留查询和原有编号', () => {
+  document.body.innerHTML = '<main><button>Export</button><aside aria-label="Properties">'
+    + '<button>Layout</button>' + '<button>Formatting</button>'.repeat(150)
+    + '<button>Export</button></aside></main>';
+  const observation = createObservation(document);
+  const page = observation.page();
+  const properties = page.nodes.find(node => node.label === 'Properties')!;
+  const layout = page.nodes.find(node => node.label === 'Layout')!;
+  expect(page.truncated).toBe(true);
+  expect(page.nodes.filter(node => node.label === 'Export')).toHaveLength(1);
+
+  const query = { type: 'search' as const, query: 'export', region: properties.id };
+  const result = observation.read(query);
+  expect(result).toMatchObject({ query, status: 'ok', truncated: false });
+  expect(result.nodes).toEqual([expect.objectContaining({ label: 'Export', region: properties.id })]);
+  expect(result.nodes[0]!.id).not.toBe(page.nodes.find(node => node.label === 'Export')!.id);
+  expect(observation.read({ type: 'region', id: properties.id }).nodes).toContainEqual(layout);
+  expect(observation.read({ type: 'search', query: 'missing', region: properties.id }).status).toBe('empty');
+  expect(observation.read({ type: 'region', id: layout.id }).status).toBe('unavailable');
+});
+
+it('检查同一编号时读取复选框当前状态，并保留选中行与页面状态', () => {
+  document.body.innerHTML = '<div role="tree"><div role="treeitem" aria-selected="true">Layout</div></div>'
+    + '<label>Auto layout <input type="checkbox"></label><div role="status">Ready</div>';
+  const observation = createObservation(document);
+  const page = observation.page();
+  const checkbox = page.nodes.find(node => node.role === 'checkbox')!;
+  expect(checkbox).toMatchObject({ label: 'Auto layout', checked: false });
+  expect(page.nodes).toEqual(expect.arrayContaining([
+    expect.objectContaining({ role: 'treeitem', label: 'Layout', selected: true }),
+    expect.objectContaining({ role: 'status', label: 'Ready' }),
+  ]));
+
+  document.querySelector('input')!.checked = true;
+  const query = { type: 'inspect' as const, id: checkbox.id };
+  expect(observation.read(query)).toEqual({
+    query, nodes: [{ ...checkbox, checked: true }], truncated: false, status: 'ok',
+  });
+});
+
+it('搜索补看可以定位普通标题文字，且不返回可编辑文本', () => {
+  document.body.innerHTML = '<aside aria-label="Properties"><div><span>Export presets</span></div>'
+    + '<div contenteditable><span>Export draft text</span></div></aside>';
+  const observation = createObservation(document);
+  const region = observation.page().nodes.find(node => node.label === 'Properties')!;
+
+  const result = observation.read({ type: 'search', query: 'export', region: region.id });
+  expect(result.nodes).toEqual([expect.objectContaining({ label: 'Export presets', role: 'text', region: region.id })]);
+});
+
+it('行内按钮的名称没变，但复用的行展示新对象后原编号失效', () => {
+  document.body.innerHTML = '<div role="grid"><div role="row" aria-labelledby="item-name">'
+    + '<span id="item-name">Logo</span><button>Export</button></div></div>';
+  const observation = createObservation(document);
+  const button = observation.page().nodes.find(node => node.role === 'button')!;
+
+  document.querySelector('#item-name')!.textContent = 'Icon';
+  expect(observation.resolve(button.id)).toBeUndefined();
+});
+
+it('补看可以读到滚动区裁剪掉的控件，但标明它仍在视口外', () => {
+  document.body.innerHTML = '<aside aria-label="Properties" style="overflow: auto">'
+    + '<h2>Export presets</h2><button>Export selection</button></aside>';
+  const region = document.querySelector('aside')!;
+  const button = document.querySelector('button')!;
+  Object.defineProperties(region, {
+    getBoundingClientRect: { value: () => new DOMRect(0, 0, 200, 100) },
+    clientHeight: { value: 100 }, scrollHeight: { value: 300 },
+  });
+  Object.defineProperty(button, 'getBoundingClientRect', { value: () => new DOMRect(10, 150, 120, 24) });
+
+  const observation = createObservation(document);
+  const page = observation.page();
+  const properties = page.nodes.find(node => node.label === 'Properties')!;
+  expect(properties).toMatchObject({ canScrollUp: false, canScrollDown: true });
+  const query = { type: 'region' as const, id: properties.id };
+  expect(observation.read(query)).toMatchObject({ truncated: true, nodes: [expect.objectContaining({ label: 'Export presets' })] });
+  const result = observation.read({ ...query, includeOffscreen: true });
+  expect(result.nodes).toContainEqual(expect.objectContaining({ label: 'Export selection', viewport: false }));
+  expect(region.scrollTop).toBe(0);
+});
+
+it('检查搜索到的屏外控件时，补回首读未覆盖的区域和相邻标题', () => {
+  document.body.innerHTML = '<aside aria-label="Properties"><h2>Export presets</h2><button>Add preset</button></aside>';
+  const outside = new DOMRect(10, window.innerHeight + 10, 100, 40);
+  for (const element of document.querySelectorAll('aside, h2, button')) {
+    Object.defineProperty(element, 'getBoundingClientRect', { value: () => outside });
+  }
+  const observation = createObservation(document);
+  expect(observation.page().nodes).toHaveLength(0);
+  const [target] = observation.read({ type: 'search', query: 'Add preset' }).nodes;
+  const result = observation.read({ type: 'inspect', id: target!.id });
+  expect(result.nodes).toEqual([
+    target,
+    expect.objectContaining({ label: 'Properties', id: target!.region, viewport: false }),
+    expect.objectContaining({ label: 'Export presets', region: target!.region, viewport: false }),
+  ]);
+});
+
+it.each(['重新命名', '改变角色', '复用原区域', '移动区域', '隐藏节点'])('目标失效后不复用原编号 (%s)', change => {
+  document.body.innerHTML = '<aside aria-label="Properties"><button>Export</button></aside>'
+    + '<aside aria-label="Layers"></aside>';
+  const region = document.querySelector('aside')!;
+  const button = document.querySelector('button')!;
+  const observation = createObservation(document);
+  const id = observation.page().nodes.find(node => node.label === 'Export')!.id;
+
+  if (change === '重新命名') button.textContent = 'Delete';
+  if (change === '改变角色') button.setAttribute('role', 'tab');
+  if (change === '复用原区域') region.setAttribute('aria-label', 'Account');
+  if (change === '移动区域') region.nextElementSibling!.append(button);
+  if (change === '隐藏节点') button.hidden = true;
+
+  expect(observation.resolve(id)).toBeUndefined();
+  expect(observation.read({ type: 'inspect', id }).status).toBe('unavailable');
+
+  region.setAttribute('aria-label', 'Properties');
+  region.append(button);
+  button.textContent = 'Export';
+  button.removeAttribute('role');
+  button.hidden = false;
+  const freshId = observation.read({ type: 'search', query: 'Export' }).nodes[0]!.id;
+  expect(freshId).toBeGreaterThan(id);
+  expect(observation.resolve(id)).toBeUndefined();
+  expect(observation.resolve(freshId)?.element).toBe(button);
+});
+
+it('观察开放 Shadow DOM 中的控件，使用当地可访问名称和所属区域', () => {
+  document.body.innerHTML = '<aside aria-label="Properties"><div></div></aside>';
+  const shadow = document.querySelector('div')!.attachShadow({ mode: 'open' });
+  shadow.innerHTML = '<span id="name">Add preset</span><button aria-labelledby="name"></button>';
+  const observation = createObservation(document);
+  const page = observation.page();
+  const region = page.nodes.find(node => node.label === 'Properties');
+  const target = page.nodes.find(node => node.label === 'Add preset');
+  expect(region).toBeDefined();
+  expect(target).toMatchObject({ region: region!.id, viewport: true, available: true });
+  expect(observation.resolve(target!.id)?.element).toBe(shadow.querySelector('button'));
 });

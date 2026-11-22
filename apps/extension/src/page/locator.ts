@@ -1,32 +1,80 @@
-// 只检查当前主文档里的元素。节点移除或祖先被隐藏后，高亮目标就失效了。
+export function pageParent(element: Element): Element | null {
+  const root = element.getRootNode();
+  return element.assignedSlot ?? element.parentElement ?? (root.nodeType === 11 ? (root as ShadowRoot).host ?? null : null);
+}
+
+// 节点移除或所在区域被隐藏后，原目标失效。开放 Shadow DOM 也要检查宿主。
 export function isVisibleTarget(element: Element, root: Document): boolean {
-  if (!element.isConnected || element.getRootNode() !== root || !root.defaultView) return false;
-  if (element.closest('[aria-hidden="true"]')) return false;
+  const view = root.defaultView;
+  if (!element.isConnected || element.ownerDocument !== root || !view) return false;
   const box = element.getBoundingClientRect();
   if (box.width <= 0 || box.height <= 0) return false;
-  const visibility = root.defaultView.getComputedStyle(element).visibility;
+  const visibility = view.getComputedStyle(element).visibility;
   if (visibility === 'hidden' || visibility === 'collapse') return false;
-  for (let node: Element | null = element; node; node = node.parentElement) {
-    const style = root.defaultView.getComputedStyle(node);
-    if (node.hasAttribute('hidden') || style.display === 'none' || style.opacity === '0'
+  for (let node: Element | null = element; node; node = pageParent(node)) {
+    const style = view.getComputedStyle(node);
+    if (node.matches('[hidden], [aria-hidden="true"], .webguide-popover, .driver-overlay')
+      || style.display === 'none' || style.opacity === '0'
       || style.contentVisibility === 'hidden') return false;
   }
   return true;
 }
 
-export function isAvailableTarget(element: Element, root: Document): boolean {
+export function isEnabledTarget(element: Element): boolean {
   // :disabled 由浏览器判定，包含 fieldset 的规则和 legend 的例外。
-  return !element.matches(':disabled')
-    && !element.closest('[aria-disabled="true"], [inert], .webguide-popover, .driver-overlay')
-    && isVisibleTarget(element, root);
+  if (element.matches(':disabled')) return false;
+  for (let node: Element | null = element; node; node = pageParent(node)) {
+    if (node.matches('[aria-disabled="true"], [inert]')) return false;
+  }
+  return true;
 }
 
-export function controlLabel(element: Element): string {
-  const compact = (value?: string | null) => value?.replace(/\s+/g, ' ').trim().slice(0, 120) ?? '';
-  // GitHub 的部分图标按钮通过独立提示元素提供可访问名称。
-  const referenced = element.getAttribute('aria-labelledby')?.trim().split(/\s+/)
-    .map(id => element.ownerDocument.getElementById(id)?.textContent).join(' ');
+export function isAvailableTarget(element: Element, root: Document): boolean {
+  return isVisibleTarget(element, root) && isEnabledTarget(element);
+}
+
+const privateContent = 'input, textarea, [contenteditable]:not([contenteditable="false"]), script, style, template';
+
+function compact(value?: string | null): string {
+  return value?.replace(/\s+/g, ' ').trim().slice(0, 120) ?? '';
+}
+
+function publicText(element: Element): string {
+  const view = element.ownerDocument.defaultView;
+  if (element.matches('select') || element.closest(privateContent) || !view) return '';
+  const parts: string[] = [];
+  let length = 0;
+  let visited = 0;
+  const walker = element.ownerDocument.createTreeWalker(element, NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT, {
+    acceptNode(node) {
+      if (node.nodeType === 1) {
+        const child = node as Element;
+        if (child.matches(`${privateContent}, select, [hidden], [aria-hidden="true"]`)) return NodeFilter.FILTER_REJECT;
+        const style = view.getComputedStyle(child);
+        if (style.display === 'none' || style.opacity === '0' || style.contentVisibility === 'hidden') return NodeFilter.FILTER_REJECT;
+      }
+      const parent = node.nodeType === 3 && node.parentElement;
+      if (parent && parent !== element && /^(hidden|collapse)$/.test(view.getComputedStyle(parent).visibility)) return NodeFilter.FILTER_SKIP;
+      return node.nodeType === 3 ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_SKIP;
+    },
+  });
+  for (let node = walker.nextNode(); node && length < 240 && visited < 120; node = walker.nextNode()) {
+    const text = node.textContent?.trim().slice(0, 240) ?? '';
+    parts.push(text);
+    length += text.length;
+    visited += 1;
+  }
+  return compact(parts.join(' '));
+}
+
+export function controlLabel(element: Element, useContents = true): string {
+  // 开放 Shadow DOM 内的标签引用在原树内解析；表单的当前值不会进入名称。
+  const root = element.getRootNode() as Document | ShadowRoot;
+  const referenced = element.getAttribute('aria-labelledby')?.trim().split(/\s+/).slice(0, 8)
+    .map(id => root.getElementById?.(id)).map(label => label ? publicText(label) : '').join(' ');
+  const labels = (element as HTMLInputElement).labels;
+  const associated = labels ? [...labels].slice(0, 8).map(publicText).join(' ') : '';
   return compact(referenced) || compact(element.getAttribute('aria-label'))
-    || compact(element instanceof HTMLElement ? element.innerText ?? element.textContent : element.textContent)
+    || compact(associated) || (useContents ? publicText(element) : '')
     || compact(element.getAttribute('title'));
 }
