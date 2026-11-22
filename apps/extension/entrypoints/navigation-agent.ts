@@ -1,6 +1,8 @@
 import { defineUnlistedScript } from 'wxt/utils/define-unlisted-script';
 import { browser } from 'wxt/browser';
-import { inspectGoal, isGoalLink, isPreferredControl, isReadmeEditTarget, repositoryAt } from '../src/navigation/github-goal.js';
+import { observeFigmaGoal } from '../src/navigation/figma-goal.js';
+import { inspectGoal, isGoalLink, isPreferredControl, isReadmeEditTarget } from '../src/navigation/github-goal.js';
+import { isGoalPage } from '../src/navigation/goal-scope.js';
 import type { BoundGoal, Control, PageCommand, PagePhase, PageUpdate } from '../src/navigation/protocol.js';
 import { controlLabel, isAvailableTarget } from '../src/page/locator.js';
 import { readPage } from '../src/page/navigation-snapshot.js';
@@ -34,6 +36,7 @@ export default defineUnlistedScript(() => {
     let fingerprint = '';
     let pageAddress = '';
     let pagePhase: PagePhase | undefined;
+    let destination: Element | undefined;
     type Target = { element: Element; identity: string; path?: string };
     let targets = new Map<number, Target>();
     let highlighted: (Target & { instruction: string }) | undefined;
@@ -74,8 +77,7 @@ export default defineUnlistedScript(() => {
     function scan() {
       if (!goal || document.visibilityState === 'hidden') return;
       const url = new URL(document.location.href);
-      const repo = repositoryAt(url.href);
-      if (repo?.toLowerCase() !== goal.repo.toLowerCase()) {
+      if (!isGoalPage(url.href, goal)) {
         clearGuide();
         if (fingerprint !== 'outside') {
           fingerprint = 'outside';
@@ -86,13 +88,22 @@ export default defineUnlistedScript(() => {
         return;
       }
       const task = goal;
-      const phase = inspectGoal(document, url, task);
+      const phase = task.kind === 'figma-auto-layout' ? 'guide' : inspectGoal(document, url, task);
+      const figma = task.kind === 'figma-auto-layout' ? observeFigmaGoal(document) : undefined;
+      const candidates = figma?.candidates;
+      destination = figma?.destination;
       const current = highlighted;
       const sameTarget = current && pageAddress === url.href && isAvailableTarget(current.element, document)
-        && targetIdentity(current.element) === current.identity;
+        && targetIdentity(current.element) === current.identity && (!candidates || candidates.includes(current.element));
       const samePhase = phase === pagePhase;
       const { page, elements, preferredIds } = readPage(document, url, (element, path) =>
-        element === current?.element || isPreferredControl(element, path, url, task));
+        element === current?.element || task.kind === 'figma-auto-layout' || isPreferredControl(element, path, url, task),
+      candidates);
+      if (task.kind === 'figma-auto-layout') {
+        // 只发送试验用的侧栏元素。设计稿名称和文件地址留在浏览器本地。
+        page.path = '/design';
+        page.title = 'Figma Design';
+      }
       const evidence = page.controls.filter(control => preferredIds.has(control.id));
       if (sameTarget && samePhase && actions === guidedActions) {
         const target = evidence.find(control => elements.get(control.id) === current.element);
@@ -191,26 +202,28 @@ export default defineUnlistedScript(() => {
       finishReview();
       if (decision.kind === 'keep') return;
       let readmeEntry = false;
+      let locationShown = false;
       const instruction = decision.reason ? decision.reason + ' ' + decision.instruction : decision.instruction;
       if (decision.kind === 'highlight') {
         const target = targets.get(decision.targetId);
         if (!target || !isAvailableTarget(target.element, document) || targetIdentity(target.element) !== target.identity) return;
         const { element } = target;
         // 两个链接都能明确推进当前任务时，捷径出现也沿用已给出的指引。
-        if (review && highlighted && (highlighted.element === element
-          || (isGoalLink(highlighted.path, goal) && isGoalLink(target.path, goal)))) return;
+        if (review && highlighted && (highlighted.element === element || (goal.kind !== 'figma-auto-layout'
+          && isGoalLink(highlighted.path, goal) && isGoalLink(target.path, goal)))) return;
         readmeEntry = goal.kind === 'readme-entry' && isReadmeEditTarget(element, new URL(document.location.href), goal.repo);
+        locationShown = element === destination;
         if (highlighted?.element !== element || highlighted.instruction !== decision.instruction) {
           if (highlighted?.element !== element) clearGuide();
           highlighted = { ...target, instruction: decision.instruction };
-          renderer.show(element, { title: '下一步', instruction: decision.instruction });
+          renderer.show(element, { title: locationShown ? '已找到' : '下一步', instruction: decision.instruction });
         }
       } else {
         clearGuide();
       }
       // 回包只结束它已经看到的操作。模型等待期间的点击仍可触发下一次判断。
       guidedActions = observedActions;
-      publish({ kind: 'displayed', revision, instruction, readmeEntry });
+      publish({ kind: 'displayed', revision, instruction, readmeEntry, locationShown });
     });
   });
 });

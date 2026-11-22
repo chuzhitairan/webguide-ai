@@ -26,7 +26,7 @@ export function App() {
   const canStart = (task !== 'issue' || validIssueNumber(issue.trim())) && !!token.trim();
   return <main className="panel">
     <h1>实时网页引导</h1>
-    <p>在当前 GitHub 仓库中查找 Issue 或 README 编辑入口。页面标题和控件文字会发给已配置的模型。</p>
+    <p>在 GitHub 查找 Issue 或 README 编辑入口，也可以在 Figma 练习稿中找到自动布局。扩展会把引导需要的页面信息发给已配置的模型。</p>
     <form onSubmit={event => {
       event.preventDefault();
       if (!canStart) return;
@@ -41,6 +41,7 @@ export function App() {
         <option value="issue">打开指定 Issue</option>
         <option value="readme-entry">找到 README 编辑入口</option>
         <option value="readme-editor">进入 README 编辑器</option>
+        <option value="figma-auto-layout">Figma · 找到 Frame 1 的自动布局</option>
       </select></label>
       {task === 'issue' && <label>Issue 编号<input value={issue} onChange={event => setIssue(event.target.value)} inputMode="numeric" placeholder="例如 17" /></label>}
       <label>本机访问令牌<input type="password" value={token} onChange={event => setToken(event.target.value)} autoComplete="off" /></label>

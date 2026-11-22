@@ -1,7 +1,7 @@
 type PageEvent = 'page-left' | 'user-action';
 
 const actionable = 'a[href], button, input, select, textarea, summary, [role="button"], [role="link"],'
-  + ' [role="menuitem"], [role="tab"], [contenteditable="true"]';
+  + ' [role="menuitem"], [role="tab"], [role="treegrid"] [role="row"], [contenteditable="true"]';
 
 // 引导开始时订阅页面变化，调用方在引导结束或离开页面后停止监听。
 export function watchPage(

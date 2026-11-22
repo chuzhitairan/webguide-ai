@@ -1,5 +1,5 @@
 import { controlLabel, isAvailableTarget, isVisibleTarget } from '../page/locator.js';
-import type { BoundGoal, Goal, PagePhase } from './protocol.js';
+import type { BoundGitHubGoal, GitHubGoal, PagePhase } from './protocol.js';
 
 const githubOrigin = 'https://github.com';
 const sitePages = new Set(['account', 'apps', 'codespaces', 'collections', 'explore', 'features', 'login',
@@ -22,7 +22,7 @@ export function validIssueNumber(value: string): boolean {
   return /^\d+$/.test(value) && Number.isSafeInteger(number) && number > 0;
 }
 
-export function bindGoal(address: string | undefined, goal: Goal): BoundGoal | undefined {
+export function bindGoal(address: string | undefined, goal: GitHubGoal): BoundGitHubGoal | undefined {
   const repo = repositoryAt(address);
   if (!repo) return;
   if (goal.kind !== 'issue') return { ...goal, repo };
@@ -73,7 +73,7 @@ export function isReadmeEditTarget(element: Element, url: URL, repo: string): bo
     && editName(element) && isAvailableTarget(element, element.ownerDocument);
 }
 
-export function isGoalLink(path: string | undefined, goal: BoundGoal): boolean {
+export function isGoalLink(path: string | undefined, goal: BoundGitHubGoal): boolean {
   if (goal.kind === 'issue') {
     const candidate = path?.toLowerCase().replace(/\/$/, '');
     return candidate === goal.path.toLowerCase() || candidate === goal.repo.toLowerCase() + '/issues';
@@ -81,7 +81,7 @@ export function isGoalLink(path: string | undefined, goal: BoundGoal): boolean {
   return readmePath(path, goal.repo, 'blob') || readmePath(path, goal.repo, 'edit');
 }
 
-export function isPreferredControl(element: Element, path: string | undefined, url: URL, goal: BoundGoal): boolean {
+export function isPreferredControl(element: Element, path: string | undefined, url: URL, goal: BoundGitHubGoal): boolean {
   if (isGoalLink(path, goal)) return true;
   if (goal.kind === 'issue') return false;
   return (readmePath(url.pathname, goal.repo, 'blob') && /^(?:edit (?:this )?file|more edit options)$/i.test(controlLabel(element)))
@@ -101,7 +101,7 @@ function readmeNeedsSignIn(document: Document, url: URL, repo: string): boolean 
     .some(element => isReadmeEditTarget(element, url, repo));
 }
 
-export function inspectGoal(document: Document, url: URL, goal: BoundGoal): PagePhase {
+export function inspectGoal(document: Document, url: URL, goal: BoundGitHubGoal): PagePhase {
   if (goal.kind === 'issue') {
     if (url.pathname.replace(/\/$/, '').toLowerCase() !== goal.path.toLowerCase()) return 'guide';
     return reachedIssue(document, url, goal.path) ? 'arrived' : 'waiting-issue';
@@ -128,7 +128,7 @@ export function inspectGoal(document: Document, url: URL, goal: BoundGoal): Page
   return fileName || fileLink ? 'arrived' : 'waiting-editor';
 }
 
-export function goalPrompt(goal: BoundGoal, phase: PagePhase): string {
+export function goalPrompt(goal: BoundGitHubGoal, phase: PagePhase): string {
   if (goal.kind === 'issue') {
     return ('在 GitHub 仓库 ' + goal.repo + ' 打开 Issue #' + goal.number + '。优先使用该仓库的 Issues 入口和列表。').slice(0, 200);
   }

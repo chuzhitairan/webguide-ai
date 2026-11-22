@@ -1,8 +1,11 @@
 type IssueGoal = { kind: 'issue'; number: string };
 type ReadmeGoal = { kind: 'readme-entry' | 'readme-editor' };
+type FigmaGoal = { kind: 'figma-auto-layout' };
 
-export type Goal = IssueGoal | ReadmeGoal;
-export type BoundGoal = (IssueGoal & { repo: string; path: string }) | (ReadmeGoal & { repo: string });
+export type GitHubGoal = IssueGoal | ReadmeGoal;
+export type BoundGitHubGoal = (IssueGoal & { repo: string; path: string }) | (ReadmeGoal & { repo: string });
+export type Goal = GitHubGoal | FigmaGoal;
+export type BoundGoal = BoundGitHubGoal | (FigmaGoal & { file: string });
 export type PagePhase = 'guide' | 'arrived' | 'waiting-issue' | 'waiting-editor' | 'fork-required' | 'login-required';
 
 export interface Control {
@@ -33,7 +36,7 @@ export type Decision =
 
 export type PageUpdate =
   | { kind: 'page'; revision: number; page: PageSnapshot; phase: PagePhase; review?: GuideReview }
-  | { kind: 'displayed'; revision: number; instruction: string; readmeEntry: boolean }
+  | { kind: 'displayed'; revision: number; instruction: string; readmeEntry: boolean; locationShown: boolean }
   | { kind: 'observing' }
   | { kind: 'outside' };
 

@@ -22,10 +22,11 @@ function sameSitePath(element: Element, url: URL): string | undefined {
   }
 }
 
-export function readPage(document: Document, url: URL, prefer?: (element: Element, path?: string) => boolean):
+export function readPage(document: Document, url: URL, prefer?: (element: Element, path?: string) => boolean,
+  candidates: Iterable<Element> = document.querySelectorAll(controlSelector)):
   { page: PageSnapshot; elements: Map<number, Element>; preferredIds: Set<number> } {
   const entries: { element: Element; control: Omit<Control, 'id'>; preferred: boolean }[] = [];
-  for (const element of document.querySelectorAll(controlSelector)) {
+  for (const element of candidates) {
     const path = sameSitePath(element, url);
     const atLimit = entries.length >= maxControls;
     const preferred = prefer?.(element, path) ?? false;
@@ -41,10 +42,11 @@ export function readPage(document: Document, url: URL, prefer?: (element: Elemen
       if (replace < 0) continue;
       entries.splice(replace, 1);
     }
-    const role = element.getAttribute('role') || ({ A: 'link', INPUT: 'textbox' }[element.tagName] ?? 'button');
+    const role = element.getAttribute('role') || ({ A: 'link', INPUT: 'textbox', H2: 'heading' }[element.tagName] ?? 'button');
     const container = element.closest('nav, dialog, main, header, footer, [role="dialog"]');
     const region = compact(container?.getAttribute('aria-label'), 32) || container?.tagName.toLowerCase();
-    const expansion = element.getAttribute('aria-expanded');
+    // 标题只用于指示位置。高亮库临时加上的 aria-expanded 不代表网页区域展开了。
+    const expansion = role === 'heading' ? null : element.getAttribute('aria-expanded');
     const expanded = expansion === 'true' ? true : expansion === 'false' ? false : undefined;
     entries.push({ element, preferred, control: { label, role: role.slice(0, 24), region, path, expanded } });
   }

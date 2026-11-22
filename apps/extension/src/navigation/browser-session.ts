@@ -1,5 +1,7 @@
 import { browser } from 'wxt/browser';
-import { bindGoal, goalPrompt, repositoryAt } from './github-goal.js';
+import { figmaGoalPrompt } from './figma-goal.js';
+import { goalPrompt } from './github-goal.js';
+import { bindGoal, isGoalPage } from './goal-scope.js';
 import type { BoundGoal, Goal, ModelRequest, ModelResponse, PageCommand, PagePhase, PageUpdate } from './protocol.js';
 
 type Tab = { id?: number; windowId: number; url?: string; pendingUrl?: string; status?: string; active: boolean };
@@ -17,18 +19,25 @@ export function startNavigation(requestedGoal: Goal, token: string, report: (sta
   let phase: PagePhase | undefined;
   let forkShown = false;
   let styledDocument: string | undefined;
+  let finishTimer: ReturnType<typeof setTimeout> | undefined;
 
   function show(text: string) {
     report({ text });
   }
 
-  function outsideRepository() {
+  function outsideGoal() {
+    if (goal?.kind === 'figma-auto-layout') {
+      show('请回到本次引导的 Figma 设计稿。');
+      return;
+    }
     show(forkShown
       ? '如果你已进入自己的 Fork，可以在副本里的 README 页面重新开始引导。'
       : '请回到本次引导的 GitHub 仓库，必要时点击扩展图标重新授权。');
   }
 
   function disconnect() {
+    clearTimeout(finishTimer);
+    finishTimer = undefined;
     ++attachment;
     ++requestNumber;
     pageRevision = undefined;
@@ -56,8 +65,8 @@ export function startNavigation(requestedGoal: Goal, token: string, report: (sta
       show('网页正在加载，引导会继续。');
       return;
     }
-    if (!tab.url || repositoryAt(tab.url)?.toLowerCase() !== goal.repo.toLowerCase()) {
-      outsideRepository();
+    if (!isGoalPage(tab.url, goal)) {
+      outsideGoal();
       return;
     }
     show('正在查看新页面…');
@@ -83,6 +92,10 @@ export function startNavigation(requestedGoal: Goal, token: string, report: (sta
       });
       connection.onDisconnect.addListener(() => {
         if (port === connection) {
+          if (finishTimer !== undefined) {
+            stop();
+            return;
+          }
           disconnect();
           show('页面连接已断开。请重新开始引导。');
         }
@@ -90,14 +103,20 @@ export function startNavigation(requestedGoal: Goal, token: string, report: (sta
       const command: PageCommand = { kind: 'observe', goal };
       connection.postMessage(command);
     } catch {
-      if (attachment === currentAttachment) show('无法读取当前网页。请在 GitHub 页面点击工具栏的 WebGuide AI 后重试。');
+      if (attachment === currentAttachment) show('无法读取当前网页。请在目标页面点击工具栏的 WebGuide AI 后重试。');
     }
   }
 
   async function receive(connection: Port, update: PageUpdate) {
-    if (port !== connection || !goal) return;
+    if (port !== connection || !goal || finishTimer !== undefined) return;
     if (update.kind === 'displayed') {
       if (pageRevision !== update.revision) return;
+      if (update.locationShown) {
+        // 找位置的任务在目标被标出时完成。留一点时间让用户看清，再撤下网页上的指引。
+        finishTimer = setTimeout(stop, 4000);
+        report({ text: '已找到自动布局。 ' + update.instruction, done: true });
+        return;
+      }
       const prefix = update.readmeEntry ? '已找到 README 编辑入口。'
         : phase === 'fork-required' ? 'GitHub 要求先 Fork。' : '';
       show(prefix + update.instruction);
@@ -112,7 +131,7 @@ export function startNavigation(requestedGoal: Goal, token: string, report: (sta
     }
     if (update.kind === 'outside') {
       pageRevision = undefined;
-      outsideRepository();
+      outsideGoal();
       return;
     }
     pageRevision = update.revision;
@@ -151,13 +170,14 @@ export function startNavigation(requestedGoal: Goal, token: string, report: (sta
       return;
     }
     if (!update.page.controls.length) {
-      show(pageNotice + '正在等待页面显示可操作控件…');
+      show(goal.kind === 'figma-auto-layout' ? '正在等待图层或布局面板。请确认练习稿的 Layers 和 Design 面板已打开。'
+        : pageNotice + '正在等待页面显示可操作控件…');
       return;
     }
     if (!update.review) show(pageNotice + 'AI 正在查看当前页面…');
     const request: ModelRequest = {
       kind: 'choose-navigation', token,
-      goal: goalPrompt(goal, phase),
+      goal: goal.kind === 'figma-auto-layout' ? figmaGoalPrompt : goalPrompt(goal, phase),
       page: update.page,
       review: update.review,
     };
@@ -185,12 +205,20 @@ export function startNavigation(requestedGoal: Goal, token: string, report: (sta
 
   function onUpdated(id: number, change: { status?: string; url?: string }, tab: Tab) {
     if (id !== initialTab?.id || !tab.active || (!change.status && !change.url)) return;
+    if (finishTimer !== undefined) {
+      if (change.status === 'loading' || change.url) stop();
+      return;
+    }
     // 页面可操作时就可以引导，无需等待图片等资源。完整跳转时换到新文档。
     if (change.status === 'loading' || !port) void attach(tab);
   }
 
   function onActivated(event: { tabId: number; windowId: number }) {
     if (!initialTab || event.windowId !== initialTab.windowId) return;
+    if (finishTimer !== undefined) {
+      stop();
+      return;
+    }
     if (event.tabId === initialTab.id) {
       void browser.tabs.get(event.tabId).then(attach, () => stop());
     } else {
@@ -201,6 +229,10 @@ export function startNavigation(requestedGoal: Goal, token: string, report: (sta
 
   function onRemoved(id: number) {
     if (id !== initialTab?.id) return;
+    if (finishTimer !== undefined) {
+      stop();
+      return;
+    }
     stop();
     show('引导标签页已关闭。');
   }
@@ -209,7 +241,8 @@ export function startNavigation(requestedGoal: Goal, token: string, report: (sta
     if (stopped) return;
     goal = bindGoal(tab?.url, requestedGoal);
     if (!goal || tab?.id === undefined) {
-      show('请先打开 GitHub 仓库，并在该标签页点击工具栏的 WebGuide AI。');
+      const startPage = requestedGoal.kind === 'figma-auto-layout' ? 'Figma Design 练习稿' : 'GitHub 仓库';
+      show('请先打开' + startPage + '，并在该标签页点击工具栏的 WebGuide AI。');
       return;
     }
     initialTab = tab;
