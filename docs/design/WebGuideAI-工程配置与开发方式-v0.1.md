@@ -1,10 +1,10 @@
 # WebGuide AI 工程配置与开发方式 v0.1
 
-初稿于 2026-11-17，工程状态更新于 2026-11-20。本页说明已有工程如何运行。实时引导沿用这里的扩展和后端，具体职责及本轮目标见[浏览器导航原型](WebGuideAI-浏览器导航原型.md)。
+初稿于 2026-11-17，工程状态更新于 2026-11-22。本页说明 Harness 分支的基础工程如何运行，并保留旧版模型接入记录。[浏览器导航原型](WebGuideAI-浏览器导航原型.md)
 
 ## 1. 采用方式及理由
 
-采用 **npm workspaces 单仓库，扩展本地运行，Fastify 后端作为单个进程**。扩展负责观察页面和显示提示，后端负责与模型通信。
+采用 **npm workspaces 单仓库，扩展本地运行，Fastify 后端作为单个进程**。后续由扩展观察页面和显示提示，后端负责与模型通信。
 
 | 选择 | 本项目取舍 |
 | --- | --- |
@@ -72,18 +72,15 @@ CI 使用 `.node-version` 指定的 Node 版本，执行 `npm ci` 和 `npm run c
 
 ## 5. 页面工具与扩展权限
 
-点击工具栏图标打开侧栏，并授权扩展读取当前标签页。引导绑定到开始时的 GitHub 仓库和标签页。[Chrome 的 activeTab 权限说明](https://developer.chrome.com/docs/extensions/develop/concepts/activeTab)
+点击工具栏图标打开侧栏。当前扩展只申请 `sidePanel` 权限。
 
-扩展为每次页面观察中的控件分配临时编号。模型返回编号和一句提示。扩展检查页面仍然匹配、控件仍可用，再用 Driver.js 显示高亮。用户自己操作网页。
+页面组件可独立读取可见控件、监听页面变化，并用 Driver.js 显示或清除高亮。后续实现引导时再接入页面组件和相应权限。
 
 ## 6. 本机后端与模型配置
 
-后端监听 `127.0.0.1:43130`。扩展当前使用这个端口。`GET /health` 中的 `ai` 表示模型配置是否齐全。`POST /api/v1/navigate` 接收任务目标和当前页面控件，返回一个控件编号及提示，或一条说明。
+Harness 分支的后端默认监听 `127.0.0.1:43130`，`GET /health` 返回 `{"status":"ok"}`。本机可用 `apps/api/.env` 中的 `WG_PORT` 改端口。模型接入和访问令牌的设置步骤见 `codex/ai-navigation` 的同名文档。
 
-1. 参考 `apps/api/.env.example` 填写 `apps/api/.env`。已有配置时保留模型地址、名称和密钥，补齐尚未配置的字段。
-2. 用 `node -e "console.log(require('node:crypto').randomBytes(24).toString('hex'))"` 生成本机访问令牌，写入 `WG_CLIENT_TOKEN`。
-3. 加载扩展，在侧栏展开「本机服务设置」，把显示的 `chrome-extension://…` 填入 `WG_ALLOWED_EXTENSION_ORIGINS`。浏览器中的扩展 ID 变更时同步更新来源。
-4. 运行 `npm run dev:api`。把 `WG_CLIENT_TOKEN` 填到侧栏，模型密钥只由本机服务读取。令牌随当前浏览器会话保存。
+### 原型模型接入记录
 
 原型先用同济大学人工智能服务平台的 `DeepSeek-V4.1-Flash`，通过 `https://agi.tongji.edu.cn/v1/chat/completions` 调用。2026-11-20 用模拟仓库首页和 Issues 列表验证了真实模型能选中 `Issues` 入口和指定编号，并返回可解析 JSON。试用参数保存在本机的 `apps/api/.env`，该文件由 Git 忽略。[模型详情](https://agi.tongji.edu.cn/models/hub/125)
 

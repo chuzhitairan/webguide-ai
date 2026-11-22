@@ -2,28 +2,22 @@
 
 WebGuide AI 是一款网页操作引导扩展。AI 根据当前页面选择要高亮的位置，扩展显示提示，由用户自己操作。
 
-**当前进度**　实时导航可以引导用户打开指定 Issue、找到 README 编辑入口或进入编辑器。模型根据眼前的网页选择下一步，扩展显示高亮，用户自己操作。[浏览器导航原型](docs/design/WebGuideAI-浏览器导航原型.md) · [项目进度](docs/README.md)
+**当前进度**　`codex/navigation-harness` 保留可独立验证的工程基础，包括扩展侧栏、本机服务、页面观察和高亮组件。GitHub 和 Figma 的实时引导原型可在 `codex/ai-navigation` 试用。[项目进度](docs/README.md)
 
 ## 本机开发
 
 1. 使用 Node 24.22.3 和 npm 11.19.1。在仓库根目录运行 `npm ci`。
 2. 运行 `npm run check`，检查类型、运行测试并构建扩展与本机服务。
-3. 在 Chrome 或 Edge 的扩展管理页打开开发者模式，加载 `apps/extension/.output/chrome-mv3`。点击扩展图标可以打开实时引导侧栏。
+3. 在 Chrome 或 Edge 的扩展管理页打开开发者模式，加载 `apps/extension/.output/chrome-mv3`。点击扩展图标可以打开基础侧栏。
 
 - 首次执行浏览器测试前运行 `npx playwright install chromium`。随后运行 `npm run test:e2e`，在独立 Chromium 配置中加载生产扩展并检查侧栏。
 - `npm run dev:api` 启动本机后端，可打开 `http://127.0.0.1:43130/health` 确认服务在运行。
 
-## 试用实时引导
+## 试用旧版实时引导
 
-1. 按[本机模型设置](docs/design/WebGuideAI-工程配置与开发方式-v0.1.md#6-本机后端与模型配置)配置模型和本机访问令牌，启动后端。
-2. 打开 GitHub 仓库首页、Issues 列表或根目录下的 README.md 文件页，在该标签页点击工具栏上的 WebGuide AI。
-3. 在侧栏填入本机访问令牌，再选择「打开指定 Issue」「找到 README 编辑入口」或「进入 README 编辑器」，然后点击「开始引导」。选择 Issue 时还需填入编号。
+`codex/ai-navigation` 保存了可运行的 GitHub 和 Figma 原型。在仓库根目录运行 `git show codex/ai-navigation:README.md`，即可查看当时的试用步骤。[原型验证记录](docs/design/WebGuideAI-浏览器导航原型.md#第一轮怎么验证)
 
-找到编辑入口时，侧栏会确认高亮的位置。选择进入编辑器时，扩展会等 GitHub 显示可编辑的 README。若页面要求先 Fork，用户可以在网页上决定是否创建自己的副本。进入副本后可重新开始引导。
-
-试用 Figma 时，打开[走查记录中的练习稿](docs/requirements/浏览器场景走查-2026-11-16.md)，在该标签页打开扩展，选择「Figma · 找到 Frame 1 的自动布局」。可以先取消选中，也可以从已选中 `Frame 1` 开始。未启用自动布局时，引导优先高亮 `Layout` 右上角的开关。已启用时，高亮 `Auto layout` 标题。
-
-旧版固定路线、协作练习和文件核对可在本地 `codex/github-raw-source` 分支查阅。
+固定路线、协作练习和文件核对可在本地 `codex/github-raw-source` 分支查阅。
 
 ## 从哪里找文件
 
