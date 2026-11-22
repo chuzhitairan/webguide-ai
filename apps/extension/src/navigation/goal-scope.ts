@@ -1,5 +1,5 @@
-import { figmaFileAt } from './figma-goal.js';
-import { bindGoal as bindGitHubGoal, repositoryAt } from './github-goal.js';
+import { figmaFileAt, figmaMessages } from './figma-goal.js';
+import { bindGoal as bindGitHubGoal, githubMessages, repositoryAt } from './github-goal.js';
 import type { BoundGoal, Goal } from './protocol.js';
 
 export function bindGoal(address: string | undefined, goal: Goal): BoundGoal | undefined {
@@ -11,4 +11,8 @@ export function bindGoal(address: string | undefined, goal: Goal): BoundGoal | u
 export function isGoalPage(address: string | undefined, goal: BoundGoal): boolean {
   if (goal.kind === 'figma-auto-layout') return figmaFileAt(address) === goal.file;
   return repositoryAt(address)?.toLowerCase() === goal.repo.toLowerCase();
+}
+
+export function goalMessages(goal: Goal) {
+  return goal.kind === 'figma-auto-layout' ? figmaMessages : githubMessages;
 }

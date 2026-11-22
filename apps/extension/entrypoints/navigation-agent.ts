@@ -1,11 +1,9 @@
 import { defineUnlistedScript } from 'wxt/utils/define-unlisted-script';
 import { browser } from 'wxt/browser';
-import { observeFigmaGoal } from '../src/navigation/figma-goal.js';
-import { inspectGoal, isGoalLink, isPreferredControl, isReadmeEditTarget } from '../src/navigation/github-goal.js';
+import { observeGoalPage } from '../src/navigation/goal-observation.js';
 import { isGoalPage } from '../src/navigation/goal-scope.js';
-import type { BoundGoal, Control, PageCommand, PagePhase, PageUpdate } from '../src/navigation/protocol.js';
+import type { BoundGoal, Control, HighlightFeedback, PageCommand, PageUpdate } from '../src/navigation/protocol.js';
 import { controlLabel, isAvailableTarget } from '../src/page/locator.js';
-import { readPage } from '../src/page/navigation-snapshot.js';
 import { watchPage } from '../src/page/observer.js';
 import { createRenderer } from '../src/page/renderer.js';
 
@@ -35,8 +33,8 @@ export default defineUnlistedScript(() => {
     let revision = 0;
     let fingerprint = '';
     let pageAddress = '';
-    let pagePhase: PagePhase | undefined;
-    let destination: Element | undefined;
+    let pageProgress = '';
+    let observation: ReturnType<typeof observeGoalPage> | undefined;
     type Target = { element: Element; identity: string; path?: string };
     let targets = new Map<number, Target>();
     let highlighted: (Target & { instruction: string }) | undefined;
@@ -87,25 +85,15 @@ export default defineUnlistedScript(() => {
         }
         return;
       }
-      const task = goal;
-      const phase = task.kind === 'figma-auto-layout' ? 'guide' : inspectGoal(document, url, task);
-      const figma = task.kind === 'figma-auto-layout' ? observeFigmaGoal(document) : undefined;
-      const candidates = figma?.candidates;
-      destination = figma?.destination;
       const current = highlighted;
+      observation = observeGoalPage(document, url, goal, current?.element);
+      const { page, elements, preferredIds, progress, keepsCurrent } = observation;
+      const progressKey = JSON.stringify(progress);
       const sameTarget = current && pageAddress === url.href && isAvailableTarget(current.element, document)
-        && targetIdentity(current.element) === current.identity && (!candidates || candidates.includes(current.element));
-      const samePhase = phase === pagePhase;
-      const { page, elements, preferredIds } = readPage(document, url, (element, path) =>
-        element === current?.element || task.kind === 'figma-auto-layout' || isPreferredControl(element, path, url, task),
-      candidates);
-      if (task.kind === 'figma-auto-layout') {
-        // 只发送试验用的侧栏元素。设计稿名称和文件地址留在浏览器本地。
-        page.path = '/design';
-        page.title = 'Figma Design';
-      }
+        && targetIdentity(current.element) === current.identity && keepsCurrent;
+      const sameProgress = progressKey === pageProgress;
       const evidence = page.controls.filter(control => preferredIds.has(control.id));
-      if (sameTarget && samePhase && actions === guidedActions) {
+      if (sameTarget && sameProgress && actions === guidedActions) {
         const target = evidence.find(control => elements.get(control.id) === current.element);
         if (!target) return;
 
@@ -128,25 +116,25 @@ export default defineUnlistedScript(() => {
         pendingReview = { signature, keys };
         indexTargets(page.controls, elements);
         observedActions = actions;
-        publish({ kind: 'page', revision: ++revision, page, phase, review: {
+        publish({ kind: 'page', revision: ++revision, page, progress, review: {
           targetId: target.id, instruction: current.instruction, changedIds: [...changes.values()],
         } });
         return;
       }
-      const next = url.href + JSON.stringify({ page, phase });
+      const next = url.href + progressKey + JSON.stringify(page);
       if (next === fingerprint && (!current || sameTarget)) {
         if (!pendingReview) indexTargets(page.controls, elements);
         return;
       }
-      if (!sameTarget || !samePhase) clearGuide();
+      if (!sameTarget || !sameProgress) clearGuide();
       pendingReview = undefined;
       seenEvidence = new Set(evidence.map(evidenceKey));
       indexTargets(page.controls, elements);
       pageAddress = url.href;
-      pagePhase = phase;
+      pageProgress = progressKey;
       fingerprint = next;
       observedActions = actions;
-      publish({ kind: 'page', revision: ++revision, page, phase });
+      publish({ kind: 'page', revision: ++revision, page, progress });
     }
 
     function scheduleScan() {
@@ -201,29 +189,27 @@ export default defineUnlistedScript(() => {
       const review = !!pendingReview;
       finishReview();
       if (decision.kind === 'keep') return;
-      let readmeEntry = false;
-      let locationShown = false;
+      let feedback: HighlightFeedback | undefined;
       const instruction = decision.reason ? decision.reason + ' ' + decision.instruction : decision.instruction;
       if (decision.kind === 'highlight') {
         const target = targets.get(decision.targetId);
         if (!target || !isAvailableTarget(target.element, document) || targetIdentity(target.element) !== target.identity) return;
         const { element } = target;
         // 两个链接都能明确推进当前任务时，捷径出现也沿用已给出的指引。
-        if (review && highlighted && (highlighted.element === element || (goal.kind !== 'figma-auto-layout'
-          && isGoalLink(highlighted.path, goal) && isGoalLink(target.path, goal)))) return;
-        readmeEntry = goal.kind === 'readme-entry' && isReadmeEditTarget(element, new URL(document.location.href), goal.repo);
-        locationShown = element === destination;
+        if (review && highlighted && (highlighted.element === element
+          || observation?.equivalentRoutes?.(highlighted.path, target.path))) return;
+        feedback = observation?.feedback(element);
         if (highlighted?.element !== element || highlighted.instruction !== decision.instruction) {
           if (highlighted?.element !== element) clearGuide();
           highlighted = { ...target, instruction: decision.instruction };
-          renderer.show(element, { title: locationShown ? '已找到' : '下一步', instruction: decision.instruction });
+          renderer.show(element, { title: feedback?.complete ? '已找到' : '下一步', instruction: decision.instruction });
         }
       } else {
         clearGuide();
       }
       // 回包只结束它已经看到的操作。模型等待期间的点击仍可触发下一次判断。
       guidedActions = observedActions;
-      publish({ kind: 'displayed', revision, instruction, readmeEntry, locationShown });
+      publish({ kind: 'displayed', revision, instruction, feedback });
     });
   });
 });

@@ -6,7 +6,15 @@ export type GitHubGoal = IssueGoal | ReadmeGoal;
 export type BoundGitHubGoal = (IssueGoal & { repo: string; path: string }) | (ReadmeGoal & { repo: string });
 export type Goal = GitHubGoal | FigmaGoal;
 export type BoundGoal = BoundGitHubGoal | (FigmaGoal & { file: string });
-export type PagePhase = 'guide' | 'arrived' | 'waiting-issue' | 'waiting-editor' | 'fork-required' | 'login-required';
+
+export type PageProgress =
+  | { kind: 'guide'; prompt: string; notice?: string; returnHint?: string }
+  | { kind: 'waiting' | 'finished'; text: string };
+
+export interface HighlightFeedback {
+  prefix: string;
+  complete?: true;
+}
 
 export interface Control {
   id: number;
@@ -35,8 +43,8 @@ export type Decision =
   | { kind: 'keep' };
 
 export type PageUpdate =
-  | { kind: 'page'; revision: number; page: PageSnapshot; phase: PagePhase; review?: GuideReview }
-  | { kind: 'displayed'; revision: number; instruction: string; readmeEntry: boolean; locationShown: boolean }
+  | { kind: 'page'; revision: number; page: PageSnapshot; progress: PageProgress; review?: GuideReview }
+  | { kind: 'displayed'; revision: number; instruction: string; feedback?: HighlightFeedback }
   | { kind: 'observing' }
   | { kind: 'outside' };
 

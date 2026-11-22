@@ -1,4 +1,5 @@
 import { controlLabel, isAvailableTarget } from '../page/locator.js';
+import type { HighlightFeedback, PageProgress } from './protocol.js';
 
 const frameName = 'Frame 1';
 const layerRows = '[aria-label="Left sidebar"] [role="treegrid"] [role="row"][data-testid="layer-row"]';
@@ -8,9 +9,18 @@ const sidebarHeadings = `${rightSidebar} h2`;
 const enableAutoLayout = `${rightSidebar} input[type="checkbox"][data-tooltip="Use auto layout"]:enabled:not(:checked)`;
 const sidebarControls = '[aria-label="Left sidebar"] :is(button,[role="button"]), [aria-label="Right sidebar"] [role="tab"]';
 
-export const figmaGoalPrompt = '在 Figma Design 中带用户找到 Frame 1 的自动布局。'
+const figmaGoalPrompt = '在 Figma Design 中带用户找到 Frame 1 的自动布局。'
   + '看到 Toggle auto layout 开关就高亮它，说明这是启用入口。若提供 Layout 或 Auto layout 标题，就指向对应区域。找到入口即可。'
   + '还未选中时优先指向 Frame 1；缺少图层时根据可见的 Layers 或 Design 入口指路。';
+
+export const figmaProgress: PageProgress = { kind: 'guide', prompt: figmaGoalPrompt };
+export const figmaMessages = {
+  start: '请先打开 Figma Design 练习稿，并在该标签页点击工具栏的 WebGuide AI。',
+  outside: '请回到本次引导的 Figma 设计稿。',
+  empty: '正在等待图层或布局面板。请确认练习稿的 Layers 和 Design 面板已打开。',
+};
+
+export const figmaLocationFeedback: HighlightFeedback = { prefix: '已找到自动布局。 ', complete: true };
 
 export function figmaFileAt(address?: string): string | undefined {
   if (!address) return;

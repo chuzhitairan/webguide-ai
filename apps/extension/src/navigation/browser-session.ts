@@ -1,14 +1,13 @@
 import { browser } from 'wxt/browser';
-import { figmaGoalPrompt } from './figma-goal.js';
-import { goalPrompt } from './github-goal.js';
-import { bindGoal, isGoalPage } from './goal-scope.js';
-import type { BoundGoal, Goal, ModelRequest, ModelResponse, PageCommand, PagePhase, PageUpdate } from './protocol.js';
+import { bindGoal, goalMessages, isGoalPage } from './goal-scope.js';
+import type { BoundGoal, Goal, ModelRequest, ModelResponse, PageCommand, PageUpdate } from './protocol.js';
 
 type Tab = { id?: number; windowId: number; url?: string; pendingUrl?: string; status?: string; active: boolean };
 type Port = ReturnType<typeof browser.tabs.connect>;
 export type NavigationStatus = { text: string; done?: boolean };
 
 export function startNavigation(requestedGoal: Goal, token: string, report: (status: NavigationStatus) => void): () => void {
+  const messages = goalMessages(requestedGoal);
   let stopped = false;
   let initialTab: Tab | undefined;
   let goal: BoundGoal | undefined;
@@ -16,8 +15,8 @@ export function startNavigation(requestedGoal: Goal, token: string, report: (sta
   let attachment = 0;
   let requestNumber = 0;
   let pageRevision: number | undefined;
-  let phase: PagePhase | undefined;
-  let forkShown = false;
+  let pageNotice = '';
+  let returnHint: string | undefined;
   let styledDocument: string | undefined;
   let finishTimer: ReturnType<typeof setTimeout> | undefined;
 
@@ -26,13 +25,7 @@ export function startNavigation(requestedGoal: Goal, token: string, report: (sta
   }
 
   function outsideGoal() {
-    if (goal?.kind === 'figma-auto-layout') {
-      show('请回到本次引导的 Figma 设计稿。');
-      return;
-    }
-    show(forkShown
-      ? '如果你已进入自己的 Fork，可以在副本里的 README 页面重新开始引导。'
-      : '请回到本次引导的 GitHub 仓库，必要时点击扩展图标重新授权。');
+    show(returnHint ?? messages.outside);
   }
 
   function disconnect() {
@@ -41,7 +34,7 @@ export function startNavigation(requestedGoal: Goal, token: string, report: (sta
     ++attachment;
     ++requestNumber;
     pageRevision = undefined;
-    phase = undefined;
+    pageNotice = '';
     const previous = port;
     port = undefined;
     previous?.disconnect();
@@ -111,21 +104,20 @@ export function startNavigation(requestedGoal: Goal, token: string, report: (sta
     if (port !== connection || !goal || finishTimer !== undefined) return;
     if (update.kind === 'displayed') {
       if (pageRevision !== update.revision) return;
-      if (update.locationShown) {
+      const text = (update.feedback?.prefix ?? pageNotice) + update.instruction;
+      if (update.feedback?.complete) {
         // 找位置的任务在目标被标出时完成。留一点时间让用户看清，再撤下网页上的指引。
         finishTimer = setTimeout(stop, 4000);
-        report({ text: '已找到自动布局。 ' + update.instruction, done: true });
+        report({ text, done: true });
         return;
       }
-      const prefix = update.readmeEntry ? '已找到 README 编辑入口。'
-        : phase === 'fork-required' ? 'GitHub 要求先 Fork。' : '';
-      show(prefix + update.instruction);
+      show(text);
       return;
     }
     const currentRequest = ++requestNumber;
     if (update.kind === 'observing') {
       pageRevision = undefined;
-      phase = undefined;
+      pageNotice = '';
       show('正在查看新页面…');
       return;
     }
@@ -135,49 +127,28 @@ export function startNavigation(requestedGoal: Goal, token: string, report: (sta
       return;
     }
     pageRevision = update.revision;
-    phase = update.phase;
-    if (phase === 'arrived') {
-      const text = goal.kind === 'issue' ? '已打开 Issue #' + goal.number : '已进入 README 编辑器。';
-      stop();
-      report({ text, done: true });
-      return;
-    }
-    if (phase === 'login-required') {
-      stop();
-      report({ text: '请先登录 GitHub。登录后回到 README 文件页，可重新开始引导。', done: true });
-      return;
-    }
-    // 地址可能先于网页内容变化。等详情渲染后再确认任务是否到达。
-    if (phase === 'waiting-issue' && goal.kind === 'issue') {
-      show('正在确认 Issue #' + goal.number + '。如果 GitHub 显示不可访问，请核对编号或权限。');
-      return;
-    }
-    if (phase === 'waiting-editor') {
-      show('正在确认 README 编辑页面。请留意 GitHub 的登录或权限提示。');
-      return;
-    }
-    if (phase === 'fork-required') {
-      forkShown = true;
-      if (goal.kind === 'readme-entry') {
+    const { progress } = update;
+    if (progress.kind !== 'guide') {
+      if (progress.kind === 'finished') {
         stop();
-        report({ text: '已找到 README 编辑入口。GitHub 要求先 Fork 才能继续。', done: true });
-        return;
-      }
+        report({ text: progress.text, done: true });
+      } else show(progress.text);
+      return;
     }
-    const pageNotice = phase === 'fork-required' ? 'GitHub 要求先 Fork。' : '';
+    pageNotice = progress.notice ?? '';
+    returnHint = progress.returnHint ?? returnHint;
     if (update.page.path.length > 300 || update.page.path.startsWith('//')) {
-      show('当前页面地址过长或格式不受支持。请回到仓库页面后重试。');
+      show('当前页面地址过长或格式不受支持。请回到本次引导的页面后重试。');
       return;
     }
     if (!update.page.controls.length) {
-      show(goal.kind === 'figma-auto-layout' ? '正在等待图层或布局面板。请确认练习稿的 Layers 和 Design 面板已打开。'
-        : pageNotice + '正在等待页面显示可操作控件…');
+      show(pageNotice + messages.empty);
       return;
     }
     if (!update.review) show(pageNotice + 'AI 正在查看当前页面…');
     const request: ModelRequest = {
       kind: 'choose-navigation', token,
-      goal: goal.kind === 'figma-auto-layout' ? figmaGoalPrompt : goalPrompt(goal, phase),
+      goal: progress.prompt,
       page: update.page,
       review: update.review,
     };
@@ -241,8 +212,7 @@ export function startNavigation(requestedGoal: Goal, token: string, report: (sta
     if (stopped) return;
     goal = bindGoal(tab?.url, requestedGoal);
     if (!goal || tab?.id === undefined) {
-      const startPage = requestedGoal.kind === 'figma-auto-layout' ? 'Figma Design 练习稿' : 'GitHub 仓库';
-      show('请先打开' + startPage + '，并在该标签页点击工具栏的 WebGuide AI。');
+      show(messages.start);
       return;
     }
     initialTab = tab;

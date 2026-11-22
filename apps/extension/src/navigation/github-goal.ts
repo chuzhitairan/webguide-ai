@@ -1,5 +1,13 @@
 import { controlLabel, isAvailableTarget, isVisibleTarget } from '../page/locator.js';
-import type { BoundGitHubGoal, GitHubGoal, PagePhase } from './protocol.js';
+import type { BoundGitHubGoal, GitHubGoal, HighlightFeedback, PageProgress } from './protocol.js';
+
+type PagePhase = 'guide' | 'arrived' | 'waiting-issue' | 'waiting-editor' | 'fork-required' | 'login-required';
+
+export const githubMessages = {
+  start: '请先打开 GitHub 仓库，并在该标签页点击工具栏的 WebGuide AI。',
+  outside: '请回到本次引导的 GitHub 仓库，必要时点击扩展图标重新授权。',
+  empty: '正在等待页面显示可操作控件…',
+};
 
 const githubOrigin = 'https://github.com';
 const sitePages = new Set(['account', 'apps', 'codespaces', 'collections', 'explore', 'features', 'login',
@@ -128,7 +136,7 @@ export function inspectGoal(document: Document, url: URL, goal: BoundGitHubGoal)
   return fileName || fileLink ? 'arrived' : 'waiting-editor';
 }
 
-export function goalPrompt(goal: BoundGitHubGoal, phase: PagePhase): string {
+function goalPrompt(goal: BoundGitHubGoal, phase: PagePhase): string {
   if (goal.kind === 'issue') {
     return ('在 GitHub 仓库 ' + goal.repo + ' 打开 Issue #' + goal.number + '。优先使用该仓库的 Issues 入口和列表。').slice(0, 200);
   }
@@ -138,4 +146,37 @@ export function goalPrompt(goal: BoundGitHubGoal, phase: PagePhase): string {
   const destination = goal.kind === 'readme-entry' ? '找到编辑入口' : '进入编辑器';
   return '为当前 GitHub 仓库根目录的 README.md ' + destination
     + '。仓库首页优先找 README.md 文件链接。在文件页找文件工具栏的编辑控件；如果藏在菜单里，先指向对应菜单。只有明确提示时才提 Fork。';
+}
+
+export function githubProgress(document: Document, url: URL, goal: BoundGitHubGoal): PageProgress {
+  const phase = inspectGoal(document, url, goal);
+  if (phase === 'arrived') {
+    return { kind: 'finished', text: goal.kind === 'issue' ? '已打开 Issue #' + goal.number : '已进入 README 编辑器。' };
+  }
+  if (phase === 'login-required') {
+    return { kind: 'finished', text: '请先登录 GitHub。登录后回到 README 文件页，可重新开始引导。' };
+  }
+  // 地址可能先于内容变化。等页面里的证据出现，再确认已经到达。
+  if (phase === 'waiting-issue' && goal.kind === 'issue') {
+    return { kind: 'waiting', text: '正在确认 Issue #' + goal.number + '。如果 GitHub 显示不可访问，请核对编号或权限。' };
+  }
+  if (phase === 'waiting-editor') {
+    return { kind: 'waiting', text: '正在确认 README 编辑页面。请留意 GitHub 的登录或权限提示。' };
+  }
+  if (phase === 'fork-required') {
+    if (goal.kind === 'readme-entry') {
+      return { kind: 'finished', text: '已找到 README 编辑入口。GitHub 要求先 Fork 才能继续。' };
+    }
+    return {
+      kind: 'guide', prompt: goalPrompt(goal, phase), notice: 'GitHub 要求先 Fork。',
+      returnHint: '如果你已进入自己的 Fork，可以在副本里的 README 页面重新开始引导。',
+    };
+  }
+  return { kind: 'guide', prompt: goalPrompt(goal, phase) };
+}
+
+export function githubHighlightFeedback(element: Element, url: URL, goal: BoundGitHubGoal): HighlightFeedback | undefined {
+  if (goal.kind === 'readme-entry' && isReadmeEditTarget(element, url, goal.repo)) {
+    return { prefix: '已找到 README 编辑入口。' };
+  }
 }
