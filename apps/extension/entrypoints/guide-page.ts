@@ -155,11 +155,12 @@ function connect(port: Port): () => void {
       return Boolean(target && pointRoles.has(target.evidence.role)
         && matches.some(({ check }) => check.id === proof.targetId && check.field === 'label'));
     }
-    // 菜单展开、按钮可用和文件标题都可能只代表中间状态。
+    // 收起的选择控件可在名称里显示当前值。展开时应核对选项状态。
     return matches.some(({ check, evidence }) => {
       if (check.field === 'checked' || check.field === 'selected') return true;
-      return check.field === 'label' && evidence?.label
-        && (resultRoles.has(evidence.role) || (evidence.role === 'textbox' && evidence.available));
+      if (check.field !== 'label' || !evidence?.label) return false;
+      const choiceSummary = evidence.expanded === false && (evidence.role === 'button' || evidence.role === 'combobox');
+      return choiceSummary || resultRoles.has(evidence.role) || (evidence.role === 'textbox' && evidence.available);
     });
   }
 

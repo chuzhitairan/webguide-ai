@@ -3,11 +3,15 @@ import Fastify from 'fastify';
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { isExtensionOrigin } from './config.js';
 import { isGuideRequest } from './guide-protocol.js';
-import { validateDecision } from './guide.js';
-import type { GuideService } from './guide.js';
+import { ModelRequestError, validateDecision } from './guide.js';
+import type { GuideService, ModelFailure } from './guide.js';
 
 const guidePath = '/api/v1/guide';
 const guideTimeoutMs = 12_000;
+
+type GuideOutcome = ModelFailure
+  | { outcome: 'ok' | 'decision-rejected' | 'client-disconnected' | 'service-deadline' | 'service-error' };
+type GuideDiagnostic = GuideOutcome & { elapsedMs: number };
 
 function allowOrigin(request: FastifyRequest, reply: FastifyReply, service: GuideService): boolean {
   const { host, origin } = request.headers;
@@ -25,7 +29,7 @@ function hasToken(authorization: string | undefined, token: string): boolean {
 }
 
 // 将建服务和监听端口分开，测试可以直接向服务发请求。
-export function createApp(service?: GuideService): FastifyInstance {
+export function createApp(service?: GuideService, report?: (diagnostic: GuideDiagnostic) => void): FastifyInstance {
   const app = Fastify();
   app.get('/health', async () => ({ status: 'ok' }));
 
@@ -64,9 +68,11 @@ export function createApp(service?: GuideService): FastifyInstance {
     reply.raw.once('close', abort);
     const deadline = AbortSignal.timeout(guideTimeoutMs);
     const signal = AbortSignal.any([disconnect.signal, deadline]);
+    const started = performance.now();
+    const record = (outcome: GuideOutcome) => report?.({ ...outcome, elapsedMs: Math.round(performance.now() - started) });
     let onAbort: (() => void) | undefined;
     try {
-      if (reply.raw.destroyed) return reply.hijack();
+      if (reply.raw.destroyed) disconnect.abort();
       signal.throwIfAborted();
       const cancelled = new Promise<never>((_resolve, reject) => {
         onAbort = () => reject(signal.reason);
@@ -75,11 +81,26 @@ export function createApp(service?: GuideService): FastifyInstance {
       const result = await Promise.race([service.decide(request.body, signal), cancelled]);
       signal.throwIfAborted();
       const decision = validateDecision(result, request.body);
-      if (decision) return decision;
+      if (decision) {
+        record({ outcome: 'ok' });
+        return decision;
+      }
+      record({ outcome: 'decision-rejected' });
       return reply.code(502).send({ error: '模型没有返回可用的引导决定，请重试。' });
-    } catch {
-      if (disconnect.signal.aborted) return reply.hijack();
-      if (deadline.aborted) return reply.code(504).send({ error: '模型判断超时，请重试。' });
+    } catch (error) {
+      if (disconnect.signal.aborted) {
+        record({ outcome: 'client-disconnected' });
+        return reply.hijack();
+      }
+      if (deadline.aborted) {
+        record({ outcome: 'service-deadline' });
+        return reply.code(504).send({ error: '模型判断超时，请重试。' });
+      }
+      const failure = error instanceof ModelRequestError ? error.failure : { outcome: 'service-error' as const };
+      record(failure);
+      if (failure.outcome === 'model-empty' || failure.outcome === 'model-json' || failure.outcome === 'model-truncated') {
+        return reply.code(502).send({ error: '模型没有返回可用的引导决定，请重试。' });
+      }
       return reply.code(502).send({ error: '本机服务暂时无法调用模型，请重试。' });
     } finally {
       if (onAbort) signal.removeEventListener('abort', onAbort);

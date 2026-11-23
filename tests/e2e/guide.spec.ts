@@ -96,6 +96,43 @@ test('找到入口即结束，最后一次高亮自动收起', async ({ extensio
   }
 });
 
+test('当前选择可由收起的控件摘要确认', async ({ extension: { panel, activate } }) => {
+  const siteUrl = 'https://workspace.example/visibility';
+  const token = 'webguide-test-token-000000';
+  const goal = '确认当前可见范围只限团队';
+  const summary = 'Visibility: Team only';
+  const app = createApp({ token, origins: [panel.url().replace('/sidepanel.html', '')], async decide(input) {
+    const chooser = input.page.nodes.find(node => node.label === summary)!;
+    if (input.feedback) return { kind: 'highlight', targetId: chooser.id, instruction: '收起可见范围菜单。' };
+    return { kind: 'keep', requirements: [{ quote: goal, result: '可见范围只限团队', source: 'page' }],
+      proofs: [{ index: 0, checks: [{ id: chooser.id, field: 'label', equals: summary }] }] };
+  } });
+  await app.listen({ host: '127.0.0.1', port: 43130 });
+  try {
+    const context = panel.context();
+    await context.route(siteUrl, route => route.fulfill({ contentType: 'text/html', body: '<!doctype html><main>'
+      + '<button aria-expanded="true" onclick="this.setAttribute(\'aria-expanded\', \'false\')">' + summary + '</button>'
+      + '</main>' }));
+    const site = await context.newPage();
+    await site.goto(siteUrl);
+    await site.bringToFront();
+    await activate(site);
+    await panel.getByLabel('我想做什么').fill(goal);
+    await panel.getByLabel('本机访问令牌').fill(token);
+    await panel.locator('form').evaluate((form: HTMLFormElement) => form.requestSubmit());
+
+    const chooser = site.getByRole('button', { name: summary });
+    await expect(panel.getByRole('status')).toHaveText('收起可见范围菜单。');
+    await expect(chooser).toHaveAttribute('aria-expanded', 'true');
+    await chooser.click();
+    await expect(chooser).toHaveAttribute('aria-expanded', 'false');
+    await expect(panel.getByRole('status')).toHaveText('已完成。可见范围只限团队。');
+    await expect(site.locator('.webguide-popover')).toHaveCount(0);
+  } finally {
+    await app.close();
+  }
+});
+
 test('网页报告导出成功后，由用户单独确认已经下载', async ({ extension: { panel, activate } }) => {
   const siteUrl = 'https://workspace.example/download';
   const token = 'webguide-test-token-000000';

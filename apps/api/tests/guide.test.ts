@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createApp } from '../src/app.js';
+import { createModelGuide } from '../src/guide.js';
 
 const origin = 'chrome-extension://aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa';
 const token = 'test-client-token-for-guide-api';
@@ -18,8 +19,9 @@ const payload = {
 };
 
 const apps: ReturnType<typeof createApp>[] = [];
-function service(decide: NonNullable<Parameters<typeof createApp>[0]>['decide'], origins = [origin]) {
-  const app = createApp({ token, origins, decide });
+function service(decide: NonNullable<Parameters<typeof createApp>[0]>['decide'], origins = [origin],
+  report?: Parameters<typeof createApp>[1]) {
+  const app = createApp({ token, origins, decide }, report);
   apps.push(app);
   return app;
 }
@@ -189,17 +191,39 @@ describe('引导接口', () => {
     expect(result.body).not.toContain('upstream-private-data');
   });
 
+  it.each([
+    ['model-http', () => new Response('private body', { status: 429 }), { upstreamStatus: 429 }],
+    ['model-connection', () => { throw new Error('private connection error'); }, {}],
+    ['model-body', () => new Response('private invalid body'), {}],
+    ['model-empty', () => Response.json({ choices: [{ message: { content: ' ' } }] }), {}],
+    ['model-truncated', () => Response.json({ choices: [{ finish_reason: 'length', message: { content: '{' } }] }), {}],
+    ['model-json', () => Response.json({ choices: [{ message: { content: 'private invalid JSON' } }] }), {}],
+    ['decision-rejected', () => Response.json({ choices: [{ message: { content: '{"kind":"highlight","targetId":999,"instruction":"private instruction"}' } }] }), {}],
+    ['ok', () => Response.json({ choices: [{ message: { content: '{"kind":"message","instruction":"查看属性栏。"}' } }] }), {}],
+  ] as const)('记录引导诊断 %s，省略上下文和上游原文', async (outcome, response, detail) => {
+    const report = vi.fn();
+    const decide = createModelGuide({ url: 'https://model.example/v1/chat/completions', name: 'practice-model',
+      key: 'private key' }, async () => response());
+    const app = service(decide, [origin], report);
+    const result = await app.inject({ method: 'POST', url, headers, payload });
+    expect(result.statusCode).toBe(outcome === 'ok' ? 200 : 502);
+    expect(report).toHaveBeenCalledExactlyOnceWith({ outcome, elapsedMs: expect.any(Number), ...detail });
+    expect(result.body).not.toContain('private');
+  });
+
   it('即使上游仍在等待，也会按时结束请求', async () => {
     const timeout = new AbortController();
     const deadline = vi.spyOn(AbortSignal, 'timeout').mockReturnValueOnce(timeout.signal);
+    const report = vi.fn();
     const app = service(async () => {
       queueMicrotask(() => timeout.abort());
       return await new Promise(() => {});
-    });
+    }, [origin], report);
     try {
       const result = await app.inject({ method: 'POST', url, headers, payload });
       expect(result.statusCode).toBe(504);
       expect(result.json()).toEqual({ error: expect.any(String) });
+      expect(report).toHaveBeenCalledExactlyOnceWith({ outcome: 'service-deadline', elapsedMs: expect.any(Number) });
     } finally {
       deadline.mockRestore();
     }
@@ -207,6 +231,7 @@ describe('引导接口', () => {
 
   it('浏览器取消请求后中止上游判断', async () => {
     const onAbort = vi.fn();
+    const report = vi.fn();
     const app = service(async (_input, signal) => {
       await new Promise<void>(resolve => {
         signal.addEventListener('abort', () => {
@@ -214,7 +239,7 @@ describe('引导接口', () => {
           resolve();
         }, { once: true });
       });
-    });
+    }, [origin], report);
     app.addHook('preHandler', async (_request, reply) => {
       // 模拟请求体已经被读取、模型仍在等待时关闭浏览器连接。
       setImmediate(() => reply.raw.destroy());
@@ -222,5 +247,6 @@ describe('引导接口', () => {
     await expect(app.inject({ method: 'POST', url, headers, payload }))
       .rejects.toMatchObject({ code: 'LIGHT_ECONNRESET' });
     expect(onAbort).toHaveBeenCalledOnce();
+    expect(report).toHaveBeenCalledExactlyOnceWith({ outcome: 'client-disconnected', elapsedMs: expect.any(Number) });
   });
 });
