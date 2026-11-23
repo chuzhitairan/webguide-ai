@@ -11,22 +11,24 @@ test('从自然语言目标出发补看控件、跟随同源跳转，并确认�
     calls.push(input);
     const archived = input.page.nodes.find(node => node.label === 'Archived');
     if (archived?.checked) {
-      return { kind: 'complete', instruction: '已显示归档记录', checks: [{ id: archived.id, field: 'checked', equals: true }] };
+      return { kind: 'keep', proofs: [{ index: 0, checks: [{ id: archived.id, field: 'checked', equals: true }] }] };
     }
     if (archived) return input.feedback
       ? { kind: 'highlight', instruction: '勾选 Archived', targetId: archived.id }
-      : { kind: 'complete', instruction: '错误：归档筛选已生效', checks: [{ id: archived.id, field: 'available', equals: true }] };
+      : { kind: 'keep', proofs: [{ index: 0, checks: [{ id: input.page.nodes.find(node => node.label === 'Filter')!.id,
+        field: 'expanded', equals: true }] }] };
     const reports = input.reads.flatMap(read => read.nodes).find(node => node.label === 'Reports');
     return reports
       ? { kind: 'highlight', instruction: '打开 Reports', targetId: reports.id }
-      : { kind: 'observe', queries: [{ type: 'search', query: 'Reports' }, { type: 'search', query: 'Archived' }] };
+      : { kind: 'observe', queries: [{ type: 'search', query: 'Reports' }, { type: 'search', query: 'Archived' }],
+        requirements: [{ quote: goal, result: '已显示归档记录', source: 'page' }] };
   } });
   await app.listen({ host: '127.0.0.1', port: 43130 });
   try {
     const context = panel.context();
     await context.route(pageOrigin + '/**', async route => {
       const body = new URL(route.request().url()).pathname === '/reports'
-        ? '<h1>Reports</h1><label><input type="checkbox" aria-label="Archived"> Archived</label>'
+        ? '<h1>Reports</h1><button aria-expanded="true">Filter</button><label><input type="checkbox" aria-label="Archived"> Archived</label>'
         : '<h1>Workspace</h1><div style="display:grid;grid-template-columns:repeat(6, 100px)">'
           + Array.from({ length: 50 }, (_, index) => '<button>Tool ' + index + '</button>').join('')
           + '</div><a href="/reports">Reports</a>';
@@ -55,8 +57,78 @@ test('从自然语言目标出发补看控件、跟随同源跳转，并确认�
     await expect(panel.getByRole('status')).toHaveText('勾选 Archived');
     expect(calls.some(call => call.feedback?.includes('完成证据'))).toBe(true);
     await archived.check();
-    await expect(panel.getByRole('status')).toHaveText('已显示归档记录');
+    await expect(panel.getByRole('status')).toHaveText('已完成。已显示归档记录。');
     await expect(site.locator('.webguide-popover')).toHaveCount(0);
+  } finally {
+    await app.close();
+  }
+});
+
+test('找到入口即结束，最后一次高亮自动收起', async ({ extension: { panel, activate } }) => {
+  const siteUrl = 'https://workspace.example/export';
+  const token = 'webguide-test-token-000000';
+  const app = createApp({ token, origins: [panel.url().replace('/sidepanel.html', '')], async decide(input) {
+    const target = input.page.nodes.find(node => node.label === 'Export')!;
+    return { kind: 'highlight', targetId: target.id, instruction: '这里是导出按钮。',
+      requirements: [{ quote: '请找到导出入口', result: '找到导出入口', source: 'point' }],
+      proofs: [{ index: 0, targetId: target.id, checks: [{ id: target.id, field: 'label', equals: 'Export' }] }],
+    };
+  } });
+  await app.listen({ host: '127.0.0.1', port: 43130 });
+  try {
+    const context = panel.context();
+    await context.route(siteUrl, route => route.fulfill({ contentType: 'text/html',
+      body: '<!doctype html><main><button>Export</button></main>' }));
+    const site = await context.newPage();
+    await site.goto(siteUrl);
+    await site.bringToFront();
+    await activate(site);
+    await panel.getByLabel('我想做什么').fill('请找到导出入口');
+    await panel.getByLabel('本机访问令牌').fill(token);
+    await panel.locator('form').evaluate((form: HTMLFormElement) => form.requestSubmit());
+
+    await expect(site.getByRole('button', { name: 'Export' })).toHaveClass(/driver-active-element/);
+    await expect(site.locator('.webguide-popover')).toContainText('已找到');
+    await expect(panel.getByRole('status')).toHaveText('已完成。找到导出入口。');
+    await expect(site.locator('.webguide-popover')).toHaveCount(0, { timeout: 6_000 });
+  } finally {
+    await app.close();
+  }
+});
+
+test('网页报告导出成功后，由用户单独确认已经下载', async ({ extension: { panel, activate } }) => {
+  const siteUrl = 'https://workspace.example/download';
+  const token = 'webguide-test-token-000000';
+  const calls: GuideRequest[] = [];
+  const app = createApp({ token, origins: [panel.url().replace('/sidepanel.html', '')], async decide(input) {
+    calls.push(input);
+    const node = input.page.nodes.find(node => node.role === 'status')!;
+    const checks = [{ id: node.id, field: 'label', equals: node.label }];
+    return { kind: 'keep', requirements: [
+      { quote: '确认导出成功', result: '网页已导出', source: 'page' },
+      { quote: '并且已下载到电脑', result: '文件已下载到电脑', source: 'user' },
+    ], proofs: [{ index: 0, checks }, { index: 1, checks }] };
+  } });
+  await app.listen({ host: '127.0.0.1', port: 43130 });
+  try {
+    const context = panel.context();
+    await context.route(siteUrl, route => route.fulfill({ contentType: 'text/html',
+      body: '<!doctype html><main><p role="status">Export succeeded. File downloaded to your computer.</p></main>' }));
+    const site = await context.newPage();
+    await site.goto(siteUrl);
+    await site.bringToFront();
+    await activate(site);
+    await panel.getByLabel('我想做什么').fill('确认导出成功并且已下载到电脑');
+    await panel.getByLabel('本机访问令牌').fill(token);
+    await panel.locator('form').evaluate((form: HTMLFormElement) => form.requestSubmit());
+
+    await expect(panel.getByRole('status')).toContainText('请确认下面这项结果');
+    await expect(panel.getByText('文件已下载到电脑', { exact: true })).toBeVisible();
+    const confirmation = panel.getByRole('button', { name: '确认这项已完成' });
+    await confirmation.evaluate(button => (button as HTMLButtonElement).click());
+    await expect(panel.getByRole('status')).toHaveText('已完成。网页已导出，文件已下载到电脑（由你确认）。');
+    await expect(confirmation).toHaveCount(0);
+    expect(calls).toHaveLength(1);
   } finally {
     await app.close();
   }

@@ -8,6 +8,153 @@ const heading: Evidence = { id: 5, label: 'Settings published', role: 'status', 
 const search: ReadQuery = { type: 'search', query: 'Publish' };
 const inspect: ReadQuery = { type: 'inspect', id: 1 };
 
+it('找到正确入口时，一次回复同时给出条件和证据并结束', async () => {
+  const verify = vi.fn().mockResolvedValue(true);
+  const choose = vi.fn().mockResolvedValue({ kind: 'keep',
+    requirements: [{ quote: '请找到发布设置', result: '找到发布设置', source: 'point' }],
+    proofs: [{ index: 0, targetId: 2, checks: [{ id: 2, field: 'label', equals: button.label }] }],
+  });
+  const report = vi.fn();
+  const session = createGuideSession('请找到发布设置', { choose, report });
+  await session.attach({
+    async snapshot() { return { title: 'Project', site: 'example.test', nodes: [button], truncated: false }; },
+    async read() { return []; }, async apply() { return true; }, verify, trackScroll() {}, clear() {},
+  });
+  expect(choose).toHaveBeenCalledOnce();
+  expect(verify).toHaveBeenCalledExactlyOnceWith([
+    { source: 'point', targetId: 2, checks: [{ id: 2, field: 'label', equals: button.label }] },
+  ], '已完成。找到发布设置。');
+  expect(report).toHaveBeenLastCalledWith({ kind: 'complete', text: '已完成。找到发布设置。' });
+});
+
+it('页面证据只能完成网页部分，用户确认后仍须复查现场', async () => {
+  const result: Decision = { kind: 'keep',
+    requirements: [
+      { quote: '确认发布成功', result: '网页已发布', source: 'page' },
+      { quote: '并且收件人已收到通知', result: '收件人已收到通知', source: 'user' },
+    ],
+    proofs: [{ index: 0, checks: [{ id: 5, field: 'label', equals: heading.label }] }],
+  };
+  let evidence = [heading];
+  const choose = vi.fn<() => Promise<Decision>>()
+    .mockResolvedValueOnce(result).mockResolvedValue({ kind: 'message', instruction: '等待网页结果。' });
+  const verify = vi.fn().mockImplementation(async () => evidence.length > 0);
+  const report = vi.fn();
+  const session = createGuideSession('确认发布成功并且收件人已收到通知', { choose, report });
+  await session.attach({
+    async snapshot() { return { title: 'Project', site: 'example.test', nodes: evidence, truncated: false }; },
+    async read() { return []; }, async apply() { return true; }, verify, trackScroll() {}, clear() {},
+  });
+  expect(report).toHaveBeenLastCalledWith(expect.objectContaining({ kind: 'confirm', index: 1 }));
+  evidence = [];
+  await session.confirm(1);
+  expect(verify).toHaveBeenCalledTimes(2);
+  expect(report).toHaveBeenLastCalledWith({ kind: 'guiding', text: '等待网页结果。' });
+  expect(report.mock.calls.some(([status]) => status.kind === 'complete')).toBe(false);
+});
+
+it('先展示一个入口，侧栏继续后再高亮下一处并完成', async () => {
+  const share = { ...button, id: 3, label: 'Share' };
+  const apply = vi.fn().mockResolvedValue(true);
+  const verify = vi.fn().mockResolvedValue(true);
+  const report = vi.fn();
+  const choose = vi.fn().mockResolvedValue({ kind: 'keep', requirements: [
+    { quote: '找到发布设置', result: '发布设置', source: 'point' },
+    { quote: '和分享入口', result: '分享入口', source: 'point' },
+  ], proofs: [button, share].map((item, index) => ({ index, targetId: item.id,
+    checks: [{ id: item.id, field: 'label', equals: item.label }],
+  })) });
+  const session = createGuideSession('找到发布设置和分享入口', { choose, report });
+  await session.attach({
+    async snapshot() { return { title: 'Project', site: 'example.test', nodes: [button, share], truncated: false }; },
+    async read() { return []; }, apply, verify, trackScroll() {}, clear() {},
+  });
+  expect(apply).toHaveBeenCalledExactlyOnceWith({ kind: 'highlight', targetId: button.id, instruction: '发布设置' });
+  expect(report).toHaveBeenLastCalledWith(expect.objectContaining({ kind: 'confirm', source: 'point', index: 0 }));
+  await session.confirm(0);
+  expect(report).toHaveBeenLastCalledWith({ kind: 'complete', text: '已完成。发布设置，分享入口。' });
+  expect(verify.mock.lastCall?.[0].at(-1).targetId).toBe(share.id);
+  expect(choose).toHaveBeenCalledOnce();
+});
+
+it('确认中途的页面刷新不会盖住下一项确认，已确认进度可恢复', async () => {
+  const goal = '确认甲收到邀请、乙也收到邀请';
+  const requirements = [
+    { quote: '确认甲收到邀请', result: '甲收到邀请', source: 'user' },
+    { quote: '乙也收到邀请', result: '乙收到邀请', source: 'user' },
+  ] as const;
+  let release!: (accepted: boolean) => void;
+  const waiting = new Promise<boolean>(resolve => { release = resolve; });
+  const verify = vi.fn().mockResolvedValue(true).mockReturnValueOnce(Promise.resolve(true)).mockReturnValueOnce(waiting);
+  const choose = vi.fn().mockResolvedValue({ kind: 'keep', requirements });
+  const report = vi.fn();
+  const saveProgress = vi.fn();
+  const page: GuidePage = {
+    async snapshot() { return { title: 'Project', site: 'example.test', nodes: [button], truncated: false }; },
+    async read() { return []; }, async apply() { return true; }, verify, trackScroll() {}, clear() {},
+  };
+  const session = createGuideSession(goal, { choose, report, saveProgress });
+  await session.attach(page);
+  const confirming = session.confirm(0);
+  await session.refresh('soft');
+  release(true);
+  await confirming;
+  expect(report).toHaveBeenLastCalledWith(expect.objectContaining({ source: 'user', index: 1 }));
+  expect(choose).toHaveBeenCalledOnce();
+  const input = vi.fn().mockResolvedValue({ kind: 'keep' });
+  const resumed = createGuideSession(goal, { choose: input, report, progress: saveProgress.mock.lastCall?.[0] });
+  await resumed.attach(page);
+  expect(input).toHaveBeenCalledWith(expect.objectContaining({ requirements }), expect.any(AbortSignal));
+  expect(report).toHaveBeenLastCalledWith(expect.objectContaining({ source: 'user', index: 1 }));
+});
+
+it('组合目标可沿同一观察累积证据，仍在结束前复查两项', async () => {
+  const requirements = [
+    { quote: '网页已发布', result: '已发布', source: 'page' },
+    { quote: '并且归档已开启', result: '已归档', source: 'page' },
+  ];
+  const checks = [{ id: 5, field: 'label', equals: heading.label }];
+  const archived = { ...heading, id: 7, label: 'Archive enabled' };
+  const choose = vi.fn().mockResolvedValueOnce({ kind: 'message', instruction: '查看归档状态。', requirements,
+    proofs: [{ index: 0, checks }],
+  }).mockResolvedValueOnce({ kind: 'keep', proofs: [{ index: 1, checks: [{ id: 7, field: 'label', equals: archived.label }] }] });
+  const report = vi.fn();
+  const verify = vi.fn().mockResolvedValue(true);
+  const session = createGuideSession('网页已发布并且归档已开启', { choose, report });
+  await session.attach({
+    async snapshot() { return { title: 'Project', site: 'example.test', nodes: [heading, archived], truncated: false }; },
+    async read() { return []; }, async apply() { return true; }, verify, trackScroll() {}, clear() {},
+  });
+  expect(report).toHaveBeenLastCalledWith({ kind: 'guiding', text: '查看归档状态。' });
+  await session.refresh('soft');
+  expect(verify.mock.lastCall?.[0]).toHaveLength(2);
+  expect(report).toHaveBeenLastCalledWith({ kind: 'complete', text: '已完成。已发布，已归档。' });
+});
+
+it('需要网页外确认时，仍先让用户看见已找到的入口', async () => {
+  const goal = '找到发布设置，并确认收件人已收到通知';
+  let evidence = [button];
+  const apply = vi.fn().mockResolvedValue(true);
+  const verify = vi.fn().mockResolvedValue(true);
+  const report = vi.fn();
+  const choose = vi.fn().mockResolvedValueOnce({ kind: 'keep', requirements: [
+    { quote: '找到发布设置', result: '发布设置入口', source: 'point' },
+    { quote: '并确认收件人已收到通知', result: '收件人已收到通知', source: 'user' },
+  ], proofs: [{ index: 0, targetId: button.id, checks: [{ id: button.id, field: 'label', equals: button.label }] }],
+  }).mockResolvedValue({ kind: 'message', instruction: '等待确认。' });
+  const session = createGuideSession(goal, { choose, report });
+  await session.attach({
+    async snapshot() { return { title: 'Project', site: 'example.test', nodes: evidence, truncated: false }; },
+    async read() { return []; }, apply, verify, trackScroll() {}, clear() {},
+  });
+  expect(apply).toHaveBeenCalledExactlyOnceWith({ kind: 'highlight', targetId: button.id, instruction: '发布设置入口' });
+  expect(report).toHaveBeenLastCalledWith(expect.objectContaining({ kind: 'confirm', source: 'user', index: 1 }));
+  evidence = [];
+  await session.refresh('user');
+  await session.confirm(1);
+  expect(verify).toHaveBeenLastCalledWith([], '已完成。发布设置入口，收件人已收到通知（由你确认）。');
+});
+
 it('合并局部补看，等用户操作后再完成自然语言目标', async () => {
   let evidence: Evidence[] = [];
   const calls: GuideRequest[] = [];
@@ -18,20 +165,22 @@ it('合并局部补看，等用户操作后再完成自然语言目标', async (
       return queries.map(query => ({ query, nodes: [button], status: 'ok', truncated: false }));
     },
     apply,
+    async verify() { return true; },
     trackScroll() {},
     clear() {},
   };
   const statuses: GuideStatus[] = [];
-  const session = createGuideSession('请找到发布设置并确认发布成功', {
+  const session = createGuideSession('请确认发布成功', {
     report(status) { statuses.push(status); },
     async choose(input) {
       calls.push(input);
       if (input.page.nodes.some(node => node.id === 5)) {
-        return { kind: 'complete', instruction: '已发布', checks: [{ id: 5, field: 'label', equals: 'Settings published' }] };
+        return { kind: 'keep', proofs: [{ index: 0, checks: [{ id: 5, field: 'label', equals: 'Settings published' }] }] };
       }
       return input.reads.length > 0
         ? { kind: 'highlight', instruction: '点击发布设置', targetId: 2 }
-        : { kind: 'observe', queries: [search, inspect] };
+        : { kind: 'observe', queries: [search, inspect],
+          requirements: [{ quote: '请确认发布成功', result: '已发布', source: 'page' }] };
     },
   });
   await session.attach(page);
@@ -42,8 +191,9 @@ it('合并局部补看，等用户操作后再完成自然语言目标', async (
 
   evidence = [heading];
   await session.refresh('user');
-  expect(calls.at(-1)?.goal).toBe('请找到发布设置并确认发布成功');
-  expect(statuses.at(-1)).toEqual({ kind: 'complete', text: '已发布' });
+  expect(calls.at(-1)?.goal).toBe('请确认发布成功');
+  expect(calls[1].requirements).toEqual([{ quote: '请确认发布成功', result: '已发布', source: 'page' }]);
+  expect(statuses.at(-1)).toEqual({ kind: 'complete', text: '已完成。已发布。' });
 });
 
 it('用户换页后晚返回的指引不会画到旧页面', async () => {
@@ -54,6 +204,7 @@ it('用户换页后晚返回的指引不会画到旧页面', async () => {
     async snapshot() { return { title: 'Project', site: 'example.test', nodes: [button], truncated: false }; },
     async read() { return []; },
     async apply(decision) { applied.push(decision); return true; },
+    async verify() { return true; },
     trackScroll() {},
     clear() {},
   };
@@ -77,24 +228,23 @@ it('现场拒绝过期指引后重读页面，再判断筛选是否已生效', a
       return { title: 'Reports', site: 'example.test', nodes: [current], truncated: false };
     },
     async read() { return []; },
-    async apply(result) {
-      if (result.kind === 'highlight') {
-        // 用户操作已生效，旧的操作提示应该失效。
-        current = { ...filter, checked: true };
-        return false;
-      }
-      return current.checked === true;
+    async apply() {
+      // 用户操作已生效，旧的操作提示应该失效。
+      current = { ...filter, checked: true };
+      return false;
     },
+    async verify() { return current.checked === true; },
     trackScroll() {},
     clear() {},
   };
   const session = createGuideSession('只看已归档报告', { report, async choose(input) {
     decisions.push(input);
     return input.page.nodes[0]?.checked
-      ? { kind: 'complete', instruction: '筛选已生效', checks: [{ id: 8, field: 'checked', equals: true }] }
-      : { kind: 'highlight', instruction: '勾选 Archived', targetId: 8 };
+      ? { kind: 'keep', proofs: [{ index: 0, checks: [{ id: 8, field: 'checked', equals: true }] }] }
+      : { kind: 'highlight', instruction: '勾选 Archived', targetId: 8,
+        requirements: [{ quote: '只看已归档报告', result: '筛选已生效', source: 'page' }] };
   } });
   await session.attach(page);
   expect(decisions.map(input => input.page.nodes[0]?.checked)).toEqual([false, true]);
-  expect(report).toHaveBeenLastCalledWith({ kind: 'complete', text: '筛选已生效' });
+  expect(report).toHaveBeenLastCalledWith({ kind: 'complete', text: '已完成。筛选已生效。' });
 });

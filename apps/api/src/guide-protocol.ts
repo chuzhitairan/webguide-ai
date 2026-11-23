@@ -37,6 +37,18 @@ export interface EvidenceCheck {
   equals: string | boolean;
 }
 
+export interface Requirement {
+  quote: string;
+  result: string;
+  source: 'point' | 'page' | 'user';
+}
+
+export interface RequirementProof {
+  index: number;
+  checks: EvidenceCheck[];
+  targetId?: number;
+}
+
 export interface GuideRequest {
   goal: string;
   page: Observation;
@@ -45,15 +57,19 @@ export interface GuideRequest {
   previous?: { instruction: string; target?: Evidence };
   feedback?: string;
   userAnswer?: string;
+  // 空数组表示由第一条回复提炼条件，之后各轮沿用同一组条件。
+  requirements?: Requirement[];
 }
 
-export type Decision =
+type NavigationDecision =
   | { kind: 'observe'; queries: ReadQuery[] }
   | { kind: 'highlight'; targetId: number; instruction: string }
   | { kind: 'message'; instruction: string; scrollRegion?: number }
   | { kind: 'wait' | 'ask' | 'blocked'; instruction: string }
   | { kind: 'keep' }
   | { kind: 'complete'; instruction: string; targetId?: number; checks: EvidenceCheck[] };
+
+export type Decision = NavigationDecision & { requirements?: Requirement[]; proofs?: RequirementProof[] };
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
@@ -102,9 +118,40 @@ function parseCheck(value: unknown): EvidenceCheck | undefined {
   }
 }
 
+function parseChecks(value: unknown): EvidenceCheck[] | undefined {
+  if (!Array.isArray(value) || value.length === 0 || value.length > 8) return;
+  const checks = value.map(parseCheck);
+  if (checks.every(check => check !== undefined)) return checks;
+}
+
+function isRequirement(value: unknown): value is Requirement {
+  return isRecord(value) && hasOnlyKeys(value, ['quote', 'result', 'source'])
+    && isText(value.quote, 500, false) && isText(value.result, 120, false)
+    && (value.source === 'point' || value.source === 'page' || value.source === 'user');
+}
+
+function isRequirementList(value: unknown): value is Requirement[] {
+  return Array.isArray(value) && value.length <= 5 && value.every(isRequirement);
+}
+
+export function coversGoal(goal: string, requirements: Requirement[]): boolean {
+  const content = (text: string) => text.replace(/[\p{White_Space}\p{Punctuation}]/gu, '');
+  // 连接词可以留在任一项。拼回原句可以发现整段要求被漏掉。
+  return requirements.every(item => goal.includes(item.quote))
+    && content(requirements.map(item => item.quote).join('')) === content(goal);
+}
+
+function parseProof(value: unknown): RequirementProof | undefined {
+  if (!isRecord(value) || typeof value.index !== 'number' || !Number.isInteger(value.index)
+    || value.index < 0 || value.index >= 5) return;
+  const checks = parseChecks(value.checks);
+  const { index, targetId } = value;
+  if (!checks || (targetId !== undefined && !isId(targetId))) return;
+  return targetId === undefined ? { index, checks } : { index, targetId, checks };
+}
+
 // 只从允许的字段重建决定。编号是否属于当前轮由调用方根据现场证据核对。
-export function parseDecision(value: unknown): Decision | undefined {
-  if (!isRecord(value)) return;
+function parseNavigation(value: Record<string, unknown>): NavigationDecision | undefined {
   const { kind, targetId } = value;
   if (kind === 'keep') return { kind };
   if (kind === 'observe') {
@@ -130,16 +177,24 @@ export function parseDecision(value: unknown): Decision | undefined {
     case 'blocked':
       return { kind, instruction };
     case 'complete': {
-      const { checks } = value;
-      if (!Array.isArray(checks) || checks.length === 0 || checks.length > 8) return;
-      if (targetId !== undefined && !isId(targetId)) return;
-      const parsed = checks.map(parseCheck);
-      if (!parsed.every(check => check !== undefined)) return;
+      const checks = parseChecks(value.checks);
+      if (!checks || (targetId !== undefined && !isId(targetId))) return;
       return targetId === undefined
-        ? { kind, instruction, checks: parsed }
-        : { kind, instruction, targetId, checks: parsed };
+        ? { kind, instruction, checks }
+        : { kind, instruction, targetId, checks };
     }
   }
+}
+
+export function parseDecision(value: unknown): Decision | undefined {
+  if (!isRecord(value)) return;
+  const decision = parseNavigation(value);
+  if (!decision) return;
+  // 条件解析失败时仍可使用格式正确的普通指引。证明按条件分别校验。
+  const requirements = isRequirementList(value.requirements) ? value.requirements : undefined;
+  const proofs = Array.isArray(value.proofs) && value.proofs.length <= 5
+    ? value.proofs.map(parseProof).filter(proof => proof !== undefined) : undefined;
+  return { ...decision, ...(requirements?.length ? { requirements } : {}), ...(proofs?.length ? { proofs } : {}) };
 }
 
 const optionalStates = ['expanded', 'selected', 'checked', 'canScrollUp', 'canScrollDown'] as const;
@@ -175,10 +230,12 @@ function isPrevious(value: unknown): value is NonNullable<GuideRequest['previous
 
 // 严格限制发送给上游的证据字段和长度，拒绝附带完整地址、页面源码等额外数据。
 export function isGuideRequest(value: unknown): value is GuideRequest {
-  return isRecord(value) && hasOnlyKeys(value, ['goal', 'page', 'reads', 'finishOnly', 'previous', 'feedback', 'userAnswer'])
+  return isRecord(value) && hasOnlyKeys(value, ['goal', 'page', 'reads', 'finishOnly', 'previous', 'feedback', 'userAnswer', 'requirements'])
     && isText(value.goal, 500, false) && isObservation(value.page) && typeof value.finishOnly === 'boolean'
     && Array.isArray(value.reads) && value.reads.length <= 9 && value.reads.every(isReadResult)
     && (value.previous === undefined || isPrevious(value.previous))
     && (value.feedback === undefined || isText(value.feedback, 500))
-    && (value.userAnswer === undefined || isText(value.userAnswer, 500));
+    && (value.userAnswer === undefined || isText(value.userAnswer, 500))
+    && (value.requirements === undefined || (isRequirementList(value.requirements)
+      && (!value.requirements.length || coversGoal(value.goal, value.requirements))));
 }

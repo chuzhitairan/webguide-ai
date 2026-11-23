@@ -5,9 +5,9 @@ import { bindGuide, bindingKey, readActiveBinding } from '../guide/browser-link.
 import type { Binding } from '../guide/browser-link.js';
 import { chooseGuide } from '../guide/model-client.js';
 import { createGuideSession, guideRequestLimit } from '../guide/session.js';
-import type { GuideStatus } from '../guide/session.js';
+import type { GuideProgress, GuideStatus } from '../guide/session.js';
 
-type Checkpoint = { goal: string; used: number };
+type Checkpoint = { goal: string; used: number; progress?: GuideProgress };
 const checkpointKey = (windowId: number) => 'guide-draft:' + windowId;
 const tokenKey = 'webguide-service-token';
 const initialStatus = { kind: 'waiting', text: '在要引导的网页点击 WebGuide AI 工具栏图标，然后输入目标。' } as const;
@@ -78,7 +78,8 @@ export function App() {
     const clientToken = token.trim();
     if (!requested || !clientToken) return;
     const used = resuming && draft.current && draft.current.used < guideRequestLimit ? draft.current.used : 0;
-    draft.current = { goal: requested, used };
+    const progress = resuming ? draft.current?.progress : undefined;
+    draft.current = { goal: requested, used, progress };
     setCanContinue(true);
     setStatus({ kind: 'reading', text: '正在连接当前标签页…' });
 
@@ -108,12 +109,17 @@ export function App() {
         }
       };
       const guiding = createGuideSession(requested, {
-        used, report,
+        used, progress, report,
         choose: (input, signal) => chooseGuide(input, clientToken, signal),
         saveUsed(count) {
           if (action.current !== task) return Promise.resolve();
-          draft.current = { goal: requested, used: count };
+          draft.current = { ...draft.current, goal: requested, used: count };
           return save(draft.current);
+        },
+        saveProgress(next) {
+          if (action.current !== task || !draft.current) return;
+          draft.current = { ...draft.current, progress: next };
+          void save(draft.current).catch(() => {});
         },
       });
       session.current = guiding;
@@ -166,6 +172,12 @@ export function App() {
       <label>补充说明<input value={answer} onChange={event => setAnswer(event.target.value)} maxLength={500} /></label>
       <button type="submit" disabled={!answer.trim()}>回答并继续</button>
     </form>}
+    {status.kind === 'confirm' && <div className="actions">
+      <p>{status.result}</p>
+      <button type="button" onClick={() => void session.current?.confirm(status.index)}>
+        {status.source === 'point' ? '查看下一个入口' : '确认这项已完成'}
+      </button>
+    </div>}
     <details>
       <summary>本机服务设置</summary>
       <p>扩展来源 <code>{globalThis.location.origin}</code></p>

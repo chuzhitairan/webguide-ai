@@ -131,6 +131,47 @@ describe('引导接口', () => {
     expect(result.json()).toEqual({ kind: 'highlight', targetId: 2, instruction: '查看导出。' });
   });
 
+  it('同一条引导回复可附用户目标的条件和当前证据', async () => {
+    const requirements = [{ quote: payload.goal, result: '找到导出选项', source: 'point' }];
+    const proofs = [{ index: 0, targetId: 1, checks: [{ id: 1, field: 'label', equals: '属性栏' }] }];
+    const decision = { kind: 'keep', requirements, proofs };
+    const app = service(async () => decision);
+    const result = await app.inject({ method: 'POST', url, headers, payload: { ...payload, requirements: [] } });
+    expect(result.statusCode).toBe(200);
+    expect(result.json()).toEqual(decision);
+  });
+
+  it('已明确的条件保持不变，网页只能提交它能证明的部分', async () => {
+    const requirements = [{ quote: '请确认已下载到电脑', result: '文件存在于本机', source: 'user' }];
+    const input = { ...payload, goal: '请确认已下载到电脑', requirements };
+    const app = service(async () => ({ kind: 'message', instruction: '检查下载文件。',
+      requirements: [{ ...requirements[0], source: 'page' }],
+      proofs: [{ index: 0, checks: [{ id: 1, field: 'label', equals: '属性栏' }] }],
+    }));
+    const result = await app.inject({ method: 'POST', url, headers, payload: input });
+    expect(result.statusCode).toBe(200);
+    expect(result.json()).toEqual({ kind: 'message', instruction: '检查下载文件。' });
+  });
+
+  it('漏掉原话后半段时只保留普通引导', async () => {
+    const app = service(async () => ({ kind: 'message', instruction: '看导出状态。',
+      requirements: [{ quote: '确认导出成功', result: '已导出', source: 'page' }],
+      proofs: [{ index: 0, checks: [{ id: 1, field: 'label', equals: '属性栏' }] }],
+    }));
+    const result = await app.inject({ method: 'POST', url, headers, payload: {
+      ...payload, goal: '确认导出成功并且已下载到电脑', requirements: [],
+    } });
+    expect(result.json()).toEqual({ kind: 'message', instruction: '看导出状态。' });
+  });
+
+  it('启用逐项核对时，普通完成决定不能跳过条件', async () => {
+    const app = service(async () => ({ kind: 'complete', instruction: '已下载。',
+      checks: [{ id: 1, field: 'label', equals: '属性栏' }],
+    }));
+    const result = await app.inject({ method: 'POST', url, headers, payload: { ...payload, requirements: [] } });
+    expect(result.statusCode).toBe(502);
+  });
+
   it('最后一次判断不接受新的补看要求', async () => {
     const app = service(async () => ({ kind: 'observe', queries: [{ type: 'inspect', id: 1 }] }));
     const result = await app.inject({ method: 'POST', url, headers, payload: { ...payload, finishOnly: true } });

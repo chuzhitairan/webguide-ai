@@ -7,8 +7,13 @@ import { createRenderer } from '../src/page/renderer.js';
 import { guidePort } from '../src/guide/page-messages.js';
 import type { PageCommand, PageRequest, PageSignal } from '../src/guide/page-messages.js';
 import type { Evidence, Observation } from '../../api/src/guide-protocol.js';
+import type { PageProof } from '../src/guide/session.js';
 
 type Port = ReturnType<typeof browser.runtime.connect>;
+
+const pointRoles = new Set(['button', 'link', 'row', 'gridcell', 'treeitem', 'option', 'tab', 'menuitem',
+  'menuitemcheckbox', 'menuitemradio', 'checkbox', 'radio', 'switch', 'textbox', 'combobox', 'searchbox']);
+const resultRoles = new Set(['status', 'dialog', 'alertdialog']);
 
 export default defineUnlistedScript(() => {
   // 同一个文档可能被尝试连接多次，页面中只安装一个连接入口。
@@ -140,6 +145,24 @@ function connect(port: Port): () => void {
       .map(({ id, label, selected, checked }) => [id, label, selected, checked]));
   }
 
+  function verifies(proof: PageProof) {
+    const matches = proof.checks.map(check => ({ check, evidence: observation?.resolve(check.id)?.evidence }));
+    if (!matches.length || !matches.every(({ check, evidence }) => evidence?.viewport && evidence[check.field] === check.equals)) {
+      return false;
+    }
+    if (proof.source === 'point') {
+      const target = visibleTarget(proof.targetId);
+      return Boolean(target && pointRoles.has(target.evidence.role)
+        && matches.some(({ check }) => check.id === proof.targetId && check.field === 'label'));
+    }
+    // 菜单展开、按钮可用和文件标题都可能只代表中间状态。
+    return matches.some(({ check, evidence }) => {
+      if (check.field === 'checked' || check.field === 'selected') return true;
+      return check.field === 'label' && evidence?.label
+        && (resultRoles.has(evidence.role) || (evidence.role === 'textbox' && evidence.available));
+    });
+  }
+
   function handle(command: PageCommand) {
     if (command.kind === 'clear') {
       clear();
@@ -165,32 +188,29 @@ function connect(port: Port): () => void {
       return true;
     }
 
-    const decision = command.decision;
-    const target = decision.targetId === undefined ? undefined : visibleTarget(decision.targetId);
-    if (decision.targetId !== undefined && !target) return false;
-    if (decision.kind === 'complete') {
-      const proof = decision.checks.map(check => ({ check, evidence: observation?.resolve(check.id)?.evidence }));
-      if (!proof.every(({ check, evidence }) => evidence && evidence[check.field] === check.equals)) return false;
-      // 看到按钮可以证明找到了入口。要报告操作已生效，还需看到结果状态。
-      const supportsCompletion = target
-        ? proof.some(({ check }) => check.id === decision.targetId && check.field === 'label')
-        : proof.some(({ check, evidence }) => evidence?.viewport && (
-          ['checked', 'selected', 'expanded'].includes(check.field)
-          || (check.field === 'label' && ['heading', 'status', 'alert', 'dialog'].includes(evidence.role))));
-      if (!supportsCompletion) return false;
-    }
-
-    if (target) {
-      currentTarget = decision.targetId;
-      renderer.show(target.element, { title: decision.kind === 'complete' ? '已找到' : '下一步', instruction: decision.instruction });
-      signature = summarize(observation.page().nodes);
-    } else clear();
-    if (decision.kind === 'complete') {
+    if (command.kind === 'verify') {
+      if (!command.proofs.every(verifies)) return false;
+      if (!command.finish) return true;
+      const id = command.proofs.find(proof => proof.source === 'point')?.targetId;
+      const target = id === undefined ? undefined : visibleTarget(id);
+      if (id !== undefined && !target) return false;
+      if (target) {
+        currentTarget = id;
+        renderer.show(target.element, { title: '已找到', instruction: command.finish });
+        finishTimer = setTimeout(clear, 4_000);
+      } else clear();
       stopped = true;
       stopWatch();
       events.abort();
-      if (target) finishTimer = setTimeout(clear, 4_000);
+      return true;
     }
+
+    const decision = command.decision;
+    const target = visibleTarget(decision.targetId);
+    if (!target) return false;
+    currentTarget = decision.targetId;
+    renderer.show(target.element, { title: '下一步', instruction: decision.instruction });
+    signature = summarize(observation.page().nodes);
     return true;
   }
 
