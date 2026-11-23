@@ -66,3 +66,35 @@ it('用户换页后晚返回的指引不会画到旧页面', async () => {
   await first;
   expect(applied).toEqual([]);
 });
+
+it('现场拒绝过期指引后重读页面，再判断筛选是否已生效', async () => {
+  const filter: Evidence = { id: 8, label: 'Archived', role: 'checkbox', viewport: true, available: true, checked: false };
+  let current = filter;
+  const decisions: GuideRequest[] = [];
+  const report = vi.fn();
+  const page: GuidePage = {
+    async snapshot() {
+      return { title: 'Reports', site: 'example.test', nodes: [current], truncated: false };
+    },
+    async read() { return []; },
+    async apply(result) {
+      if (result.kind === 'highlight') {
+        // 用户操作已生效，旧的操作提示应该失效。
+        current = { ...filter, checked: true };
+        return false;
+      }
+      return current.checked === true;
+    },
+    trackScroll() {},
+    clear() {},
+  };
+  const session = createGuideSession('只看已归档报告', { report, async choose(input) {
+    decisions.push(input);
+    return input.page.nodes[0]?.checked
+      ? { kind: 'complete', instruction: '筛选已生效', checks: [{ id: 8, field: 'checked', equals: true }] }
+      : { kind: 'highlight', instruction: '勾选 Archived', targetId: 8 };
+  } });
+  await session.attach(page);
+  expect(decisions.map(input => input.page.nodes[0]?.checked)).toEqual([false, true]);
+  expect(report).toHaveBeenLastCalledWith({ kind: 'complete', text: '筛选已生效' });
+});

@@ -1,10 +1,10 @@
 # WebGuide AI 项目文档
 
-更新于 2026-11-22。
+更新于 2026-11-23。
 
 **当前方向**　把扩展做成 AI 浏览器导航的运行层。AI 根据当前页面选择高亮目标和提示，扩展在网页上显示，用户自己操作。总体设计已形成评审稿，涵盖自然语言目标、按需补看、稳定指引与跨站验证。[导航 Harness 设计](design/WebGuideAI-导航-Harness-设计.md)
 
-**当前工程状态**　`codex/navigation-harness` 已接通自然语言目标、批量局部补看、网页高亮和结果核对。当前证据来自模拟网页和模型，两站真实任务进入下一轮验证。[首轮实施计划](design/导航Harness-首轮实施计划-2026-11-22.md) · [试用新引导](../README.md#试用新引导)
+**当前工程状态**　`codex/navigation-harness` 已接通自然语言目标、批量局部补看、网页高亮和结果核对。已开始使用同济模型验证真实页面，GitHub 已接通并进入筛选验证，Figma 入口访问受阻。[真实站点验证](design/导航Harness-真实站点验证-2026-11-23.md) · [首轮实施计划](design/导航Harness-首轮实施计划-2026-11-22.md) · [试用新引导](../README.md#试用新引导)
 
 **既有原型**　`codex/ai-navigation` 验证了 GitHub 的指定 Issue、README 编辑入口和 Fork 提示，也在真实 Figma 练习稿中验证了图层和自动布局开关的高亮。固定路线、协作练习和文件核对可在 `codex/github-raw-source` 查阅。[试用方式](../README.md#试用旧版实时引导)
 

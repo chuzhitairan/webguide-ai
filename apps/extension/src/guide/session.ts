@@ -95,7 +95,7 @@ export function createGuideSession(goal: string, options: SessionOptions) {
     }
 
     try {
-      const snapshot = await targetPage.snapshot(reason === 'user');
+      let snapshot = await targetPage.snapshot(reason === 'user');
       const reads: ReadResult[] = [];
       const evidence = new Map(snapshot.nodes.map(node => [node.id, node]));
       let feedback: string | undefined;
@@ -119,6 +119,13 @@ export function createGuideSession(goal: string, options: SessionOptions) {
           const applied = known && await targetPage.apply(result);
           if (!current()) return;
           if (!applied) {
+            if (finishOnly) break;
+            // 页面可能在模型判断期间变了。下一次判断使用现场快照，旧补看一并作废。
+            snapshot = await targetPage.snapshot(false);
+            if (!current()) return;
+            reads.length = 0;
+            evidence.clear();
+            for (const node of snapshot.nodes) evidence.set(node.id, node);
             feedback = '目标或完成证据在当前页面未通过核对。请补看，或说明还缺少什么。';
             continue;
           }
