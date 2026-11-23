@@ -5,6 +5,7 @@ export interface ModelConfig {
   url: string;
   name: string;
   key: string;
+  reasoningEffort?: string;
 }
 
 export interface GuideService {
@@ -47,6 +48,8 @@ export function createModelGuide(config: ModelConfig, request: typeof fetch = fe
           { role: 'user', content: JSON.stringify({ page, reads, previous, feedback }) },
         ],
         response_format: { type: 'json_object' },
+        // 由本机配置选择。留空时沿用该模型服务的默认行为。
+        reasoning_effort: config.reasoningEffort,
         max_tokens: 1024,
         stream: false,
       }),

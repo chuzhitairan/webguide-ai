@@ -31,9 +31,10 @@ export function readGuideConfig(env: Record<string, string | undefined>):
   }
   const path = url.pathname.replace(/\/+$/, '');
   url.pathname = path.endsWith('/chat/completions') ? path : path + '/chat/completions';
+  const reasoningEffort = env.WG_MODEL_REASONING_EFFORT?.trim();
   const origins = (env.WG_ALLOWED_EXTENSION_ORIGINS ?? '').split(',').map(origin => origin.trim()).filter(Boolean);
   if (!origins.every(isExtensionOrigin)) {
     throw new Error('WG_ALLOWED_EXTENSION_ORIGINS 需要填写 chrome-extension://扩展ID。');
   }
-  return { model: { url: url.href, name, key }, token, origins };
+  return { model: { url: url.href, name, key, ...(reasoningEffort ? { reasoningEffort } : {}) }, token, origins };
 }
