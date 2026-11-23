@@ -222,6 +222,7 @@ describe('引导接口', () => {
     try {
       const result = await app.inject({ method: 'POST', url, headers, payload });
       expect(result.statusCode).toBe(504);
+      expect(deadline).toHaveBeenCalledWith(18_000);
       expect(result.json()).toEqual({ error: expect.any(String) });
       expect(report).toHaveBeenCalledExactlyOnceWith({ outcome: 'service-deadline', elapsedMs: expect.any(Number) });
     } finally {

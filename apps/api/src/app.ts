@@ -7,7 +7,8 @@ import { ModelRequestError, validateDecision } from './guide.js';
 import type { GuideService, ModelFailure } from './guide.js';
 
 const guidePath = '/api/v1/guide';
-const guideTimeoutMs = 12_000;
+// 比扩展的 15 秒多留一点时间。收到浏览器断开通知时会立即中止上游。
+const guideTimeoutMs = 18_000;
 
 type GuideOutcome = ModelFailure
   | { outcome: 'ok' | 'decision-rejected' | 'client-disconnected' | 'service-deadline' | 'service-error' };

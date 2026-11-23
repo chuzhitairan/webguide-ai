@@ -1,4 +1,5 @@
 import { expect, it, vi } from 'vitest';
+import { chooseGuide } from '../model-client.js';
 import { createGuideSession } from '../session.js';
 import type { GuidePage, GuideStatus } from '../session.js';
 import type { Decision, Evidence, GuideRequest, ReadQuery } from '../../../../api/src/guide-protocol.js';
@@ -7,6 +8,52 @@ const button: Evidence = { id: 2, label: 'Publish settings', role: 'button', vie
 const heading: Evidence = { id: 5, label: 'Settings published', role: 'status', viewport: true, available: true };
 const search: ReadQuery = { type: 'search', query: 'Publish' };
 const inspect: ReadQuery = { type: 'inspect', id: 1 };
+
+it('在同一轮用两个各需 12 秒的请求完成补看和高亮', async () => {
+  vi.useFakeTimers();
+  // 把原生超时信号接到测试时钟，无需实际等待模型。
+  const deadlines = vi.spyOn(AbortSignal, 'timeout').mockImplementation(ms => {
+    const controller = new AbortController();
+    setTimeout(() => controller.abort(new DOMException('到期', 'TimeoutError')), ms);
+    return controller.signal;
+  });
+  const fetch = vi.spyOn(globalThis, 'fetch').mockImplementation(async (_url, init) => {
+    const input = JSON.parse(String(init?.body)) as GuideRequest;
+    const signal = init?.signal;
+    const decision: Decision = input.reads.length
+      ? { kind: 'highlight', targetId: button.id, instruction: '打开发布设置。' }
+      : { kind: 'observe', queries: [search] };
+    return new Promise((resolve, reject) => {
+      const timer = setTimeout(() => resolve(Response.json(decision)), 12_000);
+      signal?.addEventListener('abort', () => {
+        clearTimeout(timer);
+        reject(signal.reason);
+      }, { once: true });
+    });
+  });
+  const report = vi.fn();
+  const apply = vi.fn<GuidePage['apply']>().mockResolvedValue(true);
+  const session = createGuideSession('找到发布设置', {
+    report, choose: (input, signal) => chooseGuide(input, 'test-token', signal),
+  });
+  try {
+    const active = session.attach({
+      async snapshot() { return { title: 'Project', site: 'example.test', nodes: [], truncated: true }; },
+      async read() { return [{ query: search, nodes: [button], status: 'ok', truncated: false }]; },
+      apply, async verify() { return true; }, trackScroll() {}, clear() {},
+    });
+    await vi.advanceTimersByTimeAsync(24_001);
+    expect(apply).toHaveBeenCalledExactlyOnceWith({ kind: 'highlight', targetId: button.id, instruction: '打开发布设置。' });
+    await active;
+    expect(deadlines.mock.calls).toEqual([[45_000], [15_000], [15_000]]);
+    expect(report).toHaveBeenLastCalledWith({ kind: 'guiding', text: '打开发布设置。' });
+  } finally {
+    session.detach();
+    deadlines.mockRestore();
+    fetch.mockRestore();
+    vi.useRealTimers();
+  }
+});
 
 it('找到正确入口时，一次回复同时给出条件和证据并结束', async () => {
   const verify = vi.fn().mockResolvedValue(true);

@@ -31,7 +31,8 @@ interface SessionOptions {
 
 const maxJudgments = 3;
 export const guideRequestLimit = 12;
-const roundTime = 20_000;
+// 一轮内可能多次补看和询问模型。用户看完指引再操作的时间另计。
+const roundTimeMs = 45_000;
 
 export function createGuideSession(goal: string, options: SessionOptions) {
   let page: GuidePage | undefined;
@@ -130,7 +131,7 @@ export function createGuideSession(goal: string, options: SessionOptions) {
       options.report({ kind: 'paused', text: '本次引导已用完调用额度。可以继续尝试。' });
       return;
     }
-    if (round.judgments >= maxJudgments || round.elapsed >= roundTime) {
+    if (round.judgments >= maxJudgments || round.elapsed >= roundTimeMs) {
       if (!shown) options.report({ kind: 'paused', text: '还缺少能继续的页面线索。可以调整页面后再试。' });
       return;
     }
@@ -139,7 +140,7 @@ export function createGuideSession(goal: string, options: SessionOptions) {
     const started = Date.now();
     const controller = new AbortController();
     inFlight = controller;
-    const deadline = AbortSignal.timeout(roundTime - round.elapsed);
+    const deadline = AbortSignal.timeout(roundTimeMs - round.elapsed);
     const signal = AbortSignal.any([controller.signal, deadline]);
     const current = () => inFlight === controller && !signal.aborted;
     if (!shown) options.report({ kind: 'reading', text: '正在查看当前页面…' });

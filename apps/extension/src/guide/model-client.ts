@@ -1,11 +1,13 @@
 import { parseDecision } from '../../../api/src/guide-protocol.js';
 import type { GuideRequest } from '../../../api/src/guide-protocol.js';
 
+const requestTimeoutMs = 15_000;
+
 export async function chooseGuide(input: GuideRequest, token: string, signal: AbortSignal) {
   const started = performance.now();
   let response: Response | undefined;
   let value: unknown;
-  const timeout = AbortSignal.timeout(9_000);
+  const timeout = AbortSignal.timeout(requestTimeoutMs);
   const requestSignal = AbortSignal.any([signal, timeout]);
   try {
     response = await fetch('http://127.0.0.1:43130/api/v1/guide', {
