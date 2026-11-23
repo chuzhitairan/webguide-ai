@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import type { FormEvent } from 'react';
 import { browser } from 'wxt/browser';
-import { bindGuide, bindingKey } from '../guide/browser-link.js';
+import { bindGuide, bindingKey, readActiveBinding } from '../guide/browser-link.js';
 import type { Binding } from '../guide/browser-link.js';
 import { chooseGuide } from '../guide/model-client.js';
 import { createGuideSession, guideRequestLimit } from '../guide/session.js';
@@ -89,8 +89,8 @@ export function App() {
       await save(draft.current);
       const key = bindingKey(current.id);
       const stored = await browser.storage.session.get(key);
+      const binding = (stored[key] as Binding | undefined) ?? await readActiveBinding(current.id);
       if (action.current !== task) return;
-      const binding = stored[key] as Binding | undefined;
       if (!binding) {
         setStatus({ kind: 'paused', text: '先在目标网页点击 WebGuide AI 工具栏图标，再选择继续引导。' });
         return;

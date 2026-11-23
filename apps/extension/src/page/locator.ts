@@ -34,12 +34,15 @@ export function isAvailableTarget(element: Element, root: Document): boolean {
 }
 
 const privateContent = 'input, textarea, [contenteditable]:not([contenteditable="false"]), script, style, template';
+const toggle = 'input[type="checkbox"], [role="checkbox"], [role="switch"]';
+// 表格可能把开关和它的标签放在同一格，标签文字也属于行内操作。
+const rowActions = `button, [role="button"], [role="tooltip"], ${toggle}, :is(td, th, [role="cell"], [role="gridcell"]):has(${toggle})`;
 
 function compact(value?: string | null): string {
   return value?.replace(/\s+/g, ' ').trim().slice(0, 120) ?? '';
 }
 
-function publicText(element: Element): string {
+function publicText(element: Element, excludeRowActions = false): string {
   const view = element.ownerDocument.defaultView;
   if (element.matches('select') || element.closest(privateContent) || !view) return '';
   const parts: string[] = [];
@@ -49,7 +52,8 @@ function publicText(element: Element): string {
     acceptNode(node) {
       if (node.nodeType === 1) {
         const child = node as Element;
-        if (child.matches(`${privateContent}, select, [hidden], [aria-hidden="true"]`)) return NodeFilter.FILTER_REJECT;
+        if (child.matches(`${privateContent}, select, [hidden], [aria-hidden="true"]`)
+          || (excludeRowActions && child.matches(rowActions))) return NodeFilter.FILTER_REJECT;
         const style = view.getComputedStyle(child);
         if (style.display === 'none' || style.opacity === '0' || style.contentVisibility === 'hidden') return NodeFilter.FILTER_REJECT;
       }
@@ -67,14 +71,15 @@ function publicText(element: Element): string {
   return compact(parts.join(' '));
 }
 
-export function controlLabel(element: Element, useContents = true): string {
+export function controlLabel(element: Element, { useContents = true, excludeRowActions = false } = {}): string {
   // 开放 Shadow DOM 内的标签引用在原树内解析；表单的当前值不会进入名称。
   const root = element.getRootNode() as Document | ShadowRoot;
   const referenced = element.getAttribute('aria-labelledby')?.trim().split(/\s+/).slice(0, 8)
     .map(id => root.getElementById?.(id)).map(label => label ? publicText(label) : '').join(' ');
   const labels = (element as HTMLInputElement).labels;
-  const associated = labels ? [...labels].slice(0, 8).map(publicText).join(' ') : '';
+  const associated = labels ? [...labels].slice(0, 8).map(label => publicText(label)).join(' ') : '';
   return compact(referenced) || compact(element.getAttribute('aria-label'))
-    || compact(associated) || (useContents ? publicText(element) : '')
+    || compact(associated) || (useContents && excludeRowActions ? publicText(element, true) : '')
+    || (useContents ? publicText(element) : '')
     || compact(element.getAttribute('title'));
 }

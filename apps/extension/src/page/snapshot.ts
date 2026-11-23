@@ -15,6 +15,7 @@ const observedRoles = new Set([
   'menuitemcheckbox', 'menuitemradio', 'option', 'progressbar', 'radio', 'row', 'searchbox', 'slider',
   'spinbutton', 'status', 'switch', 'tab', 'textbox', 'treeitem',
 ]);
+const objectRoles = new Set(['row', 'treeitem', 'option']);
 
 const nativeRoles: Record<string, string> = {
   aside: 'complementary', button: 'button', dialog: 'dialog', footer: 'contentinfo', form: 'form', header: 'banner',
@@ -70,7 +71,7 @@ function semanticRole(element: Element): string | undefined {
       const type = (element as HTMLInputElement).type;
       return type === 'hidden' ? undefined : inputRoles[type] ?? 'textbox';
     }
-    case 'section': return controlLabel(element, false) ? 'region' : undefined;
+    case 'section': return controlLabel(element, { useContents: false }) ? 'region' : undefined;
     case 'select': return (element as HTMLSelectElement).multiple || (element as HTMLSelectElement).size > 1
       ? 'listbox' : 'combobox';
     case 'option': {
@@ -127,7 +128,8 @@ function describe(element: Element, document: Document, includeText = false): Ca
 
   const isRegion = regionRoles.has(role) || scrollRange > 0;
   const regionHeading = isRegion ? element.querySelector(':scope > h1, :scope > h2, :scope > h3') : null;
-  const label = controlLabel(element, !isRegion)
+  // 行内操作可能仅在悬停时出现。它们各有自己的编号，不参与对象名称。
+  const label = controlLabel(element, { useContents: !isRegion, excludeRowActions: objectRoles.has(role) })
     || (regionHeading && isVisibleTarget(regionHeading, document) ? controlLabel(regionHeading) : '')
     || (isRegion ? role : '');
   if (role === 'text' && !label) return;
@@ -193,7 +195,7 @@ export function createObservation(document: Document): {
     const ancestors: { candidate: Candidate; isObject: boolean }[] = [];
     for (let node = pageParent(element); node; node = pageParent(node)) {
       const role = semanticRole(node) ?? '';
-      const isObject = role === 'row' || role === 'treeitem' || role === 'option';
+      const isObject = objectRoles.has(role);
       if (!isObject && !regionRoles.has(role) && !canScroll(node)) continue;
       const candidate = describe(node, document);
       if (candidate) ancestors.push({ candidate, isObject });

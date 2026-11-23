@@ -9,6 +9,13 @@ type GuideSession = ReturnType<typeof import('./session.js').createGuideSession>
 export type Binding = { tabId: number; origin: string };
 export const bindingKey = (windowId: number) => 'tool-tab:' + windowId;
 
+export async function readActiveBinding(windowId: number): Promise<Binding | undefined> {
+  const [tab] = await browser.tabs.query({ windowId, active: true });
+  // 没存下点击记录时，只使用浏览器当前愿意给本扩展的标签页地址。
+  if (tab?.id === undefined || !tab.url || !/^https?:\/\//.test(tab.url)) return;
+  return { tabId: tab.id, origin: new URL(tab.url).origin };
+}
+
 function connectPage(port: PagePort, onSignal: (event: PageSignal) => void, disconnected: () => void): GuidePage {
   let lastId = 0;
   const pending = new Map<number, (value: unknown) => void>();

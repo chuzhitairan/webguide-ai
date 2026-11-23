@@ -62,6 +62,59 @@ test('从自然语言目标出发补看控件、跟随同源跳转，并确认�
   }
 });
 
+test('有临时授权但缺少侧栏绑定记录时，可以恢复当前页引导', async ({ extension: { panel, activate } }) => {
+  const url = 'https://workspace.example/toolbar';
+  const token = 'webguide-test-token-000000';
+  const calls: GuideRequest[] = [];
+  const app = createApp({ token, origins: [panel.url().replace('/sidepanel.html', '')], async decide(input) {
+    calls.push(input);
+    const target = input.page.nodes.find(node => node.label === 'Settings')!;
+    return { kind: 'highlight', instruction: '打开 Settings', targetId: target.id };
+  } });
+  await app.listen({ host: '127.0.0.1', port: 43130 });
+  try {
+    const context = panel.context();
+    await context.route(url, route => route.fulfill({
+      contentType: 'text/html', body: '<!doctype html><main><button>Settings</button></main>',
+    }));
+    const site = await context.newPage();
+    await site.goto(url);
+    await panel.getByLabel('我想做什么').fill('找到当前页的设置入口');
+    await panel.getByLabel('本机访问令牌').fill(token);
+    await site.bringToFront();
+    await panel.locator('form').evaluate((form: HTMLFormElement) => form.requestSubmit());
+    await expect(panel.getByRole('status')).toContainText('先在目标网页点击');
+    expect(calls).toHaveLength(0);
+
+    await activate(site);
+    const removed = await panel.evaluate(async () => {
+      const extension = (globalThis as typeof globalThis & {
+        chrome: {
+          windows: { getCurrent(): Promise<{ id: number }> };
+          storage: { session: { get(key: string): Promise<Record<string, unknown>>; remove(key: string): Promise<void> } };
+        };
+      }).chrome;
+      const { id } = await extension.windows.getCurrent();
+      const key = 'tool-tab:' + id;
+      const storage = extension.storage.session;
+      for (let count = 0; count < 20; count++) {
+        if ((await storage.get(key))[key]) {
+          await storage.remove(key);
+          return true;
+        }
+        await new Promise(resolve => setTimeout(resolve, 30));
+      }
+      return false;
+    });
+    expect(removed).toBe(true);
+    await panel.getByRole('button', { name: '继续引导' }).evaluate(button => (button as HTMLButtonElement).click());
+    await expect(site.getByRole('button', { name: 'Settings' })).toHaveClass(/driver-active-element/);
+    expect(calls).toHaveLength(1);
+  } finally {
+    await app.close();
+  }
+});
+
 test('属性栏按钮没变时，选中对象变化也会使在途回复失效', async ({ extension: { panel, activate } }) => {
   const url = 'https://workspace.example/design';
   const token = 'webguide-test-token-000000';

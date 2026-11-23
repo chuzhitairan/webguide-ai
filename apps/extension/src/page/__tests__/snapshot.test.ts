@@ -99,6 +99,31 @@ it('行内按钮的名称没变，但复用的行展示新对象后原编号失�
   expect(observation.resolve(button.id)).toBeUndefined();
 });
 
+it('悬停时出现的行内操作可以单独查找，选中行的名称和编号保持稳定', () => {
+  document.body.innerHTML = '<div role="grid"><div role="row" aria-selected="true">'
+    + '<span role="gridcell"><a href="/frame">Frame 1</a></span></div></div>';
+  const observation = createObservation(document);
+  const row = document.querySelector('[role="row"]')!;
+  const beforeHover = observation.page().nodes.find(node => node.role === 'row')!;
+
+  row.insertAdjacentHTML('beforeend', '<span role="gridcell">'
+    + '<input type="checkbox" id="lock"><label for="lock">Toggle layer locking</label></span>'
+    + '<div role="button">Toggle layer visibility</div>');
+
+  expect(observation.page().nodes.find(node => node.role === 'row')).toEqual(beforeHover);
+  expect(beforeHover).toMatchObject({ label: 'Frame 1', selected: true });
+  expect(observation.read({ type: 'search', query: 'Toggle layer locking' }).nodes).toContainEqual(
+    expect.objectContaining({ role: 'checkbox', label: 'Toggle layer locking' }),
+  );
+  expect(observation.resolve(beforeHover.id)?.element).toBe(row);
+});
+
+it('仍可通过标题按钮读取没有独立文本的行名称', () => {
+  document.body.innerHTML = '<div role="row"><span role="gridcell"><button>Page 1</button></span></div>';
+  const page = createObservation(document).page();
+  expect(page.nodes.find(node => node.role === 'row')).toMatchObject({ label: 'Page 1' });
+});
+
 it('补看可以读到滚动区裁剪掉的控件，但标明它仍在视口外', () => {
   document.body.innerHTML = '<aside aria-label="Properties" style="overflow: auto">'
     + '<h2>Export presets</h2><button>Export selection</button></aside>';
