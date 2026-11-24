@@ -155,6 +155,36 @@ describe('引导接口', () => {
     expect(result.json()).toEqual({ kind: 'message', instruction: '检查下载文件。' });
   });
 
+  it('复查时允许把几项网页条件归并，并按新条件校验同条回复', async () => {
+    const goal = '打开设置并确认同步已启用';
+    const original = [
+      { quote: '打开设置', result: '到达设置', source: 'page' },
+      { quote: '并确认同步已启用', result: '同步已启用', source: 'page' },
+    ];
+    const decision = {
+      kind: 'keep', requirements: [{ quote: goal, result: '设置中的同步已启用', source: 'page' }],
+      proofs: [{ index: 0, checks: [{ id: 1, field: 'label', equals: '属性栏' }] }],
+    };
+    const app = service(async () => decision);
+    const result = await app.inject({ method: 'POST', url, headers, payload: {
+      ...payload, goal, requirements: original, reviewRequirements: true,
+    } });
+    expect(result.statusCode).toBe(200);
+    expect(result.json()).toEqual(decision);
+  });
+
+  it('含用户确认的目标不能通过网页条件复查重写', async () => {
+    const app = service(vi.fn());
+    const result = await app.inject({ method: 'POST', url, headers, payload: {
+      ...payload, goal: '确认已导出且已下载到电脑', reviewRequirements: true,
+      requirements: [
+        { quote: '确认已导出', result: '已导出', source: 'page' },
+        { quote: '且已下载到电脑', result: '已下载到电脑', source: 'user' },
+      ],
+    } });
+    expect(result.statusCode).toBe(400);
+  });
+
   it('漏掉原话后半段时只保留普通引导', async () => {
     const app = service(async () => ({ kind: 'message', instruction: '看导出状态。',
       requirements: [{ quote: '确认导出成功', result: '已导出', source: 'page' }],

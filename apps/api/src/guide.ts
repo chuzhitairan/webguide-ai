@@ -1,4 +1,4 @@
-import { coversGoal, parseDecision } from './guide-protocol.js';
+import { acceptsRequirements, parseDecision } from './guide-protocol.js';
 import type { Decision, GuideRequest, ReadQuery } from './guide-protocol.js';
 
 export interface ModelConfig {
@@ -47,10 +47,10 @@ const legacyCompletion = [
 ].join('\n');
 
 const completionInstructions = [
-  'requirements 为空数组时，在同一条引导回复附上 1 到 5 项必要结果。每项 quote 从 goal 原样复制一段，按原顺序拼起来应覆盖整个 goal，开头客套话及连接词可随相邻要求一起复制。用 result 简述所需结果，并用补充回答消除歧义。source 用 point 表示找到入口、page 表示到达或状态生效、user 表示网页之外还需用户确认。不添加多余中间步骤。',
-  '点开控件只是完成筛选、修改设置或进入界面的路径。用户只要求最终状态时只列 page。对同一个结果的重述合在同一项 quote 里；只有用户将找入口本身作为目标时才列 point。',
-  '例如要确认导出且已下载到电脑，导出状态用 page，电脑上有文件用 user。用户只问网页显示的状态时，按网页范围核对。requirements 已有值时沿用，按其从 0 开始的顺序引用。',
-  '有证据时，在任意决定里用 proofs 提交已证实的网页项目。每项包含 index、checks（id、field、equals）；point 还要附可见可用的 targetId 并检查它的 label。需要核对选中对象时也附上该对象的名称与状态。用户确认项目由侧栏处理，网页不为它提交证明。',
+  'requirements 为空时，同一条回复附上 1 到 5 个独立的最终结果。先问自己「用户看到什么就可以停？」默认写一个。source 用 point 表示找到入口、page 表示到达或状态已生效、user 表示网页之外需用户确认。用 result 简述该终点。各项 quote 从 goal 原样取相邻片段，依次覆盖整句。一项可以跨多个分句。',
+  '例如「打开团队成员列表，只看管理员，筛选生效就行」是一项 page，quote 取整句，result 写「团队成员列表已筛为仅管理员」。打开列表是路径，列表是结果的范围，「生效」是同一个结果。只有结果各自需要核对时才拆开，例如「确认网页导出成功并且电脑上已经有文件」是 page 和 user 两项。',
+  'requirements 已有值时沿用，按从 0 开始的顺序引用。reviewRequirements 为 true 时，复查未过的条件是否只是路径、范围或已生效结果的重述。可以归并相邻的 page 条件，返回完整 requirements 和按新序号写的 proofs。分别验收的结果各保留一项。若无需归并，继续核对原条件。',
+  '有证据时，用 proofs 提交已证实的网页项目，每个 index 最多一条 proof。每条包含 index 和 checks（id、field、equals）；point 附唯一的可见可用 targetId，并在 checks 核对其 label。所属对象的名称和选中状态放进同一份 checks。user 由侧栏处理。',
   '到达界面要引用可用界面与对应对象，标题单独不足以证明到达。权限提示时继续指路。',
   '完成由扩展核对后决定。若无需下一步而已有终点证据，输出 keep 并附 proofs，例如：',
   '{"kind":"keep","requirements":[{"quote":"找到导出按钮","result":"找到导出按钮","source":"point"}],"proofs":[{"index":0,"targetId":2,"checks":[{"id":2,"field":"label","equals":"Add export settings"}]}]}',
@@ -59,7 +59,7 @@ const completionInstructions = [
 ].join('\n');
 
 export function createModelGuide(config: ModelConfig, request: typeof fetch = fetch): GuideService['decide'] {
-  return async ({ goal, userAnswer, finishOnly, page, reads, previous, feedback, requirements }, signal) => {
+  return async ({ goal, userAnswer, finishOnly, page, reads, previous, feedback, requirements, reviewRequirements }, signal) => {
     let response: Response;
     try {
       response = await request(config.url, {
@@ -71,7 +71,7 @@ export function createModelGuide(config: ModelConfig, request: typeof fetch = fe
           model: config.name,
           messages: [
             { role: 'system', content: instruction + '\n' + (requirements ? completionInstructions : legacyCompletion) },
-            { role: 'user', content: JSON.stringify({ goal, userAnswer, finishOnly, requirements }) },
+            { role: 'user', content: JSON.stringify({ goal, userAnswer, finishOnly, requirements, reviewRequirements }) },
             { role: 'user', content: JSON.stringify({ page, reads, previous, feedback }) },
           ],
           response_format: { type: 'json_object' },
@@ -120,7 +120,8 @@ export function validateDecision(value: unknown, input: GuideRequest): Decision 
     for (const node of result.nodes) ids.add(node.id);
   }
   const known = (id: number | undefined) => id === undefined || ids.has(id);
-  const requirements = input.requirements?.length === 0 && proposed && coversGoal(input.goal, proposed) ? proposed : undefined;
+  const requirements = proposed && input.requirements
+    && acceptsRequirements(input.goal, proposed, input.requirements, input.reviewRequirements) ? proposed : undefined;
   const active = requirements ?? input.requirements;
   const proofs = candidates?.flatMap(proof => {
     const condition = active?.[proof.index];

@@ -64,21 +64,27 @@ test('从自然语言目标出发补看控件、跟随同源跳转，并确认�
   }
 });
 
-test('找到入口即结束，最后一次高亮自动收起', async ({ extension: { panel, activate } }) => {
+test('入口证明有冲突时重新核对，正确高亮后自动收起', async ({ extension: { panel, activate } }) => {
   const siteUrl = 'https://workspace.example/export';
   const token = 'webguide-test-token-000000';
+  const replies: GuideRequest[] = [];
   const app = createApp({ token, origins: [panel.url().replace('/sidepanel.html', '')], async decide(input) {
+    replies.push(input);
     const target = input.page.nodes.find(node => node.label === 'Export')!;
+    const context = input.page.nodes.find(node => node.label === 'Selected design')!;
+    const proof = { index: 0, targetId: target.id, checks: [{ id: target.id, field: 'label', equals: 'Export' }] };
+    if (input.feedback?.includes('多个控件')) return { kind: 'keep', proofs: [proof] };
     return { kind: 'highlight', targetId: target.id, instruction: '这里是导出按钮。',
       requirements: [{ quote: '请找到导出入口', result: '找到导出入口', source: 'point' }],
-      proofs: [{ index: 0, targetId: target.id, checks: [{ id: target.id, field: 'label', equals: 'Export' }] }],
+      proofs: [proof, { index: 0, targetId: context.id,
+        checks: [{ id: context.id, field: 'label', equals: context.label }] }],
     };
   } });
   await app.listen({ host: '127.0.0.1', port: 43130 });
   try {
     const context = panel.context();
     await context.route(siteUrl, route => route.fulfill({ contentType: 'text/html',
-      body: '<!doctype html><main><button>Export</button></main>' }));
+      body: '<!doctype html><main><button>Selected design</button><button>Export</button></main>' }));
     const site = await context.newPage();
     await site.goto(siteUrl);
     await site.bringToFront();
@@ -90,6 +96,7 @@ test('找到入口即结束，最后一次高亮自动收起', async ({ extensio
     await expect(site.getByRole('button', { name: 'Export' })).toHaveClass(/driver-active-element/);
     await expect(site.locator('.webguide-popover')).toContainText('已找到');
     await expect(panel.getByRole('status')).toHaveText('已完成。找到导出入口。');
+    expect(replies).toHaveLength(2);
     await expect(site.locator('.webguide-popover')).toHaveCount(0, { timeout: 6_000 });
   } finally {
     await app.close();

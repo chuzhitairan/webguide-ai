@@ -1,4 +1,4 @@
-import { coversGoal } from '../../../api/src/guide-protocol.js';
+import { acceptsRequirements, canReviewRequirements } from '../../../api/src/guide-protocol.js';
 import type { Decision, EvidenceCheck, GuideRequest, Observation, ReadQuery, ReadResult, Requirement } from '../../../api/src/guide-protocol.js';
 
 export type PageDecision = { kind: 'highlight'; targetId: number; instruction: string };
@@ -75,6 +75,19 @@ export function createGuideSession(goal: string, options: SessionOptions) {
     pending = undefined;
     confirming = false;
     proofs.clear();
+  }
+
+  function hasConflictingTargets(result: Decision): boolean {
+    const targets = new Map<number, number>();
+    for (const { index, targetId } of result.proofs ?? []) {
+      if (requirements[index]?.source !== 'point' || pointed.has(index) || targetId === undefined) continue;
+      const first = targets.get(index);
+      if (first !== undefined && first !== targetId) return true;
+      targets.set(index, targetId);
+    }
+    const onlyTarget = targets.get(0);
+    return requirements.length === 1 && onlyTarget !== undefined
+      && result.kind === 'highlight' && result.targetId !== onlyTarget;
   }
 
   async function settle(view: GuidePage, current: () => boolean) {
@@ -168,37 +181,57 @@ export function createGuideSession(goal: string, options: SessionOptions) {
       const reads: ReadResult[] = [];
       const evidence = new Map(snapshot.nodes.map(node => [node.id, node]));
       let feedback: string | undefined;
+      let reviewRequirements = false;
+      let reviewedRequirements = false;
 
-      async function reread() {
+      async function reread(hint = '目标或完成证据在当前页面未通过核对。请补看，或说明还缺少什么。') {
         snapshot = await targetPage.snapshot(false);
         reads.length = 0;
         evidence.clear();
         proofs.clear();
         for (const node of snapshot.nodes) evidence.set(node.id, node);
-        feedback = '目标或完成证据在当前页面未通过核对。请补看，或说明还缺少什么。';
+        feedback = hint;
       }
 
       while (current() && runningRound.judgments < maxJudgments && used < guideRequestLimit) {
         runningRound.judgments++;
         const finishOnly = runningRound.judgments === maxJudgments || used === guideRequestLimit - 1;
         const result = await decide({ goal, page: snapshot, reads: [...reads], previous: shown, feedback,
-          finishOnly, userAnswer: answer, requirements });
+          finishOnly, userAnswer: answer, requirements, reviewRequirements: reviewRequirements ? true : undefined });
         if (!current()) return;
-        if (!requirements.length && result.requirements?.length && coversGoal(goal, result.requirements)) {
+        if (result.requirements && acceptsRequirements(goal, result.requirements, requirements, reviewRequirements)) {
           requirements = result.requirements;
+          // 归并后条件序号可能变化，旧证明需要按新条件重新提交。
+          proofs.clear();
           saveProgress();
+        }
+        reviewRequirements = false;
+        if (hasConflictingTargets(result)) {
+          if (finishOnly) break;
+          await reread('同一入口的完成证明指向多个控件。请核对唯一的最终控件，把所属对象放在同一条证明的 checks 中。');
+          continue;
         }
         const pageRequirements = requirements.filter((item, index) =>
           item.source === 'page' || (item.source === 'point' && !pointed.has(index)));
+        const submitted = new Set<number>();
         for (const { index, checks, targetId } of result.proofs ?? []) {
           const source = requirements[index]?.source;
           if (pointed.has(index) || !checks.every(check => evidence.has(check.id))) continue;
           const proof = source === 'page' ? { source, checks } as const
             : source === 'point' && targetId !== undefined && evidence.has(targetId) ? { source, checks, targetId } as const : undefined;
           if (!proof) continue;
+          submitted.add(index);
           // 单项任务由收尾请求核对一次；组合任务先积累当前轮已复查的证据。
           if (pageRequirements.length === 1 || await targetPage.verify([proof])) proofs.set(index, proof);
           if (!current()) return;
+        }
+        // 模型已经给每项都提交了证据，但只有部分通过。请它复核条件是否其实在描述同一个结果。
+        if (!finishOnly && !reviewedRequirements && result.kind === 'keep' && canReviewRequirements(requirements)
+          && submitted.size === requirements.length && proofs.size > 0 && proofs.size < requirements.length) {
+          reviewedRequirements = true;
+          reviewRequirements = true;
+          await reread('部分网页完成条件未通过复查。请重新看用户原话和现场，判断这些条件是否属于同一个最终结果。');
+          continue;
         }
         if (requirements.length && proofs.size === pageRequirements.length) {
           if (await settle(targetPage, current) || !current()) return;

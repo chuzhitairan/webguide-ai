@@ -74,6 +74,72 @@ it('找到正确入口时，一次回复同时给出条件和证据并结束', a
   expect(report).toHaveBeenLastCalledWith({ kind: 'complete', text: '已完成。找到发布设置。' });
 });
 
+it.each([true, false])('同一入口的两个目标先复查（能消除冲突：%s）', async canResolve => {
+  const goal = '找到当前项目的发布入口';
+  const row: Evidence = { id: 3, role: 'row', label: '当前项目', viewport: true, available: true, selected: true };
+  const entry = { index: 0, targetId: button.id, checks: [{ id: button.id, field: 'label', equals: button.label }] } as const;
+  const context = { index: 0, targetId: row.id, checks: [{ id: row.id, field: 'label', equals: row.label }] } as const;
+  const entryProof = { ...entry, checks: [...entry.checks] };
+  const conflicting = [entryProof, { ...context, checks: [...context.checks] }];
+  const verify = vi.fn<GuidePage['verify']>().mockResolvedValue(true);
+  const report = vi.fn();
+  const choose = vi.fn<(input: GuideRequest) => Promise<Decision>>()
+    .mockResolvedValueOnce({ kind: 'highlight', targetId: button.id, instruction: '这里是发布设置。',
+      requirements: [{ quote: goal, result: '找到发布入口', source: 'point' }], proofs: conflicting,
+    }).mockResolvedValue({ kind: 'keep', proofs: canResolve ? [entryProof] : conflicting });
+  const session = createGuideSession(goal, { choose, report });
+  await session.attach({
+    async snapshot() { return { title: 'Project', site: 'example.test', nodes: [row, button], truncated: false }; },
+    async read() { return []; }, async apply() { return true; }, verify, trackScroll() {}, clear() {},
+  });
+  expect(choose.mock.calls[1]?.[0].feedback).toContain('多个控件');
+  if (canResolve) {
+    expect(verify).toHaveBeenCalledExactlyOnceWith([
+      { source: 'point', targetId: button.id, checks: entryProof.checks },
+    ], '已完成。找到发布入口。');
+    expect(report).toHaveBeenLastCalledWith({ kind: 'complete', text: '已完成。找到发布入口。' });
+  } else {
+    expect(verify).not.toHaveBeenCalled();
+    expect(choose).toHaveBeenCalledTimes(3);
+    expect(report).toHaveBeenLastCalledWith(expect.objectContaining({ kind: 'paused' }));
+  }
+});
+
+it('筛选已生效却卡在到达页面的条件时，可重新归并同一个网页结果', async () => {
+  const goal = '打开活动记录，将筛选切成只看归档，筛选生效就行。';
+  const title: Evidence = { ...heading, label: '活动记录', role: 'heading' };
+  const selected: Evidence = { ...button, label: '范围：仅归档', expanded: false };
+  const checks = [{ id: selected.id, field: 'label', equals: selected.label }] as const;
+  const verify = vi.fn<GuidePage['verify']>().mockImplementation(async proofs =>
+    proofs.every(proof => proof.checks.some(check => check.id === selected.id)));
+  const report = vi.fn();
+  const choose = vi.fn<(input: GuideRequest) => Promise<Decision>>()
+    .mockResolvedValueOnce({ kind: 'keep',
+      requirements: [
+        { quote: '打开活动记录', result: '已打开活动记录', source: 'page' },
+        { quote: '将筛选切成只看归档', result: '选中仅归档', source: 'page' },
+        { quote: '筛选生效就行', result: '筛选已生效', source: 'page' },
+      ],
+      proofs: [
+        { index: 0, checks: [{ id: title.id, field: 'label', equals: title.label }] },
+        { index: 1, checks: [...checks] },
+        { index: 2, checks: [...checks] },
+      ],
+    }).mockResolvedValueOnce({ kind: 'keep',
+      requirements: [{ quote: goal, result: '活动记录已筛为仅归档', source: 'page' }],
+      proofs: [{ index: 0, checks: [...checks] }],
+    });
+  const session = createGuideSession(goal, { choose, report });
+  await session.attach({
+    async snapshot() { return { title: title.label, site: 'example.test', nodes: [title, selected], truncated: false }; },
+    async read() { return []; }, async apply() { return true; }, verify, trackScroll() {}, clear() {},
+  });
+  expect(choose.mock.calls[1]?.[0]).toMatchObject({ goal, reviewRequirements: true });
+  expect(choose.mock.calls[1]?.[0].requirements).toHaveLength(3);
+  expect(verify).toHaveBeenLastCalledWith([{ source: 'page', checks }], '已完成。活动记录已筛为仅归档。');
+  expect(report).toHaveBeenLastCalledWith({ kind: 'complete', text: '已完成。活动记录已筛为仅归档。' });
+});
+
 it('页面证据只能完成网页部分，用户确认后仍须复查现场', async () => {
   const result: Decision = { kind: 'keep',
     requirements: [

@@ -57,8 +57,9 @@ export interface GuideRequest {
   previous?: { instruction: string; target?: Evidence };
   feedback?: string;
   userAnswer?: string;
-  // 空数组表示由第一条回复提炼条件，之后各轮沿用同一组条件。
+  // 空数组请模型提炼终点；已有条件沿用，除非会话发起归并复查。
   requirements?: Requirement[];
+  reviewRequirements?: true;
 }
 
 type NavigationDecision =
@@ -134,11 +135,39 @@ function isRequirementList(value: unknown): value is Requirement[] {
   return Array.isArray(value) && value.length <= 5 && value.every(isRequirement);
 }
 
+function goalContent(text: string): string {
+  return text.replace(/[\p{White_Space}\p{Punctuation}]/gu, '');
+}
+
 export function coversGoal(goal: string, requirements: Requirement[]): boolean {
-  const content = (text: string) => text.replace(/[\p{White_Space}\p{Punctuation}]/gu, '');
   // 连接词可以留在任一项。拼回原句可以发现整段要求被漏掉。
   return requirements.every(item => goal.includes(item.quote))
-    && content(requirements.map(item => item.quote).join('')) === content(goal);
+    && goalContent(requirements.map(item => item.quote).join('')) === goalContent(goal);
+}
+
+export function canReviewRequirements(requirements: Requirement[]): boolean {
+  return requirements.length > 1 && requirements.every(item => item.source === 'page');
+}
+
+export function acceptsRequirements(goal: string, proposed: Requirement[], current: Requirement[], review = false): boolean {
+  if (!proposed.length || !coversGoal(goal, proposed)) return false;
+  if (!current.length) return true;
+  if (!review || !canReviewRequirements(current) || proposed.length >= current.length
+    || !proposed.every(item => item.source === 'page')) return false;
+
+  // 只合并相邻原文片段，保留完整目标和已经分清的片段边界。
+  const boundaries = new Set<number>();
+  let originalEnd = 0;
+  for (const item of current) {
+    originalEnd += goalContent(item.quote).length;
+    boundaries.add(originalEnd);
+  }
+  let proposedEnd = 0;
+  for (const item of proposed) {
+    proposedEnd += goalContent(item.quote).length;
+    if (!boundaries.has(proposedEnd)) return false;
+  }
+  return true;
 }
 
 function parseProof(value: unknown): RequirementProof | undefined {
@@ -230,12 +259,16 @@ function isPrevious(value: unknown): value is NonNullable<GuideRequest['previous
 
 // 严格限制发送给上游的证据字段和长度，拒绝附带完整地址、页面源码等额外数据。
 export function isGuideRequest(value: unknown): value is GuideRequest {
-  return isRecord(value) && hasOnlyKeys(value, ['goal', 'page', 'reads', 'finishOnly', 'previous', 'feedback', 'userAnswer', 'requirements'])
-    && isText(value.goal, 500, false) && isObservation(value.page) && typeof value.finishOnly === 'boolean'
+  if (!isRecord(value) || !isText(value.goal, 500, false)) return false;
+  const { requirements } = value;
+  if (requirements !== undefined && (!isRequirementList(requirements)
+    || (requirements.length && !coversGoal(value.goal, requirements)))) return false;
+  return hasOnlyKeys(value, ['goal', 'page', 'reads', 'finishOnly', 'previous', 'feedback', 'userAnswer', 'requirements', 'reviewRequirements'])
+    && isObservation(value.page) && typeof value.finishOnly === 'boolean'
     && Array.isArray(value.reads) && value.reads.length <= 9 && value.reads.every(isReadResult)
     && (value.previous === undefined || isPrevious(value.previous))
     && (value.feedback === undefined || isText(value.feedback, 500))
     && (value.userAnswer === undefined || isText(value.userAnswer, 500))
-    && (value.requirements === undefined || (isRequirementList(value.requirements)
-      && (!value.requirements.length || coversGoal(value.goal, value.requirements))));
+    && (value.reviewRequirements === undefined
+      || (value.reviewRequirements === true && requirements !== undefined && canReviewRequirements(requirements)));
 }
