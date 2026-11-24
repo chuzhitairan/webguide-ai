@@ -70,7 +70,7 @@ test('入口证明有冲突时重新核对，正确高亮后自动收起', async
   const replies: GuideRequest[] = [];
   const app = createApp({ token, origins: [panel.url().replace('/sidepanel.html', '')], async decide(input) {
     replies.push(input);
-    const target = input.page.nodes.find(node => node.label === 'Export')!;
+    const target = input.page.nodes.find(node => node.role === 'button' && node.label === 'Export')!;
     const context = input.page.nodes.find(node => node.label === 'Selected design')!;
     const proof = { index: 0, targetId: target.id, checks: [{ id: target.id, field: 'label', equals: 'Export' }] };
     if (input.feedback?.includes('多个控件')) return { kind: 'keep', proofs: [proof] };
@@ -84,7 +84,8 @@ test('入口证明有冲突时重新核对，正确高亮后自动收起', async
   try {
     const context = panel.context();
     await context.route(siteUrl, route => route.fulfill({ contentType: 'text/html',
-      body: '<!doctype html><main><button>Selected design</button><button>Export</button></main>' }));
+      body: '<!doctype html><main><button>Selected design</button>'
+        + '<div role="treeitem" aria-label="Export"><button>Export</button></div></main>' }));
     const site = await context.newPage();
     await site.goto(siteUrl);
     await site.bringToFront();
@@ -98,6 +99,72 @@ test('入口证明有冲突时重新核对，正确高亮后自动收起', async
     await expect(panel.getByRole('status')).toHaveText('已完成。找到导出入口。');
     expect(replies).toHaveLength(2);
     await expect(site.locator('.webguide-popover')).toHaveCount(0, { timeout: 6_000 });
+  } finally {
+    await app.close();
+  }
+});
+
+test('同名入口需要核对包含它的区域，视口外的同名控件也计入', async ({ extension: { panel, activate } }) => {
+  const url = 'https://workspace.example/export-scopes';
+  const token = 'webguide-test-token-000000';
+  const goal = '找到 Frame 1 的导出设置';
+  const calls: GuideRequest[] = [];
+  const app = createApp({ token, origins: [panel.url().replace('/sidepanel.html', '')], async decide(input) {
+    calls.push(input);
+    const region = input.page.nodes.find(node => node.label === 'Frame 1 properties')!;
+    const pageTools = input.page.nodes.find(node => node.label === 'Page tools')!;
+    const pageExport = input.page.nodes.find(node => node.label === 'Export settings' && node.region === pageTools.id)!;
+    const labelCheck = (node: typeof region) => ({ id: node.id, field: 'label', equals: node.label });
+    if (calls.length === 1) return { kind: 'highlight', targetId: pageExport.id, scopeId: pageTools.id, instruction: '点击导出设置。' };
+    if (calls.length === 2) return { kind: 'keep',
+      requirements: [{ quote: goal, result: goal, source: 'point' }],
+      proofs: [{ index: 0, targetId: pageExport.id, checks: [labelCheck(pageExport), labelCheck(region)] }],
+    };
+    const target = input.page.nodes.find(node => node.label === 'Export settings' && node.id !== pageExport.id);
+    if (!target) return { kind: 'message', instruction: '向下滚动 Frame 1 的属性面板。', scrollRegion: region.id };
+    if (input.reads.length === 0) return { kind: 'observe', queries: [{ type: 'inspect', id: target.id }] };
+    const owner = input.reads[0]?.nodes.find(node => node.id === region.id);
+    if (!owner) return { kind: 'blocked', instruction: '还没有看到图层属性。' };
+    if (calls.length === 5) return { kind: 'highlight', targetId: target.id, scopeId: owner.id, instruction: '这里是图层导出设置。' };
+    return { kind: 'keep', proofs: [{ index: 0, targetId: target.id, checks: [labelCheck(target), labelCheck(owner)] }] };
+  } });
+  await app.listen({ host: '127.0.0.1', port: 43130 });
+  try {
+    const context = panel.context();
+    await context.route(url, route => route.fulfill({ contentType: 'text/html', body: `<!doctype html>
+      <style>main{display:flex;gap:40px} aside{height:180px;width:240px;overflow:auto}
+        #export{margin-top:380px;margin-bottom:120px}</style>
+      <main>
+        <section aria-label="Page tools"><button id="page-export">Export settings</button>
+          <button role="treeitem" aria-selected="true">Frame 1</button></section>
+        <aside aria-label="Frame 1 properties" id="frame-properties">
+          <section aria-label="Export" id="export"><button id="frame-export">Export settings</button></section>
+        </aside>
+      </main>` }));
+    const site = await context.newPage();
+    await site.goto(url);
+    await site.bringToFront();
+    await activate(site);
+    await panel.getByLabel('我想做什么').fill(goal);
+    await panel.getByLabel('本机访问令牌').fill(token);
+    await panel.locator('form').evaluate((form: HTMLFormElement) => form.requestSubmit());
+
+    const wrong = site.locator('#page-export');
+    const target = site.locator('#frame-export');
+    await expect(target).not.toBeInViewport();
+    await expect(panel.getByRole('status')).toHaveText('向下滚动 Frame 1 的属性面板。');
+    await expect(wrong).not.toHaveClass(/driver-active-element/);
+    expect(calls).toHaveLength(3);
+    expect(calls.slice(1, 3).every(call => call.feedback?.includes('同名'))).toBe(true);
+    const region = site.locator('#frame-properties');
+    await region.hover();
+    await site.mouse.wheel(0, 400);
+    await expect(target).toBeInViewport();
+    await expect(target).toHaveClass(/driver-active-element/);
+    await expect(panel.getByRole('status')).toHaveText('这里是图层导出设置。');
+    await site.getByRole('treeitem', { name: 'Frame 1' }).click();
+    await expect(panel.getByRole('status')).toHaveText('已完成。找到 Frame 1 的导出设置。');
+    await expect(wrong).not.toHaveClass(/driver-active-element/);
   } finally {
     await app.close();
   }

@@ -33,6 +33,7 @@ function connect(port: Port): () => void {
   let observation: ReturnType<typeof createObservation> | undefined;
   let generation = 0;
   let observed = -1;
+  let sentIds = new Set<number>();
   let currentTarget: number | undefined;
   let actionTarget: number | undefined;
   let signature = '';
@@ -149,6 +150,30 @@ function connect(port: Port): () => void {
       .map(({ id, label, selected, checked }) => [id, label, selected, checked]));
   }
 
+  function inside(element: Element, scope: Element) {
+    for (let parent = pageParent(element); parent; parent = pageParent(parent)) {
+      if (parent === scope) return true;
+    }
+    return false;
+  }
+
+  function provesScope(element: Element, label: string, scopeIds: number[] = []) {
+    // 搜索也包含被面板裁掉的控件。第一个可见匹配可能是另一个对象的入口。
+    const alternatives = observation?.namedControls(label, pointRoles)
+      // 行及其同名的内部按钮可能只是同一处入口的两层语义。
+      .filter(other => other.element !== element && !inside(element, other.element) && !inside(other.element, element)) ?? [];
+    if (!alternatives.length) return true;
+    // 页面脚本可能比首读多看到一个屏外候选。先给模型补看机会，再接受它的选择。
+    if (!alternatives.some(other => sentIds.has(other.id))) return false;
+
+    // 同名时，证明要核对一个确实包含目标、且排除其他候选的区域或对象。
+    return scopeIds.some(id => {
+      const scope = observation?.resolve(id);
+      return !!scope?.evidence.viewport && !!scope.evidence.label && inside(element, scope.element)
+        && alternatives.every(other => !inside(other.element, scope.element));
+    });
+  }
+
   function verifies(proof: PageProof) {
     const matches = proof.checks.map(check => ({ check, evidence: observation?.resolve(check.id)?.evidence }));
     if (!matches.length || !matches.every(({ check, evidence }) => evidence?.viewport && evidence[check.field] === check.equals)) {
@@ -157,7 +182,9 @@ function connect(port: Port): () => void {
     if (proof.source === 'point') {
       const target = visibleTarget(proof.targetId);
       return Boolean(target && pointRoles.has(target.evidence.role)
-        && matches.some(({ check }) => check.id === proof.targetId && check.field === 'label'));
+        && matches.some(({ check }) => check.id === proof.targetId && check.field === 'label')
+        && provesScope(target.element, target.evidence.label,
+          proof.checks.filter(check => check.field === 'label' && check.id !== proof.targetId).map(check => check.id)));
     }
     // 收起的选择控件可在名称里显示当前值。展开时应核对选项状态。
     return matches.some(({ check, evidence }) => {
@@ -183,6 +210,7 @@ function connect(port: Port): () => void {
       }
       observed = generation;
       const page = observation.page();
+      sentIds = new Set(page.nodes.map(node => node.id));
       signature = summarize(page.nodes);
       contextAtRead = contextKey(page);
       return page;
@@ -190,7 +218,11 @@ function connect(port: Port): () => void {
     // 用户操作之后、侧栏收到事件之前到达的回复也必须作废。
     if (!observation || observed !== generation) return null;
     if (!sameContext(observation.page())) return null;
-    if (command.kind === 'read') return command.queries.map(query => observation!.read(query));
+    if (command.kind === 'read') {
+      const results = command.queries.map(query => observation!.read(query));
+      for (const result of results) for (const node of result.nodes) sentIds.add(node.id);
+      return results;
+    }
     if (command.kind === 'track-scroll') {
       const region = command.id === undefined ? undefined : observation.resolve(command.id);
       // 模型可能只给了文字提示。等一次实际滚动，即使首读仍是相同的控件，也重新补看。
@@ -219,7 +251,8 @@ function connect(port: Port): () => void {
 
     const decision = command.decision;
     const target = visibleTarget(decision.targetId);
-    if (!target) return false;
+    if (!target || (pointRoles.has(target.evidence.role)
+      && !provesScope(target.element, target.evidence.label, decision.scopeIds))) return false;
     scrollHint = undefined;
     scrolled = false;
     currentTarget = decision.targetId;

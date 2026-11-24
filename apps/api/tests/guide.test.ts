@@ -135,6 +135,7 @@ describe('引导接口', () => {
   it.each([
     { kind: 'click', targetId: 1 },
     { kind: 'highlight', targetId: 2, instruction: '查看导出。' },
+    { kind: 'highlight', targetId: 1, scopeId: 2, instruction: '查看导出。' },
     { kind: 'observe', queries: [{ type: 'inspect', id: 2 }] },
     { kind: 'complete', instruction: '已找到设置。', checks: [] },
     { kind: 'complete', instruction: '已展开。', checks: [{ id: 1, field: 'expanded', equals: 'true' }] },
@@ -146,7 +147,7 @@ describe('引导接口', () => {
   });
 
   it('接受同一轮补看中找到的编号', async () => {
-    const app = service(async () => ({ kind: 'highlight', targetId: 2, instruction: '查看导出。' }));
+    const app = service(async () => ({ kind: 'highlight', targetId: 2, scopeId: 1, instruction: '查看导出。' }));
     const result = await app.inject({
       method: 'POST',
       url,
@@ -162,7 +163,7 @@ describe('引导接口', () => {
       },
     });
     expect(result.statusCode).toBe(200);
-    expect(result.json()).toEqual({ kind: 'highlight', targetId: 2, instruction: '查看导出。' });
+    expect(result.json()).toEqual({ kind: 'highlight', targetId: 2, scopeId: 1, instruction: '查看导出。' });
   });
 
   it('同一条引导回复可附用户目标的条件和当前证据', async () => {

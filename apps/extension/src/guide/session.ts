@@ -1,7 +1,7 @@
 import { acceptsRequirements, canReviewRequirements } from '../../../api/src/guide-protocol.js';
 import type { Decision, EvidenceCheck, GuideRequest, Observation, ReadQuery, ReadResult, Requirement } from '../../../api/src/guide-protocol.js';
 
-export type PageDecision = { kind: 'highlight'; targetId: number; instruction: string };
+export type PageDecision = { kind: 'highlight'; targetId: number; instruction: string; scopeIds?: number[] };
 export type PageProof = { source: 'page'; checks: EvidenceCheck[] }
   | { source: 'point'; checks: EvidenceCheck[]; targetId: number };
 export type GuideStatus = {
@@ -106,7 +106,9 @@ export function createGuideSession(goal: string, options: SessionOptions) {
     }
     if (nextPoint) {
       const { index, proof } = nextPoint;
-      if (!await view.apply({ kind: 'highlight', targetId: proof.targetId, instruction: requirements[index].result }) || !current()) {
+      const scopeIds = proof.checks.filter(check => check.field === 'label' && check.id !== proof.targetId).map(check => check.id);
+      if (!await view.apply({ kind: 'highlight', targetId: proof.targetId, instruction: requirements[index].result,
+        ...(scopeIds.length ? { scopeIds } : {}) }) || !current()) {
         return false;
       }
       markPointed(proof.targetId);
@@ -237,7 +239,9 @@ export function createGuideSession(goal: string, options: SessionOptions) {
           if (await settle(targetPage, current) || !current()) return;
           // 现场变化后重新取证，上一份输出里的编号不再是最新证据。
           if (finishOnly) break;
-          await reread();
+          await reread(pageRequirements.some(item => item.source === 'point')
+            ? '入口完成证据未通过。若有同名控件，请搜索并用 inspect 查看候选的所属区域，在 checks 同时核对目标和包含它的区域或对象名称。'
+            : undefined);
           continue;
         }
         if (result.kind === 'observe' && !finishOnly) {
@@ -250,11 +254,12 @@ export function createGuideSession(goal: string, options: SessionOptions) {
         if (result.kind === 'highlight') {
           const target = evidence.get(result.targetId);
           if (reason === 'soft' && shown?.target && shown.target.id !== target?.id) return;
-          const applied = target && await targetPage.apply({ kind: 'highlight', targetId: result.targetId, instruction: result.instruction });
+          const applied = target && await targetPage.apply({ kind: 'highlight', targetId: result.targetId, instruction: result.instruction,
+            ...(result.scopeId === undefined ? {} : { scopeIds: [result.scopeId] }) });
           if (!current()) return;
           if (!applied) {
             if (finishOnly) break;
-            await reread();
+            await reread('高亮目标或所属区域未通过核对。若有同名控件，先用 search 比较视口内外的候选，再用 scopeId 引用目标所属区域。');
             continue;
           }
           if ([...proofs.values()].some(proof => proof.source === 'point' && proof.targetId === result.targetId)) {

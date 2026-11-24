@@ -64,7 +64,7 @@ export interface GuideRequest {
 
 type NavigationDecision =
   | { kind: 'observe'; queries: ReadQuery[] }
-  | { kind: 'highlight'; targetId: number; instruction: string }
+  | { kind: 'highlight'; targetId: number; instruction: string; scopeId?: number }
   | { kind: 'message'; instruction: string; scrollRegion?: number }
   | { kind: 'wait' | 'ask' | 'blocked'; instruction: string }
   | { kind: 'keep' }
@@ -194,8 +194,11 @@ function parseNavigation(value: Record<string, unknown>): NavigationDecision | u
   if (!isText(value.instruction, 500, false)) return;
   const instruction = value.instruction.trim();
   switch (kind) {
-    case 'highlight':
-      return isId(targetId) ? { kind, targetId, instruction } : undefined;
+    case 'highlight': {
+      const { scopeId } = value;
+      if (!isId(targetId) || (scopeId !== undefined && !isId(scopeId))) return;
+      return { kind, targetId, instruction, ...(scopeId === undefined ? {} : { scopeId }) };
+    }
     case 'message': {
       const { scrollRegion } = value;
       if (scrollRegion === undefined) return { kind, instruction };

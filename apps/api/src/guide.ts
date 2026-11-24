@@ -36,7 +36,7 @@ const instruction = [
   '只输出一个 JSON 对象，以下是允许的决定及示例：',
   '{"kind":"observe","queries":[{"type":"region","id":1,"includeOffscreen":true},{"type":"search","query":"导出","region":1},{"type":"inspect","id":2}]}',
   '补看必须是 1 到 3 项互不依赖的只读查询。search 的 region 可省略。finishOnly 为 true 时，给出指引、保持、追问、等待或卡点。',
-  '{"kind":"highlight","targetId":2,"instruction":"打开导出设置。"} 仅指向当前可见且可用的目标。',
+  '{"kind":"highlight","targetId":2,"scopeId":5,"instruction":"打开导出设置。"} 仅指向当前可见可用的目标。同名入口需补看，scopeId 引用实际包含目标且能与其他候选区分的区域或对象。唯一入口可省略 scopeId。',
   '{"kind":"message","instruction":"在右侧属性栏向下滚动。","scrollRegion":7} 用于屏外目标；scrollRegion 是当前证据里可以滚动的区域编号。普通文字提示省略 scrollRegion。',
   '{"kind":"keep"} 已有有效的 previous 或足以收尾的 proofs 时使用。新证据未改变当前指引时维持原路。',
   '{"kind":"ask","instruction":"要打开导出入口，还是确认导出完成？"} 仅问一个会影响下一步的问题。',
@@ -58,6 +58,7 @@ const completionInstructions = [
   '完成由扩展核对后决定。若无需下一步而已有终点证据，输出 keep 并附 proofs，例如：',
   '{"kind":"keep","requirements":[{"quote":"找到导出按钮","result":"找到导出按钮","source":"point"}],"proofs":[{"index":0,"targetId":2,"checks":[{"id":2,"field":"label","equals":"Add export settings"}]}]}',
   'point 要证明的是被指的控件能让用户到达所需设置或操作。先从目标判断控件要做什么，再比较同区候选的具体动作名称、展开状态及关联对象。标题、区域名和同主题的展开控件只说明位置；当旁边另有明确执行所需动作的控件时，指向后者。动作归属不清时先补看，不凭同名收尾。',
+  '找到的名称若无法确定所属对象，先用 search 比较视口内外的同名候选，通过 inspect 看所属区域。存在同名入口时，point 证明的 checks 要核对目标 label，以及实际包含它且能区分其他候选的区域或对象的 label。入口还在视口外时先提示滚动。',
   'page 要核对当前已生效的状态。控件在关闭时只显示当前值的摘要，若它明确声明了同一功能的当前选择，可用这条摘要证明设置生效。菜单里只出现一个可选名称或页面只出现相关文字时，还要找已勾选、已选中、应用后摘要等证据。空列表与筛选是否已应用是两回事。',
 ].join('\n');
 
@@ -145,7 +146,7 @@ export function validateDecision(value: unknown, input: GuideRequest): Decision 
       return !input.finishOnly && decision.queries.every(knownQuery) ? reply : undefined;
     }
     case 'highlight':
-      return known(decision.targetId) ? reply : undefined;
+      return known(decision.targetId) && known(decision.scopeId) ? reply : undefined;
     case 'message':
       return known(decision.scrollRegion) ? reply : undefined;
     case 'complete':

@@ -189,6 +189,7 @@ export function createObservation(document: Document, focus?: Element): {
   page(): Observation;
   read(query: ReadQuery): ReadResult;
   resolve(id: number): { element: Element; control: Element; evidence: Evidence } | undefined;
+  namedControls(label: string, roles: ReadonlySet<string>): { element: Element; id: number }[];
 } {
   const bindings = new Map<number, Binding>();
   const ids = new WeakMap<Element, number>();
@@ -278,6 +279,20 @@ export function createObservation(document: Document, focus?: Element): {
 
   return {
     resolve,
+    namedControls(label, roles) {
+      if (!label) return [];
+      const name = label.toLowerCase();
+      const matches: { element: Element; id: number }[] = [];
+      let scanned = 0;
+      for (const element of descendants(document.body ?? document)) {
+        if (scanned++ >= scanLimit) break;
+        // 和观察器用同一套控件名称，保留滚动区域外已经渲染的可用控件。
+        const candidate = describe(element, document);
+        if (candidate?.details.available && roles.has(candidate.details.role)
+          && candidate.details.label.toLowerCase() === name) matches.push({ element, id: remember(candidate).id });
+      }
+      return matches;
+    },
     page() {
       const { heading, nodes, truncated } = collect(document.body ?? document, pageLimit, false);
       const focused = focusId === undefined ? undefined : resolve(focusId)?.evidence;
@@ -294,9 +309,16 @@ export function createObservation(document: Document, focus?: Element): {
         const target = resolve(query.id);
         if (!target) return unavailable;
         const nodes = [target.evidence];
-        const { region } = target.evidence;
-        const scope = region === undefined ? undefined : resolve(region);
-        if (scope) nodes.push(scope.evidence);
+        const owner = bindings.get(query.id)?.object;
+        const object = owner === undefined ? undefined : resolve(owner);
+        if (object) nodes.push(object.evidence);
+        // 最近的区域也可能同名。向上补几层，让模型能区分不同对象的操作入口。
+        for (let region = target.evidence.region; region !== undefined && nodes.length < 5;) {
+          const scope = resolve(region);
+          if (!scope) break;
+          if (scope.evidence.id !== owner) nodes.push(scope.evidence);
+          region = scope.evidence.region;
+        }
         // 紧挨着的语义标题为同区的无名图标提供少量上下文。
         const previous = target.element.previousElementSibling;
         if (previous && semanticRole(previous) === 'heading') {
