@@ -19,6 +19,8 @@ WebGuide AI 是一款网页操作引导扩展。AI 根据当前页面选择要�
 2. 在仓库根目录运行 `npm run dev:api`。当前扩展使用本机默认端口 `43130`。
 3. 在练习网页点击工具栏上的 WebGuide AI 图标。输入本机访问令牌，再用自己的话写目标，例如「带我找到这个页面的导出设置」，点击「开始引导」。页面上的点击、输入和滚动由你自己完成。
 
+想试用经验引导时，在 `apps/api/.env` 加上 `WG_EXPERIENCE_ENABLED=1`，重启本机服务，再开始一次新引导。默认关闭，改成 `0` 后也可以做无经验对照。两条候选覆盖英文维基百科正文字号和 Figma 图层导出入口。[经验模块设计](docs/design/WebGuideAI-经验模块设计.md)
+
 ## 试用旧版实时引导
 
 `codex/ai-navigation` 保存了可运行的 GitHub 和 Figma 原型。在仓库根目录运行 `git show codex/ai-navigation:README.md`，即可查看当时的试用步骤。[原型验证记录](docs/design/WebGuideAI-浏览器导航原型.md#第一轮怎么验证)

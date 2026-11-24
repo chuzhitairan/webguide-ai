@@ -2,6 +2,7 @@ import { timingSafeEqual } from 'node:crypto';
 import Fastify from 'fastify';
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { isExtensionOrigin } from './config.js';
+import { experienceForSite } from './experience.js';
 import { isGuideRequest } from './guide-protocol.js';
 import { ModelRequestError, validateDecision } from './guide.js';
 import type { GuideService, ModelFailure } from './guide.js';
@@ -12,7 +13,7 @@ const guideTimeoutMs = 18_000;
 
 type GuideOutcome = ModelFailure
   | { outcome: 'ok' | 'decision-rejected' | 'client-disconnected' | 'service-deadline' | 'service-error' };
-type GuideDiagnostic = GuideOutcome & { elapsedMs: number };
+type GuideDiagnostic = GuideOutcome & { elapsedMs: number; experienceVersion?: string; experienceEntries?: string[] };
 
 function allowOrigin(request: FastifyRequest, reply: FastifyReply, service: GuideService): boolean {
   const { host, origin } = request.headers;
@@ -70,7 +71,13 @@ export function createApp(service?: GuideService, report?: (diagnostic: GuideDia
     const deadline = AbortSignal.timeout(guideTimeoutMs);
     const signal = AbortSignal.any([disconnect.signal, deadline]);
     const started = performance.now();
-    const record = (outcome: GuideOutcome) => report?.({ ...outcome, elapsedMs: Math.round(performance.now() - started) });
+    const experience = experienceForSite(service.catalog, request.body.page.site);
+    const experienceDiagnostic = service.catalog && {
+      experienceVersion: service.catalog.version,
+      experienceEntries: experience.map(entry => `${entry.id}@${entry.revision}`),
+    };
+    const record = (outcome: GuideOutcome) => report?.({ ...outcome, ...experienceDiagnostic,
+      elapsedMs: Math.round(performance.now() - started) });
     let onAbort: (() => void) | undefined;
     try {
       if (reply.raw.destroyed) disconnect.abort();
@@ -79,7 +86,7 @@ export function createApp(service?: GuideService, report?: (diagnostic: GuideDia
         onAbort = () => reject(signal.reason);
         signal.addEventListener('abort', onAbort, { once: true });
       });
-      const result = await Promise.race([service.decide(request.body, signal), cancelled]);
+      const result = await Promise.race([service.decide(request.body, signal, experience), cancelled]);
       signal.throwIfAborted();
       const decision = validateDecision(result, request.body);
       if (decision) {

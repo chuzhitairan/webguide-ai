@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createApp } from '../src/app.js';
+import { loadExperienceCatalog } from '../src/experience.js';
 import { createModelGuide } from '../src/guide.js';
 
 const origin = 'chrome-extension://aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa';
@@ -31,6 +32,37 @@ afterEach(async () => {
 });
 
 describe('引导接口', () => {
+  it('按开关和主机名只给模型发送本站的经验摘要，控件仍要用当前编号', async () => {
+    const catalog = loadExperienceCatalog();
+    const messages: { role: string; content: string }[][] = [];
+    const report = vi.fn();
+    const decide = createModelGuide({ url: 'https://model.example/v1/chat/completions', name: 'test-model', key: 'test-only' },
+      async (_url, request) => {
+        const body = JSON.parse(String(request?.body));
+        messages.push(body.messages);
+        return Response.json({ choices: [{ message: { content: '{"kind":"highlight","targetId":2,"instruction":"查看导出。"}' } }] });
+      });
+    const baseline = service(decide);
+    const trial = createApp({ token, origins: [origin], decide, catalog }, report);
+    apps.push(trial);
+    const figma = { ...payload, page: { ...payload.page, site: 'www.figma.com' } };
+    for (const [app, input] of [[baseline, figma], [trial, figma], [trial, payload]] as const) {
+      // 编号 2 在当前页面和补看里都没有出现，经验开启后也应拒绝。
+      expect((await app.inject({ method: 'POST', url, headers, payload: input })).statusCode).toBe(502);
+    }
+
+    expect(messages[0].slice(0, 2)).toEqual(messages[1].slice(0, 2));
+    const entry = catalog.entries.find(item => item.hostname === 'www.figma.com')!;
+    const baselineEvidence = JSON.parse(messages[0][2].content);
+    expect(baselineEvidence.experience).toEqual([]);
+    expect(JSON.parse(messages[1][2].content)).toEqual({ ...baselineEvidence,
+      experience: [{ goal: entry.goal, when: entry.when, advice: entry.advice, check: entry.check }] });
+    expect(JSON.parse(messages[2][2].content).experience).toEqual([]);
+    expect(report).toHaveBeenNthCalledWith(1, expect.objectContaining({ experienceVersion: catalog.version,
+      experienceEntries: [`${entry.id}@${entry.revision}`], outcome: 'decision-rejected' }));
+    expect(report).toHaveBeenNthCalledWith(2, expect.objectContaining({ experienceEntries: [] }));
+  });
+
   it('只返回已验证的一项模型决定', async () => {
     const app = service(async (input, signal) => {
       expect(input).toEqual(payload);

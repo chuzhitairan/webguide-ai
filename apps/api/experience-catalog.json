@@ -1,0 +1,28 @@
+{
+  "formatVersion": 1,
+  "version": "pilot-1",
+  "entries": [
+    {
+      "id": "wikipedia.text-size",
+      "revision": 1,
+      "hostname": "en.wikipedia.org",
+      "status": "candidate",
+      "goal": "调整英文维基百科文章的正文字号。",
+      "when": "桌面文章页，可见 Appearance 外观面板或能打开它的控件。",
+      "advice": "外观面板打开时优先查看 Text 下的字号单选组，可按 Small、Standard 或 Large 补看。面板收起时，先找能展开 Appearance 的实际控件。",
+      "check": "在正文字号单选组核对用户所需选项已选中，区别于 Width 和 Color 选项。",
+      "source": "docs/design/导航Harness-真实站点验证-2026-11-23.md#第三站验证维基百科字号"
+    },
+    {
+      "id": "figma.layer-export",
+      "revision": 1,
+      "hostname": "www.figma.com",
+      "status": "candidate",
+      "goal": "找 Figma Design 中指定图层的图片导出设置。",
+      "when": "设计编辑界面，能够核对目标图层和它对应的 Design 属性面板。",
+      "advice": "需要时先找到目标图层。选中后优先补看右侧属性面板下方的 Export 区。目标在视口外时提示用户滚动该面板。",
+      "check": "确认是目标图层的操作控件。未配置时找 Add export settings，已有配置时检查该图层的导出设置控件。若目标是实际下载，仍需核对下载结果。",
+      "source": "docs/design/导航Harness-真实站点验证-2026-11-23.md#网络恢复后的复测"
+    }
+  ]
+}
