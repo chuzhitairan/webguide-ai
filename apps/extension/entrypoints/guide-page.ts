@@ -34,6 +34,7 @@ function connect(port: Port): () => void {
   let generation = 0;
   let observed = -1;
   let currentTarget: number | undefined;
+  let actionTarget: number | undefined;
   let signature = '';
   let contextAtRead = '';
   let checkTimer: ReturnType<typeof setTimeout> | undefined;
@@ -52,6 +53,10 @@ function connect(port: Port): () => void {
   }
 
   function invalidate(event: 'action' | 'boundary') {
+    // 一次操作可能连续触发 click、input、change。撤掉高亮时先记下这一轮要复查的控件。
+    if (event === 'boundary' || currentTarget !== undefined) {
+      actionTarget = event === 'action' ? currentTarget : undefined;
+    }
     generation++;
     clear();
     notify(event);
@@ -172,7 +177,12 @@ function connect(port: Port): () => void {
     }
     if (stopped || document.visibilityState === 'hidden') return null;
     if (command.kind === 'snapshot') {
-      if (command.newRound || !observation) observation = createObservation(document);
+      if (command.newRound || !observation) {
+        // 等页面稳定后重新解析原目标。脱离文档或被复用的控件会自然失效。
+        const focus = actionTarget === undefined ? undefined : observation?.resolve(actionTarget)?.element;
+        actionTarget = undefined;
+        observation = createObservation(document, focus);
+      }
       observed = generation;
       const page = observation.page();
       signature = summarize(page.nodes);

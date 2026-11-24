@@ -185,7 +185,7 @@ function priority(candidate: Candidate): number {
 }
 
 // 实例归属一轮。首读与补看使用同一组编号，失效的编号不能指向后来复用的节点。
-export function createObservation(document: Document): {
+export function createObservation(document: Document, focus?: Element): {
   page(): Observation;
   read(query: ReadQuery): ReadResult;
   resolve(id: number): { element: Element; control: Element; evidence: Evidence } | undefined;
@@ -273,11 +273,20 @@ export function createObservation(document: Document): {
     return { heading, nodes, truncated: truncated || matches.length > limit };
   }
 
+  const focusCandidate = focus && describe(focus, document);
+  const focusId = focusCandidate && remember(focusCandidate).id;
+
   return {
     resolve,
     page() {
       const { heading, nodes, truncated } = collect(document.body ?? document, pageLimit, false);
-      return { title: compact(heading || document.title, 160), site: document.location.hostname, nodes, truncated };
+      const focused = focusId === undefined ? undefined : resolve(focusId)?.evidence;
+      // 把上一步高亮的控件放到首读前面。仍使用本轮编号，并保持原有观察上限。
+      const ordered = focused?.viewport ? [focused, ...nodes.filter(node => node.id !== focused.id)] : nodes;
+      return {
+        title: compact(heading || document.title, 160), site: document.location.hostname,
+        nodes: ordered.slice(0, pageLimit), truncated: truncated || ordered.length > pageLimit,
+      };
     },
     read(query) {
       const unavailable: ReadResult = { query, nodes: [], truncated: false, status: 'unavailable' };

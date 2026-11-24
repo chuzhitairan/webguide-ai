@@ -140,16 +140,21 @@ test('当前选择可由收起的控件摘要确认', async ({ extension: { pane
   }
 });
 
-test('关联标签上的可见控件可以高亮并核对单选状态', async ({ extension: { panel, activate } }) => {
+test('操作后优先复查首读范围外的单选控件', async ({ extension: { panel, activate } }) => {
   const url = 'https://workspace.example/appearance';
   const token = 'webguide-test-token-000000';
   const goal = '把字号调到大号';
+  const calls: GuideRequest[] = [];
   const app = createApp({ token, origins: [panel.url().replace('/sidepanel.html', '')], async decide(input) {
-    const large = input.page.nodes.find(node => node.role === 'radio' && node.label === 'Large');
+    calls.push(input);
+    const large = [...input.page.nodes, ...input.reads.flatMap(read => read.nodes)]
+      .find(node => node.role === 'radio' && node.label === 'Large');
     if (large?.checked) return { kind: 'keep',
       proofs: [{ index: 0, checks: [{ id: large.id, field: 'checked', equals: true }] }],
     };
-    const target = large ?? input.page.nodes.find(node => node.role === 'button' && node.label === 'Appearance');
+    const trigger = input.page.nodes.find(node => node.role === 'button' && node.label === 'Appearance');
+    if (trigger?.expanded && !large) return { kind: 'observe', queries: [{ type: 'search', query: 'Large' }] };
+    const target = large ?? trigger;
     if (target) return { kind: 'highlight', targetId: target.id, instruction: target.label,
       requirements: [{ quote: goal, source: 'page', result: '已调到大号' }],
     };
@@ -164,14 +169,17 @@ test('关联标签上的可见控件可以高亮并核对单选状态', async ({
         input { opacity: 0; position: absolute; }
         #appearance { inset: 0; width: 100%; height: 100%; margin: 0; }
         .trigger { position: relative; display: inline-block; }
+        .tools { display: grid; grid-template-columns: repeat(10, 85px); }
         main:has(#appearance:not(:checked)) fieldset { display: none; }
       </style>
       <main>
         <span class="trigger">
           <label aria-hidden="true" for="appearance">Appearance</label>
-          <input type="checkbox" role="button" aria-label="Appearance" id="appearance">
+          <input type="checkbox" role="button" aria-label="Appearance" aria-expanded="false" id="appearance"
+            onchange="this.setAttribute('aria-expanded', String(this.checked))">
         </span>
         <fieldset>
+          <div class="tools">${Array.from({ length: 45 }, (_, index) => '<button>Tool ' + index + '</button>').join('')}</div>
           <input type="radio" name="size" id="standard" checked><label for="standard">Standard</label>
           <input type="radio" name="size" id="large"><label for="large">Large</label>
         </fieldset>
@@ -190,10 +198,19 @@ test('关联标签上的可见控件可以高亮并核对单选状态', async ({
     await site.locator('#appearance').click();
     const large = site.locator('label[for="large"]');
     await expect(large).toHaveClass(/driver-active-element/);
+    expect(calls.at(-1)?.page.nodes.some(node => node.label === 'Large')).toBe(false);
+    expect(calls.at(-1)?.reads.flatMap(read => read.nodes)).toContainEqual(
+      expect.objectContaining({ label: 'Large', checked: false }),
+    );
+    const beforeClick = calls.length;
     await large.click();
     await expect(site.locator('#large')).toBeChecked();
     await expect(panel.getByRole('status')).toHaveText('已完成。已调到大号。');
     await expect(site.locator('.webguide-popover')).toHaveCount(0);
+    expect(calls.slice(beforeClick)).toHaveLength(1);
+    expect(calls[beforeClick]?.reads).toEqual([]);
+    expect(calls[beforeClick]?.page.nodes[0]).toMatchObject({ label: 'Large', checked: true });
+    expect(calls[beforeClick]?.page.nodes).toHaveLength(40);
   } finally {
     await app.close();
   }
