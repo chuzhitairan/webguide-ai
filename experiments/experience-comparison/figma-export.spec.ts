@@ -1,7 +1,9 @@
+import { writeFile } from 'node:fs/promises';
 import { createApp } from '../../apps/api/src/app.js';
 import { readGuideConfig } from '../../apps/api/src/config.js';
 import { loadExperienceCatalog } from '../../apps/api/src/experience.js';
-import { createModelGuide } from '../../apps/api/src/guide.js';
+import { createModelGuide, validateDecision } from '../../apps/api/src/guide.js';
+import type { GuideRequest } from '../../apps/api/src/guide-protocol.js';
 import { expect, test } from '../../tests/e2e/fixtures.js';
 
 process.loadEnvFile('apps/api/.env');
@@ -59,7 +61,7 @@ for (let pair = 1; pair <= 3; pair++) {
     for (const withExperience of order) {
       const start = selected ? 'selected-offscreen' : 'unselected';
       const mode = withExperience ? 'on' : 'off';
-      test(`${start} pair ${pair} ${mode}`, async ({ extension: { panel, activate } }) => {
+      test(`${start} pair ${pair} ${mode}`, async ({ extension: { panel, activate } }, testInfo) => {
         const context = panel.context();
         await context.route(address, route => route.fulfill({ contentType: 'text/html', body: pageHtml(selected) }));
         const site = await context.newPage();
@@ -77,6 +79,10 @@ for (let pair = 1; pair <= 3; pair++) {
         let latestActivity = 0;
         const serviceOutcomes: string[] = [];
         const clientOutcomes: string[] = [];
+        const decisions: Record<string, unknown>[] = [];
+        let latestAccepted: { request: number; input: GuideRequest } | undefined;
+        let firstCorrectInput: GuideRequest | undefined;
+        let reachedAfter: number | null = null;
         panel.on('console', async message => {
           if (!message.text().startsWith('[guide]')) return;
           const data = await message.args()[1]?.jsonValue().catch(() => null);
@@ -85,12 +91,22 @@ for (let pair = 1; pair <= 3; pair++) {
         const app = createApp({ token, origins: [panel.url().replace('/sidepanel.html', '')],
           catalog: withExperience ? catalog : undefined,
           async decide(input, signal, hints) {
-            requests++;
+            const request = ++requests;
             pending++;
             latestActivity = Date.now();
             try {
-              const reply = await decide(input, signal, hints) as { kind?: string };
-              if (reply.kind === 'observe') observations++;
+              const reply = await decide(input, signal, hints);
+              const raw = reply && typeof reply === 'object'
+                ? reply as { kind?: unknown; requirements?: unknown; proofs?: unknown } : undefined;
+              const accepted = validateDecision(reply, input);
+              if (raw?.kind === 'observe') observations++;
+              if (accepted && !signal.aborted) latestAccepted = { request, input };
+              decisions.push({ request, kind: raw?.kind, finishOnly: input.finishOnly, feedback: input.feedback,
+                expectedResults: (accepted?.requirements ?? input.requirements)?.map(({ source }) => source),
+                submittedConditions: Array.isArray(raw?.requirements) ? raw.requirements.length : 0,
+                submittedProofs: Array.isArray(raw?.proofs) ? raw.proofs.length : 0,
+                acceptedProofs: accepted?.proofs?.length ?? 0,
+                accepted: !!accepted });
               return reply;
             } finally {
               pending--;
@@ -125,7 +141,11 @@ for (let pair = 1; pair <= 3; pair++) {
               highlights.add(highlight);
               lastHighlight = highlight;
             }
-            if (highlight === 'frame-export') reachedMs ??= Date.now() - started;
+            if (highlight === 'frame-export' && reachedMs === null) {
+              reachedMs = Date.now() - started;
+              reachedAfter = latestAccepted?.request ?? null;
+              firstCorrectInput = latestAccepted?.input;
+            }
             if (status.startsWith('已完成')) { stop = 'completed'; break; }
             if (await panel.getByRole('button', { name: '继续引导' }).isVisible()) { stop = 'paused'; break; }
             if (await panel.getByRole('button', { name: '回答并继续' }).isVisible()) { stop = 'asked'; break; }
@@ -151,11 +171,15 @@ for (let pair = 1; pair <= 3; pair++) {
             await new Promise(resolve => setTimeout(resolve, 130));
           }
           const correctFinish = stop === 'completed' && lastHighlight === 'frame-export';
+          // 固定页面的首个正确高亮可回放，同一份观察可用于对照两版提示词。
+          if (firstCorrectInput) {
+            await writeFile(testInfo.outputPath('first-correct-observation.json'), JSON.stringify({ input: firstCorrectInput, mode }));
+          }
           // 这条日志是试跑结果。Playwright 通过表示试跑过程有效，导航结果由页面证据判定。
           console.log('EXPERIENCE ' + JSON.stringify({ start, pair, mode, requests, observations, layerSelected, scrollTop,
             reachedMs, correctFinish, falseFinish: stop === 'completed' && !correctFinish,
             wrongHighlight: highlights.has('page-export') || highlights.has('cover'), highlights: [...highlights],
-            stop, status, serviceOutcomes, clientOutcomes, elapsedMs: Date.now() - started }));
+            stop, status, serviceOutcomes, clientOutcomes, reachedAfter, decisions, elapsedMs: Date.now() - started }));
         } finally {
           await app.close();
         }
