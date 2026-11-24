@@ -16,7 +16,7 @@ export interface GuidePage {
   read(queries: ReadQuery[]): Promise<ReadResult[]>;
   apply(decision: PageDecision): Promise<boolean>;
   verify(proofs: PageProof[], finish?: string): Promise<boolean>;
-  trackScroll(id: number): void;
+  trackScroll(id?: number): void;
   clear(): void;
 }
 
@@ -268,8 +268,9 @@ export function createGuideSession(goal: string, options: SessionOptions) {
         if (result.kind === 'observe' || result.kind === 'keep' || result.kind === 'complete') break;
         if (reason === 'soft' && shown?.target && result.kind === 'message') return;
         targetPage.clear();
-        if (result.kind === 'message' && result.scrollRegion !== undefined && evidence.has(result.scrollRegion)) {
-          targetPage.trackScroll(result.scrollRegion);
+        if (result.kind === 'message') {
+          const regionId = result.scrollRegion;
+          targetPage.trackScroll(regionId !== undefined && evidence.has(regionId) ? regionId : undefined);
         }
         shown = { instruction: result.instruction };
         asking = result.kind === 'ask';

@@ -8,7 +8,7 @@ export type PageCommand =
   | { kind: 'read'; queries: ReadQuery[] }
   | { kind: 'apply'; decision: PageDecision }
   | { kind: 'verify'; proofs: PageProof[]; finish?: string }
-  | { kind: 'track-scroll'; id: number }
+  | { kind: 'track-scroll'; id?: number }
   | { kind: 'clear' };
 
 export type PageSignal = 'action' | 'boundary' | 'changed' | 'scroll' | 'lost';

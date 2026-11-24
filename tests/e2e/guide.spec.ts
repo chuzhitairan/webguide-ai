@@ -216,6 +216,63 @@ test('操作后优先复查首读范围外的单选控件', async ({ extension: 
   }
 });
 
+test('文字提示之后滚动面板，即使没有区域编号也会重新观察', async ({ extension: { panel, activate } }) => {
+  const url = 'https://workspace.example/scroll-settings';
+  const token = 'webguide-test-token-000000';
+  const goal = '找到发布设置入口';
+  const calls: GuideRequest[] = [];
+  const app = createApp({ token, origins: [panel.url().replace('/sidepanel.html', '')], async decide(input) {
+    calls.push(input);
+    if (calls.length === 1) return { kind: 'message', instruction: '向下滚动属性面板。',
+      requirements: [{ quote: goal, source: 'point', result: goal }] };
+
+    const target = input.reads.flatMap(read => read.nodes).find(node => node.label === '发布设置');
+    if (!target?.viewport) return { kind: 'observe', queries: [{ type: 'search', query: '发布设置' }] };
+    return { kind: 'keep', proofs: [{ index: 0, targetId: target.id,
+      checks: [{ id: target.id, field: 'label', equals: target.label }] }] };
+  } });
+  await app.listen({ host: '127.0.0.1', port: 43130 });
+  try {
+    const context = panel.context();
+    await context.route(url, route => route.fulfill({ contentType: 'text/html; charset=utf-8', body: `<!doctype html>
+      <style>
+        main { display: flex; gap: 24px; }
+        #tools { display: grid; grid-template-columns: repeat(8, 70px); }
+        #settings { height: 200px; width: 250px; overflow-y: auto; }
+        .spacer { height: 530px; }
+      </style>
+      <main>
+        <div id="tools">${Array.from({ length: 45 }, (_, index) => '<button>Tool ' + index + '</button>').join('')}</div>
+        <section id="settings" aria-label="属性面板">
+          <div class="spacer"></div><button>发布设置</button><div class="spacer"></div>
+        </section>
+      </main>` }));
+    const site = await context.newPage();
+    await site.goto(url);
+    const settings = site.locator('#settings');
+    await settings.evaluate(element => { element.scrollTop = 40; });
+    await site.bringToFront();
+    await activate(site);
+    await panel.getByLabel('我想做什么').fill(goal);
+    await panel.getByLabel('本机访问令牌').fill(token);
+    await panel.locator('form').evaluate((form: HTMLFormElement) => form.requestSubmit());
+
+    await expect(panel.getByRole('status')).toHaveText('向下滚动属性面板。');
+    await settings.hover();
+    await site.mouse.wheel(0, 460);
+    await expect.poll(() => settings.evaluate(element => element.scrollTop)).toBeGreaterThan(440);
+    const target = site.getByRole('button', { name: '发布设置' });
+    await expect(target).toBeInViewport();
+    await expect(target).toHaveClass(/driver-active-element/);
+    await expect(panel.getByRole('status')).toHaveText('已完成。找到发布设置入口。');
+    // 滚动区域的方向标志和首读列表都没变。新控件由补看找出。
+    expect(calls[1]?.page).toEqual(calls[0]?.page);
+    expect(calls).toHaveLength(3);
+  } finally {
+    await app.close();
+  }
+});
+
 test('网页报告导出成功后，由用户单独确认已经下载', async ({ extension: { panel, activate } }) => {
   const siteUrl = 'https://workspace.example/download';
   const token = 'webguide-test-token-000000';

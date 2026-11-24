@@ -41,7 +41,7 @@ function connect(port: Port): () => void {
   let finishTimer: ReturnType<typeof setTimeout> | undefined;
   let stopped = false;
   let scrolled = false;
-  let scrollHint: { id: number; element: Element; key: string } | undefined;
+  let scrollHint: { id: number; element: Element; key: string } | 'any' | undefined;
   const events = new AbortController();
   const notify = (event: PageSignal) => port.postMessage({ event });
 
@@ -49,6 +49,7 @@ function connect(port: Port): () => void {
     clearTimeout(finishTimer);
     currentTarget = undefined;
     scrollHint = undefined;
+    scrolled = false;
     renderer.clear();
   }
 
@@ -93,14 +94,11 @@ function connect(port: Port): () => void {
       notify('lost');
       return;
     }
-    if (scrolled && scrollHint) {
-      const key = scrollKey(scrollHint.id);
-      if (key !== scrollHint.key) {
-        scrollHint = undefined;
-        scrolled = false;
-        notify('scroll');
-        return;
-      }
+    if (scrolled && scrollHint && (scrollHint === 'any' || scrollKey(scrollHint.id) !== scrollHint.key)) {
+      scrollHint = undefined;
+      scrolled = false;
+      notify('scroll');
+      return;
     }
     const next = summarize(page.nodes);
     if (next !== signature) {
@@ -121,7 +119,7 @@ function connect(port: Port): () => void {
   const stopWatch = watchPage(document, queueCheck, event =>
     invalidate(event === 'user-action' ? 'action' : 'boundary'));
   document.addEventListener('scroll', event => {
-    if (event.target === scrollHint?.element) scrolled = true;
+    if (scrollHint === 'any' || event.target === scrollHint?.element) scrolled = true;
     queueCheck();
   }, { capture: true, signal: events.signal });
 
@@ -194,9 +192,11 @@ function connect(port: Port): () => void {
     if (!sameContext(observation.page())) return null;
     if (command.kind === 'read') return command.queries.map(query => observation!.read(query));
     if (command.kind === 'track-scroll') {
-      const region = observation.resolve(command.id);
-      if (!region?.evidence.canScrollUp && !region?.evidence.canScrollDown) return false;
-      scrollHint = { id: command.id, element: region.element, key: scrollKey(command.id) };
+      const region = command.id === undefined ? undefined : observation.resolve(command.id);
+      // 模型可能只给了文字提示。等一次实际滚动，即使首读仍是相同的控件，也重新补看。
+      scrollHint = region && (region.evidence.canScrollUp || region.evidence.canScrollDown)
+        ? { id: region.evidence.id, element: region.element, key: scrollKey(region.evidence.id) }
+        : 'any';
       return true;
     }
 
@@ -220,6 +220,8 @@ function connect(port: Port): () => void {
     const decision = command.decision;
     const target = visibleTarget(decision.targetId);
     if (!target) return false;
+    scrollHint = undefined;
+    scrolled = false;
     currentTarget = decision.targetId;
     renderer.show(target.element, { title: '下一步', instruction: decision.instruction });
     signature = summarize(observation.page().nodes);
