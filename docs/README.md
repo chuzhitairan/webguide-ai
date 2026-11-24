@@ -8,13 +8,15 @@
 
 扩展的单次模型请求最多等 15 秒，每轮最多处理 45 秒。[时限对照记录](design/导航Harness-真实站点验证-2026-11-23.md#放宽模型等待时间)
 
+**经验模块**　整体设计已成稿。首轮用本机服务读取版本化目录，比较模型在有／无经验时的引导结果。[经验模块设计](design/WebGuideAI-经验模块设计.md)
+
 **既有原型**　`codex/ai-navigation` 验证了 GitHub 的指定 Issue、README 编辑入口和 Fork 提示，也在真实 Figma 练习稿中验证了图层和自动布局开关的高亮。固定路线、协作练习和文件核对可在 `codex/github-raw-source` 查阅。[试用方式](../README.md#试用旧版实时引导)
 
 ## 接手原型先看这里
 
 | 想了解什么 | 文档 |
 | --- | --- |
-| AI 怎么看网页、选高亮和提示，经验如何复用 | [导航 Harness 设计](design/WebGuideAI-导航-Harness-设计.md) |
+| AI 怎么看网页、选高亮和提示 | [导航 Harness 设计](design/WebGuideAI-导航-Harness-设计.md) |
 | 之前在真实网页看到了什么 | [浏览器导航原型](design/WebGuideAI-浏览器导航原型.md) |
 | 接下来做什么、用什么场景验证 | [版本交付范围](requirements/版本交付范围-2026-11-17.md#当前开发顺序) |
 | 怎么运行项目、调试扩展 | [工程配置](design/WebGuideAI-工程配置与开发方式-v0.1.md) · [浏览器扩展经验](experience/浏览器扩展.md) |
