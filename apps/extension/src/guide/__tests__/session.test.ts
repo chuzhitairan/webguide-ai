@@ -134,10 +134,51 @@ it('筛选已生效却卡在到达页面的条件时，可重新归并同一个�
     async snapshot() { return { title: title.label, site: 'example.test', nodes: [title, selected], truncated: false }; },
     async read() { return []; }, async apply() { return true; }, verify, trackScroll() {}, clear() {},
   });
-  expect(choose.mock.calls[1]?.[0]).toMatchObject({ goal, reviewRequirements: true });
+  expect(choose.mock.calls[1]?.[0]).toMatchObject({ goal, reviewRequirements: true,
+    feedback: '当前已通过下标 1、2，待核对下标 0。无需归并时，优先处理待核对项。' });
   expect(choose.mock.calls[1]?.[0].requirements).toHaveLength(3);
   expect(verify).toHaveBeenLastCalledWith([{ source: 'page', checks }], '已完成。活动记录已筛为仅归档。');
   expect(report).toHaveBeenLastCalledWith({ kind: 'complete', text: '已完成。活动记录已筛为仅归档。' });
+});
+
+it.each([true, false])('复核未归并的条件时，只保留当前仍可验证的证明 (%s)', async stillPublished => {
+  const goal = '确认网页已发布，且已开启归档。';
+  const published = { ...heading, label: '网页已发布' };
+  const archiveHeading = { ...button, id: 7, role: 'heading', label: '归档设置' };
+  const archive = { ...button, id: 8, role: 'checkbox', label: '归档', checked: true };
+  const requirements = [
+    { quote: '确认网页已发布，', result: '网页已发布', source: 'page' },
+    { quote: '且已开启归档。', result: '已开启归档', source: 'page' },
+  ] as const;
+  const publishedCheck = { id: published.id, field: 'label', equals: published.label } as const;
+  const archiveCheck = { id: archive.id, field: 'checked', equals: true } as const;
+  const choose = vi.fn<(input: GuideRequest) => Promise<Decision>>()
+    .mockResolvedValueOnce({ kind: 'keep', requirements: [...requirements], proofs: [
+      { index: 0, checks: [publishedCheck] },
+      { index: 1, checks: [{ id: archiveHeading.id, field: 'label', equals: archiveHeading.label }] },
+    ] })
+    .mockResolvedValueOnce({ kind: 'keep', proofs: [{ index: 1, checks: [archiveCheck] }] });
+  const report = vi.fn();
+  let snapshotCount = 0;
+  const verify = vi.fn<GuidePage['verify']>().mockImplementation(async proofs => proofs.every(proof =>
+    proof.checks.every(check => check.id === archive.id || (check.id === published.id && (snapshotCount === 1 || stillPublished)))));
+  const session = createGuideSession(goal, { choose, report });
+  await session.attach({
+    async snapshot() {
+      snapshotCount++;
+      const status = stillPublished || snapshotCount === 1 ? published : { ...published, label: '网页尚未发布' };
+      return { title: '设置', site: 'example.test', nodes: [status, archiveHeading, archive], truncated: false };
+    },
+    async read() { return []; }, async apply() { return true; }, verify, trackScroll() {}, clear() {},
+  });
+
+  expect(choose).toHaveBeenCalledTimes(2);
+  expect(verify).toHaveBeenNthCalledWith(3, [{ source: 'page', checks: [publishedCheck] }]);
+  expect(choose.mock.calls[1]?.[0].feedback).toContain(`当前已通过下标 ${stillPublished ? '0' : '无'}`);
+  expect(report).toHaveBeenLastCalledWith(expect.objectContaining({ kind: stillPublished ? 'complete' : 'paused' }));
+  if (stillPublished) expect(verify).toHaveBeenLastCalledWith([
+    { source: 'page', checks: [publishedCheck] }, { source: 'page', checks: [archiveCheck] },
+  ], '已完成。网页已发布，已开启归档。');
 });
 
 it('页面证据只能完成网页部分，用户确认后仍须复查现场', async () => {

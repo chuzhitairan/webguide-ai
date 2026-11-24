@@ -232,7 +232,18 @@ export function createGuideSession(goal: string, options: SessionOptions) {
           && submitted.size === requirements.length && proofs.size > 0 && proofs.size < requirements.length) {
           reviewedRequirements = true;
           reviewRequirements = true;
-          await reread('部分网页完成条件未通过复查。请重新看用户原话和现场，判断这些条件是否属于同一个最终结果。');
+          // 条件未归并时，浏览器可以重核已有的证明。归并后会按新下标重新收集。
+          const earlierProofs = [...proofs];
+          await reread();
+          for (const [index, proof] of earlierProofs) {
+            if (!current()) return;
+            const stillValid = proof.checks.every(check => evidence.has(check.id)) && await targetPage.verify([proof]);
+            if (!current()) return;
+            if (stillValid) proofs.set(index, proof);
+          }
+          const passed = [...proofs.keys()].sort((first, second) => first - second);
+          const failed = requirements.map((_, index) => index).filter(index => !proofs.has(index));
+          feedback = `当前已通过下标 ${passed.join('、') || '无'}，待核对下标 ${failed.join('、')}。无需归并时，优先处理待核对项。`;
           continue;
         }
         if (requirements.length && proofs.size === pageRequirements.length) {
