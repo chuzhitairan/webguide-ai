@@ -30,6 +30,7 @@ const inputRoles: Record<string, string> = {
 
 interface Candidate {
   element: Element;
+  control: Element;
   isRegion: boolean;
   details: Omit<Evidence, 'id' | 'region'>;
 }
@@ -42,6 +43,7 @@ interface Context {
 interface Binding extends Context {
   id: number;
   element: Element;
+  control: Element;
   role: string;
   label: string;
 }
@@ -114,6 +116,7 @@ function ariaState(value: string | null): boolean | undefined {
 function standaloneText(element: Element): boolean {
   if (element.childElementCount || !element.matches('div, p, span')) return false;
   for (let node = pageParent(element); node; node = pageParent(node)) {
+    if (node.localName === 'label' && (node as HTMLLabelElement).control) return false;
     const role = semanticRole(node);
     if (role && !regionRoles.has(role)) return false;
   }
@@ -121,33 +124,38 @@ function standaloneText(element: Element): boolean {
 }
 
 function describe(element: Element, document: Document, includeText = false): Candidate | undefined {
+  // 一些网站只画出 label，真正的单选框或开关是透明的。用 label 的位置和输入控件的状态。
+  const associated = element.localName === 'label' ? (element as HTMLLabelElement).control : null;
+  const control = associated?.matches('input[type="radio"], input[type="checkbox"]')
+    && !associated.closest('[aria-hidden="true"]') && !isVisibleTarget(associated, document) ? associated : element;
   const scrollRange = canScroll(element);
-  const role = semanticRole(element) ?? (scrollRange ? 'region' : undefined)
+  const role = semanticRole(control) ?? (scrollRange ? 'region' : undefined)
     ?? (includeText && standaloneText(element) ? 'text' : undefined);
-  if (!role || !document.defaultView || !isVisibleTarget(element, document)) return;
+  if (!role || !document.defaultView || !isVisibleTarget(element, document, { asControlLabel: control !== element })) return;
 
   const isRegion = regionRoles.has(role) || scrollRange > 0;
   const regionHeading = isRegion ? element.querySelector(':scope > h1, :scope > h2, :scope > h3') : null;
   // 行内操作可能仅在悬停时出现。它们各有自己的编号，不参与对象名称。
-  const label = controlLabel(element, { useContents: !isRegion, excludeRowActions: objectRoles.has(role) })
+  const label = controlLabel(control, { useContents: !isRegion, excludeRowActions: objectRoles.has(role) })
     || (regionHeading && isVisibleTarget(regionHeading, document) ? controlLabel(regionHeading) : '')
     || (isRegion ? role : '');
   if (role === 'text' && !label) return;
-  const expanded = ariaState(element.getAttribute('aria-expanded'))
+  const expanded = ariaState(control.getAttribute('aria-expanded'))
     ?? (element.localName === 'summary' && element.parentElement?.localName === 'details'
       ? (element.parentElement as HTMLDetailsElement).open : undefined);
-  const current = element.getAttribute('aria-current');
-  const selected = ariaState(element.getAttribute('aria-selected'))
+  const current = control.getAttribute('aria-current');
+  const selected = ariaState(control.getAttribute('aria-selected'))
     ?? (current && current !== 'false' ? true : undefined)
     ?? (element.localName === 'option' ? (element as HTMLOptionElement).selected : undefined);
-  const checked = ariaState(element.getAttribute('aria-checked'))
-    ?? (element.localName === 'input' && (role === 'checkbox' || role === 'radio')
-      ? (element as HTMLInputElement).checked : undefined);
+  const checked = ariaState(control.getAttribute('aria-checked'))
+    ?? (control.localName === 'input' && (role === 'checkbox' || role === 'radio')
+      ? (control as HTMLInputElement).checked : undefined);
 
   return {
-    element, isRegion,
+    element, control, isRegion,
     details: {
-      role, label, viewport: inViewport(element, document.defaultView), available: isEnabledTarget(element),
+      role, label, viewport: inViewport(element, document.defaultView),
+      available: isEnabledTarget(element) && (control === element || isEnabledTarget(control)),
       ...(expanded === undefined ? {} : { expanded }),
       ...(selected === undefined ? {} : { selected }),
       ...(checked === undefined ? {} : { checked }),
@@ -180,7 +188,7 @@ function priority(candidate: Candidate): number {
 export function createObservation(document: Document): {
   page(): Observation;
   read(query: ReadQuery): ReadResult;
-  resolve(id: number): { element: Element; evidence: Evidence } | undefined;
+  resolve(id: number): { element: Element; control: Element; evidence: Evidence } | undefined;
 } {
   const bindings = new Map<number, Binding>();
   const ids = new WeakMap<Element, number>();
@@ -215,31 +223,31 @@ export function createObservation(document: Document): {
   }
 
   function remember(candidate: Candidate, { region, object } = contextFor(candidate.element)): Evidence {
-    const { element, details: { role, label } } = candidate;
+    const { element, control, details: { role, label } } = candidate;
     const priorId = ids.get(element);
     const prior = priorId === undefined ? undefined : bindings.get(priorId);
-    if (prior?.role === role && prior.label === label && prior.region === region && prior.object === object) {
+    if (prior?.control === control && prior.role === role && prior.label === label && prior.region === region && prior.object === object) {
       return evidence(candidate, prior.id, region);
     }
     if (prior) forget(prior.id, element);
     const id = nextId++;
-    bindings.set(id, { id, element, role, label, region, object });
+    bindings.set(id, { id, element, control, role, label, region, object });
     ids.set(element, id);
     return evidence(candidate, id, region);
   }
 
-  function resolve(id: number): { element: Element; evidence: Evidence } | undefined {
+  function resolve(id: number) {
     const previous = bindings.get(id);
     if (!previous) return;
     const { element } = previous;
     const candidate = describe(element, document, previous.role === 'text');
     const { region, object } = candidate ? contextFor(element) : {};
-    if (!candidate || previous.role !== candidate.details.role || previous.label !== candidate.details.label
+    if (!candidate || previous.control !== candidate.control || previous.role !== candidate.details.role || previous.label !== candidate.details.label
       || previous.region !== region || previous.object !== object) {
       forget(id, element);
       return;
     }
-    return { element, evidence: evidence(candidate, id, region) };
+    return { element, control: candidate.control, evidence: evidence(candidate, id, region) };
   }
 
   function collect(root: Element | Document, limit: number, includeOffscreen: boolean, keyword = '') {

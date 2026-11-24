@@ -140,6 +140,65 @@ test('当前选择可由收起的控件摘要确认', async ({ extension: { pane
   }
 });
 
+test('关联标签上的可见控件可以高亮并核对单选状态', async ({ extension: { panel, activate } }) => {
+  const url = 'https://workspace.example/appearance';
+  const token = 'webguide-test-token-000000';
+  const goal = '把字号调到大号';
+  const app = createApp({ token, origins: [panel.url().replace('/sidepanel.html', '')], async decide(input) {
+    const large = input.page.nodes.find(node => node.role === 'radio' && node.label === 'Large');
+    if (large?.checked) return { kind: 'keep',
+      proofs: [{ index: 0, checks: [{ id: large.id, field: 'checked', equals: true }] }],
+    };
+    const target = large ?? input.page.nodes.find(node => node.role === 'button' && node.label === 'Appearance');
+    if (target) return { kind: 'highlight', targetId: target.id, instruction: target.label,
+      requirements: [{ quote: goal, source: 'page', result: '已调到大号' }],
+    };
+    return { kind: 'blocked', instruction: '没有可点击的字号设置。' };
+  } });
+  await app.listen({ host: '127.0.0.1', port: 43130 });
+  try {
+    const context = panel.context();
+    await context.route(url, route => route.fulfill({ contentType: 'text/html', body: `<!doctype html>
+      <style>
+        label { display: inline-block; padding: 12px; }
+        input { opacity: 0; position: absolute; }
+        #appearance { inset: 0; width: 100%; height: 100%; margin: 0; }
+        .trigger { position: relative; display: inline-block; }
+        main:has(#appearance:not(:checked)) fieldset { display: none; }
+      </style>
+      <main>
+        <span class="trigger">
+          <label aria-hidden="true" for="appearance">Appearance</label>
+          <input type="checkbox" role="button" aria-label="Appearance" id="appearance">
+        </span>
+        <fieldset>
+          <input type="radio" name="size" id="standard" checked><label for="standard">Standard</label>
+          <input type="radio" name="size" id="large"><label for="large">Large</label>
+        </fieldset>
+      </main>` }));
+    const site = await context.newPage();
+    await site.goto(url);
+    await site.bringToFront();
+    await activate(site);
+    await panel.getByLabel('我想做什么').fill(goal);
+    await panel.getByLabel('本机访问令牌').fill(token);
+    await panel.locator('form').evaluate((form: HTMLFormElement) => form.requestSubmit());
+
+    const appearance = site.locator('label[for="appearance"]');
+    await expect(appearance).toHaveClass(/driver-active-element/);
+    // 可见图标上方的透明输入控件会直接接到用户点击。
+    await site.locator('#appearance').click();
+    const large = site.locator('label[for="large"]');
+    await expect(large).toHaveClass(/driver-active-element/);
+    await large.click();
+    await expect(site.locator('#large')).toBeChecked();
+    await expect(panel.getByRole('status')).toHaveText('已完成。已调到大号。');
+    await expect(site.locator('.webguide-popover')).toHaveCount(0);
+  } finally {
+    await app.close();
+  }
+});
+
 test('网页报告导出成功后，由用户单独确认已经下载', async ({ extension: { panel, activate } }) => {
   const siteUrl = 'https://workspace.example/download';
   const token = 'webguide-test-token-000000';

@@ -79,6 +79,35 @@ it('检查同一编号时读取复选框当前状态，并保留选中行与页�
   });
 });
 
+it('通过可见标签定位透明的输入控件，并从输入控件复查选中状态', () => {
+  document.body.innerHTML = '<aside aria-label="Appearance">'
+    + '<input type="checkbox" id="appearance" role="button" aria-label="Appearance" style="opacity:0">'
+    + '<label aria-hidden="true" for="appearance"><span>Appearance</span></label>'
+    + '<input id="large" type="radio" style="opacity:0"><label for="large"><span>Large</span></label>'
+    + '<input id="other" type="radio" style="opacity:0">'
+    + '<input id="small" type="radio" style="opacity:0"><label hidden for="small">Small</label>'
+    + '<input id="ghost" type="radio" aria-hidden="true" style="opacity:0"><label for="ghost">Ghost</label>'
+    + '</aside>';
+  const observation = createObservation(document);
+  const page = observation.page();
+  const option = page.nodes.find(node => node.role === 'radio');
+  expect(option).toMatchObject({ role: 'radio', label: 'Large', viewport: true, checked: false });
+  expect(page.nodes).toContainEqual(expect.objectContaining({ role: 'button', label: 'Appearance', viewport: true }));
+  expect(page.nodes.some(node => node.label === 'Small')).toBe(false);
+  expect(page.nodes.some(node => node.label === 'Ghost')).toBe(false);
+
+  const label = document.querySelector<HTMLLabelElement>('label[for="large"]')!;
+  const radio = document.querySelector<HTMLInputElement>('#large')!;
+  expect(observation.resolve(option!.id)?.element).toBe(label);
+  expect(observation.read({ type: 'search', query: 'Large' }).nodes).toEqual([option]);
+  radio.checked = true;
+  expect(observation.resolve(option!.id)?.evidence.checked).toBe(true);
+  radio.disabled = true;
+  expect(observation.resolve(option!.id)?.evidence.available).toBe(false);
+  label.htmlFor = 'other';
+  expect(observation.resolve(option!.id)).toBeUndefined();
+});
+
 it('搜索补看可以定位普通标题文字，且不返回可编辑文本', () => {
   document.body.innerHTML = '<aside aria-label="Properties"><div><span>Export presets</span></div>'
     + '<div contenteditable><span>Export draft text</span></div></aside>';

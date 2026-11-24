@@ -123,7 +123,7 @@ function connect(port: Port): () => void {
   function visibleTarget(id: number) {
     const target = observation?.resolve(id);
     if (!target?.evidence.viewport || !target.evidence.available) return;
-    const { element } = target;
+    const { element, control } = target;
     const rect = element.getBoundingClientRect();
     // Driver 会把未完整显示的目标滚进视口。让用户先滚到能操作的位置。
     if (rect.left < 0 || rect.top < 0 || rect.right > innerWidth || rect.bottom > innerHeight) return;
@@ -136,7 +136,8 @@ function connect(port: Port): () => void {
         && (rect.top < box.top + parent.clientTop || rect.bottom > box.top + parent.clientTop + parent.clientHeight)) return;
     }
     const hit = document.elementFromPoint((rect.left + rect.right) / 2, (rect.top + rect.bottom) / 2);
-    if (hit && (element.contains(hit) || (element.getRootNode() instanceof ShadowRoot
+    // 透明输入框可能正好覆盖关联的可见标签，两者都能接到这次操作。
+    if (hit && (hit === control || element.contains(hit) || (element.getRootNode() instanceof ShadowRoot
       && (element.getRootNode() as ShadowRoot).host === hit))) return target;
   }
 

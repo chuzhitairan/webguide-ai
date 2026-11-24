@@ -4,7 +4,7 @@ export function pageParent(element: Element): Element | null {
 }
 
 // 节点移除或所在区域被隐藏后，原目标失效。开放 Shadow DOM 也要检查宿主。
-export function isVisibleTarget(element: Element, root: Document): boolean {
+export function isVisibleTarget(element: Element, root: Document, { asControlLabel = false } = {}): boolean {
   const view = root.defaultView;
   if (!element.isConnected || element.ownerDocument !== root || !view) return false;
   const box = element.getBoundingClientRect();
@@ -13,7 +13,9 @@ export function isVisibleTarget(element: Element, root: Document): boolean {
   if (visibility === 'hidden' || visibility === 'collapse') return false;
   for (let node: Element | null = element; node; node = pageParent(node)) {
     const style = view.getComputedStyle(node);
-    if (node.matches('[hidden], [aria-hidden="true"], .webguide-popover, .driver-overlay')
+    // 控件已经提供语义时，网站可以只把重复的图形标签从读屏树隐藏。
+    const hiddenFromAccessibility = node.getAttribute('aria-hidden') === 'true' && !(asControlLabel && node === element);
+    if (hiddenFromAccessibility || node.matches('[hidden], .webguide-popover, .driver-overlay')
       || style.display === 'none' || style.opacity === '0'
       || style.contentVisibility === 'hidden') return false;
   }
