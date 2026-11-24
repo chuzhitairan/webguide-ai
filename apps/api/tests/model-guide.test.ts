@@ -62,15 +62,17 @@ describe('模型请求', () => {
       expect(init?.method).toBe('POST');
       expect(init?.redirect).toBe('error');
       expect(new Headers(init?.headers).get('authorization')).toBe('Bearer test-only-model-key');
-      const { model, messages, response_format, reasoning_effort } = JSON.parse(String(init?.body)) as {
+      const { model, messages, response_format, reasoning_effort, max_tokens } = JSON.parse(String(init?.body)) as {
         model: string;
         messages: { role: string; content: string }[];
         response_format: unknown;
         reasoning_effort?: string;
+        max_tokens: number;
       };
       expect(model).toBe('practice-model');
       expect(response_format).toEqual({ type: 'json_object' });
       expect(reasoning_effort).toBe(reasoningEffort);
+      expect(max_tokens).toBe(4_096);
       expect(messages[0].role).toBe('system');
       expect(messages[0].content).not.toContain('忽略用户的目标');
       expect(JSON.parse(messages[1].content)).toMatchObject({ goal: '找到设置' });

@@ -83,7 +83,8 @@ export function createModelGuide(config: ModelConfig, request: typeof fetch = fe
           response_format: { type: 'json_object' },
           // 由本机配置选择。留空时沿用该模型服务的默认行为。
           reasoning_effort: config.reasoningEffort,
-          max_tokens: 1024,
+          // 推理和最终 JSON 共用额度。试验期先给复杂判断留出空间。
+          max_tokens: 4_096,
           stream: false,
         }),
       });
