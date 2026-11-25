@@ -1,9 +1,11 @@
 import type { Evidence, Observation, ReadQuery, ReadResult } from '../../../api/src/guide-protocol.js';
-import { controlLabel, isEnabledTarget, isVisibleTarget, pageParent } from './locator.js';
+import { clipsOverflow, controlLabel, isEnabledTarget, isVisibleTarget, listEntryLabel, overflowOnAxis, pageParent } from './locator.js';
 
 const pageLimit = 40;
 const readLimit = 20;
 const scanLimit = 6000;
+const entryLinkLimit = 3;
+const entryScanLimit = 120;
 
 const regionRoles = new Set([
   'alertdialog', 'application', 'banner', 'complementary', 'contentinfo', 'dialog', 'form', 'grid', 'group',
@@ -11,11 +13,12 @@ const regionRoles = new Set([
 ]);
 
 const observedRoles = new Set([
-  ...regionRoles, 'alert', 'button', 'checkbox', 'combobox', 'gridcell', 'heading', 'link', 'menuitem',
+  ...regionRoles, 'alert', 'button', 'checkbox', 'combobox', 'gridcell', 'heading', 'link', 'listitem', 'menuitem',
   'menuitemcheckbox', 'menuitemradio', 'option', 'progressbar', 'radio', 'row', 'searchbox', 'slider',
   'spinbutton', 'status', 'switch', 'tab', 'textbox', 'treeitem',
 ]);
-const objectRoles = new Set(['row', 'treeitem', 'option']);
+const entryRoles = new Set(['listitem', 'row']);
+const objectRoles = new Set([...entryRoles, 'treeitem', 'option']);
 
 const nativeRoles: Record<string, string> = {
   aside: 'complementary', button: 'button', dialog: 'dialog', footer: 'contentinfo', form: 'form', header: 'banner',
@@ -52,16 +55,11 @@ function compact(value: string, limit: number): string {
   return value.replace(/\s+/g, ' ').trim().slice(0, limit);
 }
 
-function overflow(style: CSSStyleDeclaration, axis: 'x' | 'y'): string {
-  const [x, y = x] = style.overflow.split(/\s+/);
-  return axis === 'x' ? style.overflowX || x : style.overflowY || y;
-}
-
 function canScroll(element: Element): number {
   const distance = element.scrollHeight - element.clientHeight;
   if (distance <= 1) return 0;
   const view = element.ownerDocument.defaultView;
-  return view && /^(auto|scroll|overlay)$/.test(overflow(view.getComputedStyle(element), 'y')) ? distance : 0;
+  return view && /^(auto|scroll|overlay)$/.test(overflowOnAxis(view.getComputedStyle(element), 'y')) ? distance : 0;
 }
 
 function semanticRole(element: Element): string | undefined {
@@ -69,6 +67,8 @@ function semanticRole(element: Element): string | undefined {
   if (explicit && observedRoles.has(explicit)) return explicit;
   switch (element.localName) {
     case 'a': return element.hasAttribute('href') ? 'link' : undefined;
+    case 'li': return explicit === 'none' || explicit === 'presentation' ? undefined : 'listitem';
+    case 'tr': return explicit === 'none' || explicit === 'presentation' ? undefined : 'row';
     case 'input': {
       const type = (element as HTMLInputElement).type;
       return type === 'hidden' ? undefined : inputRoles[type] ?? 'textbox';
@@ -93,8 +93,8 @@ function inViewport(element: Element, view: Window): boolean {
   let bottom = Math.min(box.bottom, view.innerHeight);
   for (let node = pageParent(element); node && right > left && bottom > top; node = pageParent(node)) {
     const style = view.getComputedStyle(node);
-    const clipsX = /^(auto|scroll|overlay|hidden|clip)$/.test(overflow(style, 'x'));
-    const clipsY = /^(auto|scroll|overlay|hidden|clip)$/.test(overflow(style, 'y'));
+    const clipsX = clipsOverflow(style, 'x');
+    const clipsY = clipsOverflow(style, 'y');
     if (!clipsX && !clipsY) continue;
     const bounds = node.getBoundingClientRect();
     if (clipsX) {
@@ -118,7 +118,7 @@ function standaloneText(element: Element): boolean {
   for (let node = pageParent(element); node; node = pageParent(node)) {
     if (node.localName === 'label' && (node as HTMLLabelElement).control) return false;
     const role = semanticRole(node);
-    if (role && !regionRoles.has(role)) return false;
+    if (role && !regionRoles.has(role) && !entryRoles.has(role)) return false;
   }
   return true;
 }
@@ -136,7 +136,8 @@ function describe(element: Element, document: Document, includeText = false): Ca
   const isRegion = regionRoles.has(role) || scrollRange > 0;
   const regionHeading = isRegion ? element.querySelector(':scope > h1, :scope > h2, :scope > h3') : null;
   // 行内操作可能仅在悬停时出现。它们各有自己的编号，不参与对象名称。
-  const label = controlLabel(control, { useContents: !isRegion, excludeRowActions: objectRoles.has(role) })
+  const entryLabel = role === 'listitem' || control.localName === 'tr' ? listEntryLabel(control) : '';
+  const label = entryLabel || controlLabel(control, { useContents: !isRegion, excludeRowActions: objectRoles.has(role) })
     || (regionHeading && isVisibleTarget(regionHeading, document) ? controlLabel(regionHeading) : '')
     || (isRegion ? role : '');
   if (role === 'text' && !label) return;
@@ -184,6 +185,16 @@ function priority(candidate: Candidate): number {
   return label && role !== 'text' ? 1 : 2;
 }
 
+function matchesSearch(keyword: string): (label: string) => boolean {
+  if (!/^[#\p{L}\p{N}._-]+$/u.test(keyword) || !/\p{N}/u.test(keyword)) {
+    return label => label.toLowerCase().includes(keyword);
+  }
+  // 有数字的完整标识按边界匹配，例如 #1 和订单 ORD-17。
+  const escaped = keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const pattern = new RegExp(`(?:^|[^\\p{L}\\p{N}])${escaped}(?![\\p{L}\\p{N}])`, 'u');
+  return label => pattern.test(label.toLowerCase());
+}
+
 // 实例归属一轮。首读与补看使用同一组编号，失效的编号不能指向后来复用的节点。
 export function createObservation(document: Document, focus?: Element): {
   page(): Observation;
@@ -219,8 +230,9 @@ export function createObservation(document: Document, focus?: Element): {
     return context;
   }
 
-  function evidence(candidate: Candidate, id: number, region?: number): Evidence {
-    return { id, ...candidate.details, ...(region === undefined ? {} : { region }) };
+  function evidence(candidate: Candidate, id: number, { region, object }: Context): Evidence {
+    return { id, ...candidate.details, ...(region === undefined ? {} : { region }),
+      ...(object === undefined ? {} : { object }) };
   }
 
   function remember(candidate: Candidate, { region, object } = contextFor(candidate.element)): Evidence {
@@ -228,13 +240,13 @@ export function createObservation(document: Document, focus?: Element): {
     const priorId = ids.get(element);
     const prior = priorId === undefined ? undefined : bindings.get(priorId);
     if (prior?.control === control && prior.role === role && prior.label === label && prior.region === region && prior.object === object) {
-      return evidence(candidate, prior.id, region);
+      return evidence(candidate, prior.id, { region, object });
     }
     if (prior) forget(prior.id, element);
     const id = nextId++;
     bindings.set(id, { id, element, control, role, label, region, object });
     ids.set(element, id);
-    return evidence(candidate, id, region);
+    return evidence(candidate, id, { region, object });
   }
 
   function resolve(id: number) {
@@ -248,7 +260,30 @@ export function createObservation(document: Document, focus?: Element): {
       forget(id, element);
       return;
     }
-    return { element, control: candidate.control, evidence: evidence(candidate, id, region) };
+    return { element, control: candidate.control, evidence: evidence(candidate, id, { region, object }) };
+  }
+
+  function owningEntry(element: Element): Element | undefined {
+    for (let owner = pageParent(element); owner; owner = pageParent(owner)) {
+      const role = semanticRole(owner) ?? '';
+      if (objectRoles.has(role)) return entryRoles.has(role) ? owner : undefined;
+    }
+  }
+
+  function* entryLinks(entry: Element): Iterable<Candidate> {
+    let scanned = 0;
+    let links = 0;
+    for (const element of descendants(entry)) {
+      if (scanned++ >= entryScanLimit || links >= entryLinkLimit) return;
+      if (semanticRole(element) !== 'link') continue;
+      // 只带回这个条目直接拥有的链接，跳过嵌套条目。相邻条目也不在扫描范围内。
+      if (owningEntry(element) !== entry) continue;
+      const link = describe(element, document);
+      if (link) {
+        links++;
+        yield link;
+      }
+    }
   }
 
   function collect(root: Element | Document, limit: number, includeOffscreen: boolean, keyword = '') {
@@ -256,22 +291,39 @@ export function createObservation(document: Document, focus?: Element): {
     let scanned = 0;
     let truncated = false;
     let heading = '';
+    const matchesKeyword = matchesSearch(keyword);
     for (const element of descendants(root)) {
       if (scanned++ >= scanLimit) {
         truncated = true;
         break;
       }
+      // 列表条目用于定向搜索和关联，不额外占用普通页面地图的条数。
+      const role = semanticRole(element);
+      if (!keyword && (role === 'listitem' || (element.localName === 'tr' && !element.hasAttribute('role')))) continue;
       const candidate = describe(element, document, Boolean(keyword));
       if (!candidate) continue;
       const { label, viewport } = candidate.details;
       if (!heading && element.localName === 'h1') heading = label;
-      if (keyword && !label.toLowerCase().includes(keyword)) continue;
+      if (!matchesKeyword(label)) continue;
       if (includeOffscreen || viewport) matches.push(candidate);
       else truncated = true;
     }
     matches.sort((first, second) => priority(first) - priority(second));
-    const nodes = matches.slice(0, limit).map(candidate => remember(candidate));
-    return { heading, nodes, truncated: truncated || matches.length > limit };
+    const selected = new Map<Element, Candidate>();
+    const expanded = new Set<Element>();
+    for (const candidate of matches.slice(0, limit)) {
+      selected.set(candidate.element, candidate);
+      if (!keyword) continue;
+      const role = candidate.details.role;
+      const owner = role === 'text' ? owningEntry(candidate.element) : undefined;
+      const entry = entryRoles.has(role) ? candidate : owner && describe(owner, document);
+      if (!entry || expanded.has(entry.element)) continue;
+      expanded.add(entry.element);
+      selected.set(entry.element, entry);
+      for (const link of entryLinks(entry.element)) selected.set(link.element, link);
+    }
+    const nodes = [...selected.values()].slice(0, limit).map(candidate => remember(candidate));
+    return { heading, nodes, truncated: truncated || matches.length > limit || selected.size > limit };
   }
 
   const focusCandidate = focus && describe(focus, document);

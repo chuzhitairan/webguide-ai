@@ -1,7 +1,7 @@
 import { browser } from 'wxt/browser';
 import { defineUnlistedScript } from 'wxt/utils/define-unlisted-script';
 import { createObservation } from '../src/page/snapshot.js';
-import { pageParent } from '../src/page/locator.js';
+import { clipsOverflow, pageParent } from '../src/page/locator.js';
 import { watchPage } from '../src/page/observer.js';
 import { createRenderer } from '../src/page/renderer.js';
 import { guidePort } from '../src/guide/page-messages.js';
@@ -135,9 +135,9 @@ function connect(port: Port): () => void {
     for (let parent = pageParent(element); parent; parent = pageParent(parent)) {
       const style = getComputedStyle(parent);
       const box = parent.getBoundingClientRect();
-      if (/(auto|scroll|overlay|hidden|clip)/.test(style.overflowX)
+      if (clipsOverflow(style, 'x')
         && (rect.left < box.left + parent.clientLeft || rect.right > box.left + parent.clientLeft + parent.clientWidth)) return;
-      if (/(auto|scroll|overlay|hidden|clip)/.test(style.overflowY)
+      if (clipsOverflow(style, 'y')
         && (rect.top < box.top + parent.clientTop || rect.bottom > box.top + parent.clientTop + parent.clientHeight)) return;
     }
     const hit = document.elementFromPoint((rect.left + rect.right) / 2, (rect.top + rect.bottom) / 2);

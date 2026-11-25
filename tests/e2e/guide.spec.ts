@@ -2,6 +2,46 @@ import { expect, test } from './fixtures.js';
 import { createApp } from '../../apps/api/src/app.js';
 import type { GuideRequest } from '../../apps/api/src/guide-protocol.js';
 
+test('按列表编号补看，扩展核对并高亮同一条目的链接', async ({ extension: { panel, activate } }) => {
+  const url = 'https://workspace.example/requests';
+  const token = 'webguide-test-token-000000';
+  const goal = '帮我找到第 1 号申请的入口。';
+  const app = createApp({ token, origins: [panel.url().replace('/sidepanel.html', '')], async decide(input) {
+    if (!input.reads.length) {
+      expect(input.page.nodes.some(node => node.label === 'First request')).toBe(false);
+      return { kind: 'observe', queries: [{ type: 'search', query: '#1' }] };
+    }
+    const nodes = input.reads[0].nodes;
+    const entry = nodes.find(node => node.role === 'listitem')!;
+    const links = nodes.filter(node => node.role === 'link');
+    expect(links).toEqual([expect.objectContaining({ label: 'First request', object: entry.id })]);
+    return { kind: 'point', targetId: links[0].id, scopeId: entry.id,
+      requirements: [{ quote: goal, result: '找到第 1 号申请入口', source: 'point' }] };
+  } });
+  await app.listen({ host: '127.0.0.1', port: 43130 });
+  try {
+    const context = panel.context();
+    await context.route(url, route => route.fulfill({ contentType: 'text/html', body: '<!doctype html><main>'
+      + '<div style="display:grid;grid-template-columns:repeat(10,90px)">'
+      + Array.from({ length: 42 }, (_, index) => `<button>Filter ${index + 50}</button>`).join('')
+      + '</div><ul><li><span>#10</span><a href="/ten">Other request</a></li>'
+      + '<li aria-label="More information"><h3 style="display:inline;overflow:hidden">'
+      + '<a href="/one">First request</a></h3><span>#<!--split-->1</span></li></ul></main>' }));
+    const page = await context.newPage();
+    await page.goto(url);
+    await page.bringToFront();
+    await activate(page);
+    await panel.getByLabel('我想做什么').fill(goal);
+    await panel.getByLabel('本机访问令牌').fill(token);
+    await panel.locator('form').evaluate((form: HTMLFormElement) => form.requestSubmit());
+    await expect(panel.getByRole('status')).toHaveText('已完成。找到第 1 号申请入口。');
+    await expect(page.getByRole('link', { name: 'First request' })).toHaveClass(/driver-active-element/);
+    await expect(page).toHaveURL(url);
+  } finally {
+    await app.close();
+  }
+});
+
 test('从自然语言目标出发补看控件、跟随同源跳转，并确认筛选生效', async ({ extension: { panel, activate } }) => {
   const pageOrigin = 'https://workspace.example';
   const token = 'webguide-test-token-000000';

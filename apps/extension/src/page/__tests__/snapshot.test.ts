@@ -60,6 +60,37 @@ it('在指定区域找到首读未返回的控件，保留查询和原有编号'
   expect(observation.read({ type: 'region', id: layout.id }).status).toBe('unavailable');
 });
 
+it('搜索拆成连续文本的编号时，只返回同一列表项的链接', () => {
+  document.body.innerHTML = '<main><ul><li><span>#10</span><a href="/ten">Ten</a></li>'
+    + '<li aria-label="More information"><h3><a href="/one">First review</a></h3>'
+    + '<span>#<!--render marker-->1</span><input value="private note">'
+    + '<ul><li><span>#2</span><a href="/nested">Nested review</a></li></ul></li>'
+    + '</ul></main>';
+  const observation = createObservation(document);
+  const result = observation.read({ type: 'search', query: '#1' });
+  const entry = result.nodes.find(node => node.role === 'listitem')!;
+  const links = result.nodes.filter(node => node.role === 'link');
+  expect(entry.label).toBe('First review #1');
+  expect(links).toEqual([expect.objectContaining({ label: 'First review', object: entry.id })]);
+  expect(result.nodes.some(node => node.label === '#1' && node.object === entry.id)).toBe(true);
+  expect(JSON.stringify(result)).not.toMatch(/private note|Nested review|Ten/);
+
+  // 列表虚拟复用同一个条目时，旧链接编号不再代表上一条记录。
+  document.querySelector('li[aria-label] > span')!.textContent = '#3';
+  expect(observation.resolve(links[0].id)).toBeUndefined();
+});
+
+it('按订单号补看表格，返回同一行的入口并排除相邻编号', () => {
+  document.body.innerHTML = '<table><tbody><tr><th>ORD-170</th><td><a href="/larger">另一张订单</a></td></tr>'
+    + '<tr><th><span>ORD-17</span></th><td><a href="/target">查看订单</a></td></tr></tbody></table>';
+  const result = createObservation(document).read({ type: 'search', query: 'ORD-17' });
+  const row = result.nodes.find(node => node.role === 'row')!;
+  expect(row.label).toBe('ORD-17 查看订单');
+  expect(result.nodes.filter(node => node.role === 'link')).toEqual([
+    expect.objectContaining({ label: '查看订单', object: row.id }),
+  ]);
+});
+
 it('检查同一编号时读取复选框当前状态，并保留选中行与页面状态', () => {
   document.body.innerHTML = '<div role="tree"><div role="treeitem" aria-selected="true">Layout</div></div>'
     + '<label>Auto layout <input type="checkbox"></label><div role="status">Ready</div>';

@@ -5,6 +5,7 @@ export interface Evidence {
   viewport: boolean;
   available: boolean;
   region?: number;
+  object?: number;
   expanded?: boolean;
   selected?: boolean;
   checked?: boolean;
@@ -293,10 +294,11 @@ const optionalStates = ['expanded', 'selected', 'checked', 'canScrollUp', 'canSc
 
 function isEvidence(value: unknown): value is Evidence {
   return isRecord(value)
-    && hasOnlyKeys(value, ['id', 'role', 'label', 'viewport', 'available', 'region', ...optionalStates])
+    && hasOnlyKeys(value, ['id', 'role', 'label', 'viewport', 'available', 'region', 'object', ...optionalStates])
     && isId(value.id) && isText(value.role, 64, false) && isText(value.label, 240)
     && typeof value.viewport === 'boolean' && typeof value.available === 'boolean'
     && (value.region === undefined || isId(value.region))
+    && (value.object === undefined || isId(value.object))
     && optionalStates.every(key => value[key] === undefined || typeof value[key] === 'boolean');
 }
 
