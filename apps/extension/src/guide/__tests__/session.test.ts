@@ -1,6 +1,6 @@
 import { expect, it, vi } from 'vitest';
 import { chooseGuide } from '../model-client.js';
-import { createGuideSession } from '../session.js';
+import { createGuideSession, guideRequestLimit } from '../session.js';
 import type { GuidePage, GuideStatus } from '../session.js';
 import type { Decision, Evidence, GuideRequest, ReadQuery } from '../../../../api/src/guide-protocol.js';
 
@@ -53,6 +53,53 @@ it('在同一轮用两个各需 12 秒的请求完成补看和高亮', async () 
     fetch.mockRestore();
     vi.useRealTimers();
   }
+});
+
+it('自动重试用到最后一次额度时，只要求模型利用已有证据', async () => {
+  const choose = vi.fn<(input: GuideRequest) => Promise<Decision>>()
+    .mockRejectedValueOnce(new Error('模型响应超时'))
+    .mockImplementation(async input => input.finishOnly
+      ? { kind: 'highlight', targetId: button.id, instruction: '打开发布设置。' }
+      : { kind: 'observe', queries: [search] });
+  const saveUsed = vi.fn().mockResolvedValue(undefined);
+  const apply = vi.fn().mockResolvedValue(true);
+  const read = vi.fn().mockResolvedValue([]);
+  const session = createGuideSession('找到发布设置', { choose, saveUsed, report() {}, used: guideRequestLimit - 2 });
+
+  await session.attach({
+    async snapshot() { return { title: 'Project', site: 'example.test', nodes: [button], truncated: false }; },
+    read, apply, async verify() { return true; }, trackScroll() {}, clear() {},
+  });
+
+  expect(choose).toHaveBeenCalledTimes(2);
+  expect(choose.mock.calls[0][0].finishOnly).toBe(false);
+  expect(choose.mock.calls[1][0]).toEqual({ ...choose.mock.calls[0][0], finishOnly: true });
+  expect(saveUsed.mock.calls).toEqual([[guideRequestLimit - 1], [guideRequestLimit]]);
+  expect(read).not.toHaveBeenCalled();
+  expect(apply).toHaveBeenCalledExactlyOnceWith({ kind: 'highlight', targetId: button.id, instruction: '打开发布设置。' });
+});
+
+it('两次技术失败后等待用户操作，页面自行更新不会继续花额度', async () => {
+  const choose = vi.fn<(input: GuideRequest) => Promise<Decision>>()
+    .mockRejectedValueOnce(new Error('超时')).mockRejectedValueOnce(new Error('暂时没有取得模型指引。'))
+    .mockResolvedValue({ kind: 'highlight', targetId: button.id, instruction: '打开发布设置。' });
+  const report = vi.fn();
+  const session = createGuideSession('找到发布设置', { choose, report });
+
+  await session.attach({
+    async snapshot() { return { title: 'Project', site: 'example.test', nodes: [button], truncated: false }; },
+    async read() { return []; }, async apply() { return true; }, async verify() { return true; }, trackScroll() {}, clear() {},
+  });
+  expect(report).toHaveBeenLastCalledWith({ kind: 'paused', text: '暂时没有取得模型指引。' });
+
+  await session.refresh('soft');
+  await session.refresh('lost');
+  expect(choose).toHaveBeenCalledTimes(2);
+  expect(report).toHaveBeenLastCalledWith({ kind: 'paused', text: '暂时没有取得模型指引。' });
+
+  await session.refresh('user');
+  expect(choose).toHaveBeenCalledTimes(3);
+  expect(report).toHaveBeenLastCalledWith({ kind: 'guiding', text: '打开发布设置。' });
 });
 
 it('找到正确入口时，一次回复同时给出条件和证据并结束', async () => {

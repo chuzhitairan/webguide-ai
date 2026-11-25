@@ -41,6 +41,7 @@ export function createGuideSession(goal: string, options: SessionOptions) {
   let used = options.used ?? 0;
   let shown: NonNullable<GuideRequest['previous']> | undefined;
   let softPending = false;
+  let pausedAfterError = false;
   let asking = false;
   let completed = false;
   let answer = options.progress?.answer;
@@ -135,13 +136,14 @@ export function createGuideSession(goal: string, options: SessionOptions) {
     if (reason === 'user') {
       cancel();
       round = { judgments: 0, elapsed: 0, retried: false };
+      pausedAfterError = false;
       asking = false;
     }
     if (reason === 'lost') {
       cancel();
       shown = undefined;
     }
-    if (inFlight) return;
+    if (inFlight || pausedAfterError) return;
     if (used >= guideRequestLimit) {
       options.report({ kind: 'paused', text: '本次引导已用完调用额度。可以继续尝试。' });
       return;
@@ -160,14 +162,17 @@ export function createGuideSession(goal: string, options: SessionOptions) {
     const current = () => inFlight === controller && !signal.aborted;
     if (!shown) options.report({ kind: 'reading', text: '正在查看当前页面…' });
 
-    async function decide(input: GuideRequest): Promise<Decision> {
+    async function decide(input: Omit<GuideRequest, 'finishOnly'>) {
       async function send() {
         signal.throwIfAborted();
         if (used >= guideRequestLimit) throw new Error('本次引导已用完调用额度。');
         used++;
+        // 重试也占一次额度。最后一次请求必须用手头的证据给出可交付的判断。
+        const finishOnly = runningRound.judgments === maxJudgments || used === guideRequestLimit;
         await options.saveUsed?.(used);
         signal.throwIfAborted();
-        return options.choose(input, signal);
+        const result = await options.choose({ ...input, finishOnly }, signal);
+        return { result, finishOnly };
       }
       try {
         return await send();
@@ -197,9 +202,8 @@ export function createGuideSession(goal: string, options: SessionOptions) {
 
       while (current() && runningRound.judgments < maxJudgments && used < guideRequestLimit) {
         runningRound.judgments++;
-        const finishOnly = runningRound.judgments === maxJudgments || used === guideRequestLimit - 1;
-        const result = await decide({ goal, page: snapshot, reads: [...reads], previous: shown, feedback,
-          finishOnly, userAnswer: answer, requirements, reviewRequirements: reviewRequirements ? true : undefined });
+        const { result, finishOnly } = await decide({ goal, page: snapshot, reads: [...reads], previous: shown, feedback,
+          userAnswer: answer, requirements, reviewRequirements: reviewRequirements ? true : undefined });
         if (!current()) return;
         if (result.requirements && acceptsRequirements(goal, result.requirements, requirements, reviewRequirements)) {
           requirements = result.requirements;
@@ -306,6 +310,8 @@ export function createGuideSession(goal: string, options: SessionOptions) {
       }
     } catch (error) {
       if (inFlight === controller) {
+        // 页面可能仍在更新。暂停后等用户继续或实际操作，避免后台悄悄开启下一次判断。
+        pausedAfterError = true;
         const text = deadline.aborted ? '等待模型超时，可以重试。'
           : error instanceof Error ? error.message : '暂时无法继续引导。';
         options.report({ kind: 'paused', text });

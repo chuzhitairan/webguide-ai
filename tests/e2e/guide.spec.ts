@@ -2,6 +2,60 @@ import { expect, test } from './fixtures.js';
 import { createApp } from '../../apps/api/src/app.js';
 import type { GuideRequest } from '../../apps/api/src/guide-protocol.js';
 
+test('浏览器超时并重试失败后，可以沿原目标重新观察并完成', async ({ extension: { panel, activate } }) => {
+  const url = 'https://workspace.example/notifications';
+  const token = 'webguide-test-token-000000';
+  const goal = '帮我找到通知设置入口';
+  const requests: GuideRequest[] = [];
+  const outcomes: string[] = [];
+  const app = createApp({ token, origins: [panel.url().replace('/sidepanel.html', '')], async decide(input, signal) {
+    requests.push(input);
+    if (requests.length === 1) {
+      // 让实际浏览器触发单次时限，验证本机服务随即取消等待。
+      await new Promise<never>((_resolve, reject) => {
+        signal.addEventListener('abort', () => reject(signal.reason), { once: true });
+      });
+    }
+    if (requests.length === 2) return { kind: 'unrecognized' };
+    const target = input.page.nodes.find(node => node.label === 'Notification settings');
+    if (!target) return { kind: 'blocked', instruction: '还未看到通知设置。' };
+    return { kind: 'point', targetId: target.id,
+      requirements: [{ quote: goal, result: '找到通知设置入口', source: 'point' }] };
+  } }, ({ outcome }) => { outcomes.push(outcome); });
+  await app.listen({ host: '127.0.0.1', port: 43130 });
+  try {
+    const context = panel.context();
+    await context.route(url, route => route.fulfill({ contentType: 'text/html',
+      body: '<!doctype html><main><button aria-expanded="false">Settings</button></main>' }));
+    const site = await context.newPage();
+    await site.goto(url);
+    await site.bringToFront();
+    await activate(site);
+    await panel.getByLabel('我想做什么').fill(goal);
+    await panel.getByLabel('本机访问令牌').fill(token);
+    await panel.locator('form').evaluate((form: HTMLFormElement) => form.requestSubmit());
+
+    await expect(panel.getByRole('status')).toHaveText('暂时没有取得模型指引，可以重试。', { timeout: 25_000 });
+    expect(requests).toHaveLength(2);
+    expect(requests[1]).toEqual(requests[0]);
+    await expect.poll(() => outcomes).toEqual(expect.arrayContaining(['client-disconnected', 'decision-rejected']));
+    await expect(site.locator('.webguide-popover')).toHaveCount(0);
+
+    // 恢复之后应使用当前页面的名称，即使它在暂停期间已经变化。
+    await site.getByRole('button', { name: 'Settings' }).evaluate(button => { button.textContent = 'Notification settings'; });
+    await panel.getByRole('button', { name: '继续引导' }).evaluate(button => (button as HTMLButtonElement).click());
+    await expect(panel.getByRole('status')).toHaveText('已完成。找到通知设置入口。');
+    const target = site.getByRole('button', { name: 'Notification settings' });
+    await expect(target).toHaveClass(/driver-active-element/);
+    await expect(target).toHaveAttribute('aria-expanded', 'false');
+    expect(requests).toHaveLength(3);
+    expect(requests[2].goal).toBe(goal);
+    expect(outcomes.at(-1)).toBe('ok');
+  } finally {
+    await app.close();
+  }
+});
+
 test('按列表编号补看，扩展核对并高亮同一条目的链接', async ({ extension: { panel, activate } }) => {
   const url = 'https://workspace.example/requests';
   const token = 'webguide-test-token-000000';
