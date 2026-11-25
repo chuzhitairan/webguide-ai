@@ -6,11 +6,6 @@ import { createModelGuide, validateDecision } from '../../apps/api/src/guide.js'
 import type { GuideRequest } from '../../apps/api/src/guide-protocol.js';
 import { expect, test } from '../../tests/e2e/fixtures.js';
 
-process.loadEnvFile('apps/api/.env');
-const local = readGuideConfig(process.env);
-if (!local) throw new Error('请先配置本机模型。');
-const decide = createModelGuide(local.model);
-const catalog = loadExperienceCatalog();
 const address = 'https://www.figma.com/design/webguide-pilot/experience-comparison';
 const token = 'webguide-experience-comparison-local';
 const goal = '我想把 Frame 1 导出成图片，先帮我找到它的导出设置入口。';
@@ -54,6 +49,42 @@ function pageHtml(selected: boolean) {
     </script>`;
 }
 
+test('capture post-scroll observation', async ({ extension: { panel, activate } }, testInfo) => {
+  const scrollInstruction = '在右侧设计面板向下滚动，找到 Export 区域，点击其中的 Add export settings 打开导出设置。';
+  let captured: GuideRequest | undefined;
+  const app = createApp({ token, origins: [panel.url().replace('/sidepanel.html', '')], async decide(input) {
+    if (!input.previous) return { kind: 'message', instruction: scrollInstruction };
+    if (input.reads.length === 0) {
+      return { kind: 'observe', queries: [{ type: 'search', query: 'Add export settings' }] };
+    }
+    captured ??= input;
+    return { kind: 'keep' };
+  } });
+  await app.listen({ host: '127.0.0.1', port: 43130 });
+  try {
+    const context = panel.context();
+    await context.route(address, route => route.fulfill({ contentType: 'text/html', body: pageHtml(true) }));
+    const site = await context.newPage();
+    await site.setViewportSize({ width: 1120, height: 720 });
+    await site.goto(address);
+    const target = site.locator('#frame-export');
+    await expect(target).not.toBeInViewport();
+    await panel.getByLabel('我想做什么').fill(goal);
+    await panel.getByLabel('本机访问令牌').fill(token);
+    await site.bringToFront();
+    await activate(site);
+    await panel.locator('form').evaluate((form: HTMLFormElement) => form.requestSubmit());
+    await expect(panel.getByRole('status')).toHaveText(scrollInstruction);
+
+    await site.locator('#design').evaluate(element => { element.scrollTop = element.scrollHeight; });
+    await expect(target).toBeInViewport();
+    await expect.poll(() => captured?.previous?.instruction).toBe(scrollInstruction);
+    await writeFile(testInfo.outputPath('post-scroll-observation.json'), JSON.stringify({ input: captured }));
+  } finally {
+    await app.close();
+  }
+});
+
 for (let pair = 1; pair <= 3; pair++) {
   for (const selected of [false, true]) {
     // 相邻试跑只切换经验开关。交替先后顺序，降低服务随时间变化的影响。
@@ -62,6 +93,11 @@ for (let pair = 1; pair <= 3; pair++) {
       const start = selected ? 'selected-offscreen' : 'unselected';
       const mode = withExperience ? 'on' : 'off';
       test(`${start} pair ${pair} ${mode}`, async ({ extension: { panel, activate } }, testInfo) => {
+        process.loadEnvFile('apps/api/.env');
+        const local = readGuideConfig(process.env);
+        if (!local) throw new Error('请先配置本机模型。');
+        const decide = createModelGuide(local.model);
+        const catalog = withExperience ? loadExperienceCatalog() : undefined;
         const context = panel.context();
         await context.route(address, route => route.fulfill({ contentType: 'text/html', body: pageHtml(selected) }));
         const site = await context.newPage();
@@ -89,7 +125,7 @@ for (let pair = 1; pair <= 3; pair++) {
           if (typeof data?.outcome === 'string') clientOutcomes.push(data.outcome);
         });
         const app = createApp({ token, origins: [panel.url().replace('/sidepanel.html', '')],
-          catalog: withExperience ? catalog : undefined,
+          catalog,
           async decide(input, signal, hints) {
             const request = ++requests;
             pending++;
