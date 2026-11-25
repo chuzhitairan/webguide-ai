@@ -9,6 +9,17 @@ export interface ModelConfig {
   reasoningEffort?: string;
 }
 
+export function configureModel(base: string, name: string, key: string, reasoningEffort?: string): ModelConfig {
+  const url = URL.parse(base.trim());
+  if (!url || url.protocol !== 'https:' || url.username || url.password || url.search || url.hash) {
+    throw new Error('模型 API 地址需要使用 HTTPS，且只包含域名和接口路径。');
+  }
+  if (!name.trim() || !key.trim()) throw new Error('请填写模型名称和 API 密钥。');
+  const path = url.pathname.replace(/\/+$/, '');
+  url.pathname = path.endsWith('/chat/completions') ? path : path + '/chat/completions';
+  return { url: url.href, name: name.trim(), key: key.trim(), ...(reasoningEffort ? { reasoningEffort } : {}) };
+}
+
 export interface GuideService {
   token: string;
   origins: string[];
@@ -76,6 +87,7 @@ export function createModelGuide(config: ModelConfig, request: typeof fetch = fe
         headers: { 'content-type': 'application/json', authorization: 'Bearer ' + config.key },
         signal,
         redirect: 'error',
+        credentials: 'omit',
         body: JSON.stringify({
           model: config.name,
           messages: [

@@ -1,10 +1,9 @@
 import { writeFile } from 'node:fs/promises';
-import { createApp } from '../../apps/api/src/app.js';
 import { readGuideConfig } from '../../apps/api/src/config.js';
-import { loadExperienceCatalog } from '../../apps/api/src/experience.js';
-import { createModelGuide, validateDecision } from '../../apps/api/src/guide.js';
+import { experienceForSite, loadExperienceCatalog } from '../../apps/api/src/experience.js';
+import { createModelGuide, ModelRequestError, validateDecision } from '../../apps/api/src/guide.js';
 import type { GuideRequest } from '../../apps/api/src/guide-protocol.js';
-import { expect, test } from '../../tests/e2e/fixtures.js';
+import { expect, mockModel, test } from '../../tests/e2e/fixtures.js';
 
 const address = 'https://www.figma.com/design/webguide-pilot/experience-comparison';
 const token = 'webguide-experience-comparison-local';
@@ -52,15 +51,14 @@ function pageHtml(selected: boolean) {
 test('capture post-scroll observation', async ({ extension: { panel, activate } }, testInfo) => {
   const scrollInstruction = '在右侧设计面板向下滚动，找到 Export 区域，点击其中的 Add export settings 打开导出设置。';
   let captured: GuideRequest | undefined;
-  const app = createApp({ token, origins: [panel.url().replace('/sidepanel.html', '')], async decide(input) {
+  const closeMock = await mockModel(panel, token, async input => {
     if (!input.previous) return { kind: 'message', instruction: scrollInstruction };
     if (input.reads.length === 0) {
       return { kind: 'observe', queries: [{ type: 'search', query: 'Add export settings' }] };
     }
     captured ??= input;
     return { kind: 'keep' };
-  } });
-  await app.listen({ host: '127.0.0.1', port: 43130 });
+  });
   try {
     const context = panel.context();
     await context.route(address, route => route.fulfill({ contentType: 'text/html', body: pageHtml(true) }));
@@ -70,7 +68,7 @@ test('capture post-scroll observation', async ({ extension: { panel, activate } 
     const target = site.locator('#frame-export');
     await expect(target).not.toBeInViewport();
     await panel.getByLabel('我想做什么').fill(goal);
-    await panel.getByLabel('本机访问令牌').fill(token);
+    await panel.getByLabel('模型 API 密钥').fill(token);
     await site.bringToFront();
     await activate(site);
     await panel.locator('form').evaluate((form: HTMLFormElement) => form.requestSubmit());
@@ -81,7 +79,7 @@ test('capture post-scroll observation', async ({ extension: { panel, activate } 
     await expect.poll(() => captured?.previous?.instruction).toBe(scrollInstruction);
     await writeFile(testInfo.outputPath('post-scroll-observation.json'), JSON.stringify({ input: captured }));
   } finally {
-    await app.close();
+    await closeMock();
   }
 });
 
@@ -124,17 +122,17 @@ for (let pair = 1; pair <= 3; pair++) {
           const data = await message.args()[1]?.jsonValue().catch(() => null);
           if (typeof data?.outcome === 'string') clientOutcomes.push(data.outcome);
         });
-        const app = createApp({ token, origins: [panel.url().replace('/sidepanel.html', '')],
-          catalog,
-          async decide(input, signal, hints) {
+        const closeMock = await mockModel(panel, token,
+          async (input, signal) => {
             const request = ++requests;
             pending++;
             latestActivity = Date.now();
             try {
-              const reply = await decide(input, signal, hints);
+              const reply = await decide(input, signal, experienceForSite(catalog, input.page.site));
               const raw = reply && typeof reply === 'object'
                 ? reply as { kind?: unknown; requirements?: unknown; proofs?: unknown } : undefined;
               const accepted = validateDecision(reply, input);
+              if (!accepted) serviceOutcomes.push('decision-rejected');
               if (raw?.kind === 'observe') observations++;
               if (accepted && !signal.aborted) latestAccepted = { request, input };
               decisions.push({ request, kind: raw?.kind, finishOnly: input.finishOnly, feedback: input.feedback,
@@ -144,16 +142,18 @@ for (let pair = 1; pair <= 3; pair++) {
                 acceptedProofs: accepted?.proofs?.length ?? 0,
                 accepted: !!accepted });
               return reply;
+            } catch (error) {
+              if (error instanceof ModelRequestError) serviceOutcomes.push(error.failure.outcome);
+              throw error;
             } finally {
               pending--;
               latestActivity = Date.now();
             }
           },
-        }, ({ outcome }) => { if (outcome !== 'ok') serviceOutcomes.push(outcome); });
-        await app.listen({ host: '127.0.0.1', port: 43130 });
+          outcome => { if (outcome === 'client-disconnected') serviceOutcomes.push(outcome); }, withExperience);
         try {
           await panel.getByLabel('我想做什么').fill(goal);
-          await panel.getByLabel('本机访问令牌').fill(token);
+          await panel.getByLabel('模型 API 密钥').fill(token);
           await site.bringToFront();
           await activate(site);
           const started = Date.now();
@@ -217,7 +217,7 @@ for (let pair = 1; pair <= 3; pair++) {
             wrongHighlight: highlights.has('page-export') || highlights.has('cover'), highlights: [...highlights],
             stop, status, serviceOutcomes, clientOutcomes, reachedAfter, decisions, elapsedMs: Date.now() - started }));
         } finally {
-          await app.close();
+          await closeMock();
         }
       });
     }

@@ -10,6 +10,7 @@ export default defineConfig({
     name: 'WebGuide AI',
     action: { default_title: '打开 WebGuide AI' },
     permissions: ['sidePanel', 'activeTab', 'scripting', 'storage'],
-    host_permissions: ['http://127.0.0.1/*'],
+    // 配置模型后单独申请该服务域名，用户引导的网页沿用 activeTab。
+    optional_host_permissions: ['https://*/*'],
   },
 });

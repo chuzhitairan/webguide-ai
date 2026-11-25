@@ -19,5 +19,5 @@ button[type="submit"]:enabled { background: #155e4a; color: white; }
 button:disabled { opacity: .55; cursor: default; }
 .actions { display: flex; flex-wrap: wrap; gap: .6rem; }
 [role="status"] { font-weight: 600; }
-details { margin-top: 1rem; }
-code { overflow-wrap: anywhere; }
+details label { margin-top: .6rem; }
+label.checkbox { display: flex; align-items: center; }

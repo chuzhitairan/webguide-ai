@@ -18,13 +18,14 @@ it('在同一轮用两个各需 12 秒的请求完成补看和高亮', async () 
     return controller.signal;
   });
   const fetch = vi.spyOn(globalThis, 'fetch').mockImplementation(async (_url, init) => {
-    const input = JSON.parse(String(init?.body)) as GuideRequest;
+    const { messages } = JSON.parse(String(init?.body));
+    const { reads } = JSON.parse(messages[2].content) as GuideRequest;
     const signal = init?.signal;
-    const decision: Decision = input.reads.length
+    const decision: Decision = reads.length
       ? { kind: 'highlight', targetId: button.id, instruction: '打开发布设置。' }
       : { kind: 'observe', queries: [search] };
     return new Promise((resolve, reject) => {
-      const timer = setTimeout(() => resolve(Response.json(decision)), 12_000);
+      const timer = setTimeout(() => resolve(Response.json({ choices: [{ message: { content: JSON.stringify(decision) } }] })), 12_000);
       signal?.addEventListener('abort', () => {
         clearTimeout(timer);
         reject(signal.reason);
@@ -34,7 +35,8 @@ it('在同一轮用两个各需 12 秒的请求完成补看和高亮', async () 
   const report = vi.fn();
   const apply = vi.fn<GuidePage['apply']>().mockResolvedValue(true);
   const session = createGuideSession('找到发布设置', {
-    report, choose: (input, signal) => chooseGuide(input, 'test-token', signal),
+    report, choose: (input, signal) => chooseGuide(input,
+      { url: 'https://model.example/v1/chat/completions', name: 'test-model', key: 'test-key' }, signal),
   });
   try {
     const active = session.attach({

@@ -1,5 +1,4 @@
-import { expect, test } from './fixtures.js';
-import { createApp } from '../../apps/api/src/app.js';
+import { expect, mockModel, test } from './fixtures.js';
 import type { GuideRequest } from '../../apps/api/src/guide-protocol.js';
 
 test('浏览器超时并重试失败后，可以沿原目标重新观察并完成', async ({ extension: { panel, activate } }) => {
@@ -8,10 +7,10 @@ test('浏览器超时并重试失败后，可以沿原目标重新观察并完�
   const goal = '帮我找到通知设置入口';
   const requests: GuideRequest[] = [];
   const outcomes: string[] = [];
-  const app = createApp({ token, origins: [panel.url().replace('/sidepanel.html', '')], async decide(input, signal) {
+  const closeMock = await mockModel(panel, token, async (input, signal) => {
     requests.push(input);
     if (requests.length === 1) {
-      // 让实际浏览器触发单次时限，验证本机服务随即取消等待。
+      // 让实际浏览器触发单次时限，验证模型请求被取消。
       await new Promise<never>((_resolve, reject) => {
         signal.addEventListener('abort', () => reject(signal.reason), { once: true });
       });
@@ -21,8 +20,7 @@ test('浏览器超时并重试失败后，可以沿原目标重新观察并完�
     if (!target) return { kind: 'blocked', instruction: '还未看到通知设置。' };
     return { kind: 'point', targetId: target.id,
       requirements: [{ quote: goal, result: '找到通知设置入口', source: 'point' }] };
-  } }, ({ outcome }) => { outcomes.push(outcome); });
-  await app.listen({ host: '127.0.0.1', port: 43130 });
+  }, outcome => { outcomes.push(outcome); });
   try {
     const context = panel.context();
     await context.route(url, route => route.fulfill({ contentType: 'text/html',
@@ -32,13 +30,13 @@ test('浏览器超时并重试失败后，可以沿原目标重新观察并完�
     await site.bringToFront();
     await activate(site);
     await panel.getByLabel('我想做什么').fill(goal);
-    await panel.getByLabel('本机访问令牌').fill(token);
+    await panel.getByLabel('模型 API 密钥').fill(token);
     await panel.locator('form').evaluate((form: HTMLFormElement) => form.requestSubmit());
 
-    await expect(panel.getByRole('status')).toHaveText('暂时没有取得模型指引，可以重试。', { timeout: 25_000 });
+    await expect(panel.getByRole('status')).toHaveText('模型返回了无法识别的指引，可以重试。', { timeout: 25_000 });
     expect(requests).toHaveLength(2);
     expect(requests[1]).toEqual(requests[0]);
-    await expect.poll(() => outcomes).toEqual(expect.arrayContaining(['client-disconnected', 'decision-rejected']));
+    await expect.poll(() => outcomes).toEqual(expect.arrayContaining(['client-disconnected', 'replied']));
     await expect(site.locator('.webguide-popover')).toHaveCount(0);
 
     // 恢复之后应使用当前页面的名称，即使它在暂停期间已经变化。
@@ -50,9 +48,9 @@ test('浏览器超时并重试失败后，可以沿原目标重新观察并完�
     await expect(target).toHaveAttribute('aria-expanded', 'false');
     expect(requests).toHaveLength(3);
     expect(requests[2].goal).toBe(goal);
-    expect(outcomes.at(-1)).toBe('ok');
+    expect(outcomes.at(-1)).toBe('replied');
   } finally {
-    await app.close();
+    await closeMock();
   }
 });
 
@@ -60,7 +58,7 @@ test('按列表编号补看，扩展核对并高亮同一条目的链接', async
   const url = 'https://workspace.example/requests';
   const token = 'webguide-test-token-000000';
   const goal = '帮我找到第 1 号申请的入口。';
-  const app = createApp({ token, origins: [panel.url().replace('/sidepanel.html', '')], async decide(input) {
+  const closeMock = await mockModel(panel, token, async input => {
     if (!input.reads.length) {
       expect(input.page.nodes.some(node => node.label === 'First request')).toBe(false);
       return { kind: 'observe', queries: [{ type: 'search', query: '#1' }] };
@@ -71,8 +69,7 @@ test('按列表编号补看，扩展核对并高亮同一条目的链接', async
     expect(links).toEqual([expect.objectContaining({ label: 'First request', object: entry.id })]);
     return { kind: 'point', targetId: links[0].id, scopeId: entry.id,
       requirements: [{ quote: goal, result: '找到第 1 号申请入口', source: 'point' }] };
-  } });
-  await app.listen({ host: '127.0.0.1', port: 43130 });
+  });
   try {
     const context = panel.context();
     await context.route(url, route => route.fulfill({ contentType: 'text/html', body: '<!doctype html><main>'
@@ -86,13 +83,13 @@ test('按列表编号补看，扩展核对并高亮同一条目的链接', async
     await page.bringToFront();
     await activate(page);
     await panel.getByLabel('我想做什么').fill(goal);
-    await panel.getByLabel('本机访问令牌').fill(token);
+    await panel.getByLabel('模型 API 密钥').fill(token);
     await panel.locator('form').evaluate((form: HTMLFormElement) => form.requestSubmit());
     await expect(panel.getByRole('status')).toHaveText('已完成。找到第 1 号申请入口。');
     await expect(page.getByRole('link', { name: 'First request' })).toHaveClass(/driver-active-element/);
     await expect(page).toHaveURL(url);
   } finally {
-    await app.close();
+    await closeMock();
   }
 });
 
@@ -101,7 +98,7 @@ test('从自然语言目标出发补看控件、跟随同源跳转，并确认�
   const token = 'webguide-test-token-000000';
   const goal = '打开报告并只显示已归档的记录';
   const calls: GuideRequest[] = [];
-  const app = createApp({ token, origins: [panel.url().replace('/sidepanel.html', '')], async decide(input) {
+  const closeMock = await mockModel(panel, token, async input => {
     calls.push(input);
     const archived = input.page.nodes.find(node => node.label === 'Archived');
     if (archived?.checked) {
@@ -116,8 +113,7 @@ test('从自然语言目标出发补看控件、跟随同源跳转，并确认�
       ? { kind: 'highlight', instruction: '打开 Reports', targetId: reports.id }
       : { kind: 'observe', queries: [{ type: 'search', query: 'Reports' }, { type: 'search', query: 'Archived' }],
         requirements: [{ quote: goal, result: '已显示归档记录', source: 'page' }] };
-  } });
-  await app.listen({ host: '127.0.0.1', port: 43130 });
+  });
   try {
     const context = panel.context();
     await context.route(pageOrigin + '/**', async route => {
@@ -133,7 +129,7 @@ test('从自然语言目标出发补看控件、跟随同源跳转，并确认�
     await site.bringToFront();
     await activate(site);
     await panel.getByLabel('我想做什么').fill(goal);
-    await panel.getByLabel('本机访问令牌').fill(token);
+    await panel.getByLabel('模型 API 密钥').fill(token);
     await site.bringToFront();
     await panel.locator('form').evaluate((form: HTMLFormElement) => form.requestSubmit());
 
@@ -154,7 +150,7 @@ test('从自然语言目标出发补看控件、跟随同源跳转，并确认�
     await expect(panel.getByRole('status')).toHaveText('已完成。已显示归档记录。');
     await expect(site.locator('.webguide-popover')).toHaveCount(0);
   } finally {
-    await app.close();
+    await closeMock();
   }
 });
 
@@ -162,7 +158,7 @@ test('入口证明有冲突时重新核对，正确高亮后自动收起', async
   const siteUrl = 'https://workspace.example/export';
   const token = 'webguide-test-token-000000';
   const replies: GuideRequest[] = [];
-  const app = createApp({ token, origins: [panel.url().replace('/sidepanel.html', '')], async decide(input) {
+  const closeMock = await mockModel(panel, token, async input => {
     replies.push(input);
     const target = input.page.nodes.find(node => node.role === 'button' && node.label === 'Export')!;
     const context = input.page.nodes.find(node => node.label === 'Selected design')!;
@@ -173,8 +169,7 @@ test('入口证明有冲突时重新核对，正确高亮后自动收起', async
       proofs: [proof, { index: 0, targetId: context.id,
         checks: [{ id: context.id, field: 'label', equals: context.label }] }],
     };
-  } });
-  await app.listen({ host: '127.0.0.1', port: 43130 });
+  });
   try {
     const context = panel.context();
     await context.route(siteUrl, route => route.fulfill({ contentType: 'text/html',
@@ -185,7 +180,7 @@ test('入口证明有冲突时重新核对，正确高亮后自动收起', async
     await site.bringToFront();
     await activate(site);
     await panel.getByLabel('我想做什么').fill('请找到导出入口');
-    await panel.getByLabel('本机访问令牌').fill(token);
+    await panel.getByLabel('模型 API 密钥').fill(token);
     await panel.locator('form').evaluate((form: HTMLFormElement) => form.requestSubmit());
 
     await expect(site.getByRole('button', { name: 'Export' })).toHaveClass(/driver-active-element/);
@@ -194,7 +189,7 @@ test('入口证明有冲突时重新核对，正确高亮后自动收起', async
     expect(replies).toHaveLength(2);
     await expect(site.locator('.webguide-popover')).toHaveCount(0, { timeout: 6_000 });
   } finally {
-    await app.close();
+    await closeMock();
   }
 });
 
@@ -204,7 +199,7 @@ test('到达目标的标题可以在页头，另一个证据须在同一内容�
   const goal = '请帮我打开「侧栏闪烁」的详情。';
   const title = '侧栏闪烁';
   const calls: GuideRequest[] = [];
-  const app = createApp({ token, origins: [panel.url().replace('/sidepanel.html', '')], async decide(input) {
+  const closeMock = await mockModel(panel, token, async input => {
     calls.push(input);
     const link = input.page.nodes.find(node => node.role === 'link' && node.label === title);
     if (link) return { kind: 'highlight', targetId: link.id, instruction: '打开详情。',
@@ -219,8 +214,7 @@ test('到达目标的标题可以在页头，另一个证据须在同一内容�
     const label = calls.length === 3 ? '站点选项' : '留下评论';
     const control = input.page.nodes.find(node => node.label === label)!;
     return { kind: 'keep', proofs: [{ index: 0, checks: [...checks, { id: control.id, field: 'label', equals: label }] }] };
-  } });
-  await app.listen({ host: '127.0.0.1', port: 43130 });
+  });
   try {
     const context = panel.context();
     await context.route(origin + '/**', route => route.fulfill({ contentType: 'text/html; charset=utf-8',
@@ -235,7 +229,7 @@ test('到达目标的标题可以在页头，另一个证据须在同一内容�
     await site.bringToFront();
     await activate(site);
     await panel.getByLabel('我想做什么').fill(goal);
-    await panel.getByLabel('本机访问令牌').fill(token);
+    await panel.getByLabel('模型 API 密钥').fill(token);
     await panel.locator('form').evaluate((form: HTMLFormElement) => form.requestSubmit());
 
     await expect(panel.getByRole('status')).toHaveText('打开详情。');
@@ -246,7 +240,7 @@ test('到达目标的标题可以在页头，另一个证据须在同一内容�
     expect(calls.slice(2).every(call => call.requirements?.[0].source === 'arrival'
       && call.feedback?.includes('到达证据未通过'))).toBe(true);
   } finally {
-    await app.close();
+    await closeMock();
   }
 });
 
@@ -255,7 +249,7 @@ test('列表条目标题和列表工具不能证明已经打开详情', async ({
   const token = 'webguide-test-token-000000';
   const goal = '请带我打开「延迟反馈」的详情。';
   const calls: GuideRequest[] = [];
-  const app = createApp({ token, origins: [panel.url().replace('/sidepanel.html', '')], async decide(input) {
+  const closeMock = await mockModel(panel, token, async input => {
     calls.push(input);
     const link = input.page.nodes.find(node => node.role === 'link' && node.label === '延迟反馈')!;
     if (input.feedback) return { kind: 'highlight', targetId: link.id, instruction: '打开详情。' };
@@ -263,8 +257,7 @@ test('列表条目标题和列表工具不能证明已经打开详情', async ({
     const filter = input.page.nodes.find(node => node.role === 'button' && node.label === '筛选列表')!;
     return { kind: 'keep', requirements: [{ start: null, result: '已打开延迟反馈详情', source: 'arrival' }],
       proofs: [{ index: 0, checks: [title, filter].map(node => ({ id: node.id, field: 'label', equals: node.label })) }] };
-  } });
-  await app.listen({ host: '127.0.0.1', port: 43130 });
+  });
   try {
     const context = panel.context();
     await context.route(url, route => route.fulfill({ contentType: 'text/html; charset=utf-8',
@@ -275,7 +268,7 @@ test('列表条目标题和列表工具不能证明已经打开详情', async ({
     await site.bringToFront();
     await activate(site);
     await panel.getByLabel('我想做什么').fill(goal);
-    await panel.getByLabel('本机访问令牌').fill(token);
+    await panel.getByLabel('模型 API 密钥').fill(token);
     await panel.locator('form').evaluate((form: HTMLFormElement) => form.requestSubmit());
 
     await expect(panel.getByRole('status')).toHaveText('打开详情。');
@@ -283,7 +276,7 @@ test('列表条目标题和列表工具不能证明已经打开详情', async ({
     expect(calls[1].feedback).toContain('到达证据未通过');
     await expect(site).toHaveURL(url);
   } finally {
-    await app.close();
+    await closeMock();
   }
 });
 
@@ -292,7 +285,7 @@ test('最终指引核对同名入口的区域，指到正确入口后直接完�
   const token = 'webguide-test-token-000000';
   const goal = '找到 Frame 1 的导出设置';
   const calls: GuideRequest[] = [];
-  const app = createApp({ token, origins: [panel.url().replace('/sidepanel.html', '')], async decide(input) {
+  const closeMock = await mockModel(panel, token, async input => {
     calls.push(input);
     const region = input.page.nodes.find(node => node.label === 'Frame 1 properties')!;
     const pageTools = input.page.nodes.find(node => node.label === 'Page tools')!;
@@ -307,8 +300,7 @@ test('最终指引核对同名入口的区域，指到正确入口后直接完�
     const owner = input.reads[0]?.nodes.find(node => node.id === region.id);
     if (!owner) return { kind: 'blocked', instruction: '还没有看到图层属性。' };
     return { kind: 'point', targetId: target.id, scopeId: owner.id };
-  } });
-  await app.listen({ host: '127.0.0.1', port: 43130 });
+  });
   try {
     const context = panel.context();
     await context.route(url, route => route.fulfill({ contentType: 'text/html', body: `<!doctype html>
@@ -326,7 +318,7 @@ test('最终指引核对同名入口的区域，指到正确入口后直接完�
     await site.bringToFront();
     await activate(site);
     await panel.getByLabel('我想做什么').fill(goal);
-    await panel.getByLabel('本机访问令牌').fill(token);
+    await panel.getByLabel('模型 API 密钥').fill(token);
     await panel.locator('form').evaluate((form: HTMLFormElement) => form.requestSubmit());
 
     const wrong = site.locator('#page-export');
@@ -345,7 +337,7 @@ test('最终指引核对同名入口的区域，指到正确入口后直接完�
     expect(calls).toHaveLength(5);
     await expect(wrong).not.toHaveClass(/driver-active-element/);
   } finally {
-    await app.close();
+    await closeMock();
   }
 });
 
@@ -354,13 +346,12 @@ test('当前选择可由收起的控件摘要确认', async ({ extension: { pane
   const token = 'webguide-test-token-000000';
   const goal = '确认当前可见范围只限团队';
   const summary = 'Visibility: Team only';
-  const app = createApp({ token, origins: [panel.url().replace('/sidepanel.html', '')], async decide(input) {
+  const closeMock = await mockModel(panel, token, async input => {
     const chooser = input.page.nodes.find(node => node.label === summary)!;
     if (input.feedback) return { kind: 'highlight', targetId: chooser.id, instruction: '收起可见范围菜单。' };
     return { kind: 'keep', requirements: [{ quote: goal, result: '可见范围只限团队', source: 'page' }],
       proofs: [{ index: 0, checks: [{ id: chooser.id, field: 'label', equals: summary }] }] };
-  } });
-  await app.listen({ host: '127.0.0.1', port: 43130 });
+  });
   try {
     const context = panel.context();
     await context.route(siteUrl, route => route.fulfill({ contentType: 'text/html', body: '<!doctype html><main>'
@@ -371,7 +362,7 @@ test('当前选择可由收起的控件摘要确认', async ({ extension: { pane
     await site.bringToFront();
     await activate(site);
     await panel.getByLabel('我想做什么').fill(goal);
-    await panel.getByLabel('本机访问令牌').fill(token);
+    await panel.getByLabel('模型 API 密钥').fill(token);
     await panel.locator('form').evaluate((form: HTMLFormElement) => form.requestSubmit());
 
     const chooser = site.getByRole('button', { name: summary });
@@ -382,7 +373,7 @@ test('当前选择可由收起的控件摘要确认', async ({ extension: { pane
     await expect(panel.getByRole('status')).toHaveText('已完成。可见范围只限团队。');
     await expect(site.locator('.webguide-popover')).toHaveCount(0);
   } finally {
-    await app.close();
+    await closeMock();
   }
 });
 
@@ -391,7 +382,7 @@ test('操作后优先复查首读范围外的单选控件', async ({ extension: 
   const token = 'webguide-test-token-000000';
   const goal = '把字号调到大号';
   const calls: GuideRequest[] = [];
-  const app = createApp({ token, origins: [panel.url().replace('/sidepanel.html', '')], async decide(input) {
+  const closeMock = await mockModel(panel, token, async input => {
     calls.push(input);
     const large = [...input.page.nodes, ...input.reads.flatMap(read => read.nodes)]
       .find(node => node.role === 'radio' && node.label === 'Large');
@@ -405,8 +396,7 @@ test('操作后优先复查首读范围外的单选控件', async ({ extension: 
       requirements: [{ quote: goal, source: 'page', result: '已调到大号' }],
     };
     return { kind: 'blocked', instruction: '没有可点击的字号设置。' };
-  } });
-  await app.listen({ host: '127.0.0.1', port: 43130 });
+  });
   try {
     const context = panel.context();
     await context.route(url, route => route.fulfill({ contentType: 'text/html', body: `<!doctype html>
@@ -435,7 +425,7 @@ test('操作后优先复查首读范围外的单选控件', async ({ extension: 
     await site.bringToFront();
     await activate(site);
     await panel.getByLabel('我想做什么').fill(goal);
-    await panel.getByLabel('本机访问令牌').fill(token);
+    await panel.getByLabel('模型 API 密钥').fill(token);
     await panel.locator('form').evaluate((form: HTMLFormElement) => form.requestSubmit());
 
     const appearance = site.locator('label[for="appearance"]');
@@ -458,7 +448,7 @@ test('操作后优先复查首读范围外的单选控件', async ({ extension: 
     expect(calls[beforeClick]?.page.nodes[0]).toMatchObject({ label: 'Large', checked: true });
     expect(calls[beforeClick]?.page.nodes).toHaveLength(40);
   } finally {
-    await app.close();
+    await closeMock();
   }
 });
 
@@ -467,7 +457,7 @@ test('文字提示之后滚动面板，即使没有区域编号也会重新观�
   const token = 'webguide-test-token-000000';
   const goal = '找到发布设置入口';
   const calls: GuideRequest[] = [];
-  const app = createApp({ token, origins: [panel.url().replace('/sidepanel.html', '')], async decide(input) {
+  const closeMock = await mockModel(panel, token, async input => {
     calls.push(input);
     if (calls.length === 1) return { kind: 'message', instruction: '向下滚动属性面板。',
       requirements: [{ quote: goal, source: 'point', result: goal }] };
@@ -476,8 +466,7 @@ test('文字提示之后滚动面板，即使没有区域编号也会重新观�
     if (!target?.viewport) return { kind: 'observe', queries: [{ type: 'search', query: '发布设置' }] };
     return { kind: 'keep', proofs: [{ index: 0, targetId: target.id,
       checks: [{ id: target.id, field: 'label', equals: target.label }] }] };
-  } });
-  await app.listen({ host: '127.0.0.1', port: 43130 });
+  });
   try {
     const context = panel.context();
     await context.route(url, route => route.fulfill({ contentType: 'text/html; charset=utf-8', body: `<!doctype html>
@@ -500,7 +489,7 @@ test('文字提示之后滚动面板，即使没有区域编号也会重新观�
     await site.bringToFront();
     await activate(site);
     await panel.getByLabel('我想做什么').fill(goal);
-    await panel.getByLabel('本机访问令牌').fill(token);
+    await panel.getByLabel('模型 API 密钥').fill(token);
     await panel.locator('form').evaluate((form: HTMLFormElement) => form.requestSubmit());
 
     await expect(panel.getByRole('status')).toHaveText('向下滚动属性面板。');
@@ -515,7 +504,7 @@ test('文字提示之后滚动面板，即使没有区域编号也会重新观�
     expect(calls[1]?.page).toEqual(calls[0]?.page);
     expect(calls).toHaveLength(3);
   } finally {
-    await app.close();
+    await closeMock();
   }
 });
 
@@ -523,7 +512,7 @@ test('网页报告导出成功后，由用户单独确认已经下载', async ({
   const siteUrl = 'https://workspace.example/download';
   const token = 'webguide-test-token-000000';
   const calls: GuideRequest[] = [];
-  const app = createApp({ token, origins: [panel.url().replace('/sidepanel.html', '')], async decide(input) {
+  const closeMock = await mockModel(panel, token, async input => {
     calls.push(input);
     const node = input.page.nodes.find(node => node.role === 'status')!;
     const checks = [{ id: node.id, field: 'label', equals: node.label }];
@@ -531,8 +520,7 @@ test('网页报告导出成功后，由用户单独确认已经下载', async ({
       { quote: '确认导出成功', result: '网页已导出', source: 'page' },
       { quote: '并且已下载到电脑', result: '文件已下载到电脑', source: 'user' },
     ], proofs: [{ index: 0, checks }, { index: 1, checks }] };
-  } });
-  await app.listen({ host: '127.0.0.1', port: 43130 });
+  });
   try {
     const context = panel.context();
     await context.route(siteUrl, route => route.fulfill({ contentType: 'text/html',
@@ -542,7 +530,7 @@ test('网页报告导出成功后，由用户单独确认已经下载', async ({
     await site.bringToFront();
     await activate(site);
     await panel.getByLabel('我想做什么').fill('确认导出成功并且已下载到电脑');
-    await panel.getByLabel('本机访问令牌').fill(token);
+    await panel.getByLabel('模型 API 密钥').fill(token);
     await panel.locator('form').evaluate((form: HTMLFormElement) => form.requestSubmit());
 
     await expect(panel.getByRole('status')).toContainText('请确认下面这项结果');
@@ -553,7 +541,7 @@ test('网页报告导出成功后，由用户单独确认已经下载', async ({
     await expect(confirmation).toHaveCount(0);
     expect(calls).toHaveLength(1);
   } finally {
-    await app.close();
+    await closeMock();
   }
 });
 
@@ -561,12 +549,11 @@ test('有临时授权但缺少侧栏绑定记录时，可以恢复当前页引�
   const url = 'https://workspace.example/toolbar';
   const token = 'webguide-test-token-000000';
   const calls: GuideRequest[] = [];
-  const app = createApp({ token, origins: [panel.url().replace('/sidepanel.html', '')], async decide(input) {
+  const closeMock = await mockModel(panel, token, async input => {
     calls.push(input);
     const target = input.page.nodes.find(node => node.label === 'Settings')!;
     return { kind: 'highlight', instruction: '打开 Settings', targetId: target.id };
-  } });
-  await app.listen({ host: '127.0.0.1', port: 43130 });
+  });
   try {
     const context = panel.context();
     await context.route(url, route => route.fulfill({
@@ -575,7 +562,7 @@ test('有临时授权但缺少侧栏绑定记录时，可以恢复当前页引�
     const site = await context.newPage();
     await site.goto(url);
     await panel.getByLabel('我想做什么').fill('找到当前页的设置入口');
-    await panel.getByLabel('本机访问令牌').fill(token);
+    await panel.getByLabel('模型 API 密钥').fill(token);
     await site.bringToFront();
     await panel.locator('form').evaluate((form: HTMLFormElement) => form.requestSubmit());
     await expect(panel.getByRole('status')).toContainText('先在目标网页点击');
@@ -606,7 +593,7 @@ test('有临时授权但缺少侧栏绑定记录时，可以恢复当前页引�
     await expect(site.getByRole('button', { name: 'Settings' })).toHaveClass(/driver-active-element/);
     expect(calls).toHaveLength(1);
   } finally {
-    await app.close();
+    await closeMock();
   }
 });
 
@@ -617,7 +604,7 @@ test('属性栏按钮没变时，选中对象变化也会使在途回复失效',
   let release!: () => void;
   const firstRequest = new Promise<void>(resolve => { started = resolve; });
   const slow = new Promise<void>(resolve => { release = resolve; });
-  const app = createApp({ token, origins: [panel.url().replace('/sidepanel.html', '')], async decide(input) {
+  const closeMock = await mockModel(panel, token, async input => {
     const target = input.page.nodes.find(node => node.label === 'Export')!;
     const selected = input.page.nodes.find(node => node.selected)?.label;
     if (selected === 'Layer A') {
@@ -625,8 +612,7 @@ test('属性栏按钮没变时，选中对象变化也会使在途回复失效',
       await slow;
     }
     return { kind: 'highlight', targetId: target.id, instruction: 'Export ' + selected };
-  } });
-  await app.listen({ host: '127.0.0.1', port: 43130 });
+  });
   try {
     const context = panel.context();
     await context.route(url, route => route.fulfill({ contentType: 'text/html', body: '<!doctype html>'
@@ -644,7 +630,7 @@ test('属性栏按钮没变时，选中对象变化也会使在途回复失效',
     await site.bringToFront();
     await activate(site);
     await panel.getByLabel('我想做什么').fill('找到当前选中对象的导出按钮');
-    await panel.getByLabel('本机访问令牌').fill(token);
+    await panel.getByLabel('模型 API 密钥').fill(token);
     await site.bringToFront();
     await panel.locator('form').evaluate((form: HTMLFormElement) => form.requestSubmit());
     await firstRequest;
@@ -665,9 +651,13 @@ test('属性栏按钮没变时，选中对象变化也会使在途回复失效',
     await expect(site.locator('.webguide-popover')).toHaveCount(0);
     await panel.goto(panelUrl);
     await expect(panel.getByLabel('我想做什么')).toHaveValue('找到当前选中对象的导出按钮');
+    await expect(panel.getByLabel('模型 API 密钥')).toHaveValue(token);
     await expect(panel.getByRole('button', { name: '继续引导' })).toBeVisible();
+    await panel.getByText('模型设置', { exact: true }).click();
+    await panel.getByLabel('模型 API 地址').fill('https://another-model.example/v1');
+    await expect(panel.getByLabel('模型 API 密钥')).toHaveValue('');
   } finally {
     release();
-    await app.close();
+    await closeMock();
   }
 });

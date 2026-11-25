@@ -2,7 +2,7 @@
 
 WebGuide AI 是一款网页操作引导扩展。AI 根据当前页面选择要高亮的位置，扩展显示提示，由用户自己操作。
 
-**当前进度**　`codex/navigation-harness` 已接通自然语言目标、按需补看、高亮指引和结果核对。首轮用模拟网页和模型验证。GitHub 和 Figma 的旧预设原型可在 `codex/ai-navigation` 试用。[项目进度](docs/README.md)
+**当前进度**　`codex/navigation-harness` 支持自然语言目标、按需补看、高亮指引和结果核对。扩展使用个人 API 密钥直连模型。GitHub 和 Figma 的旧预设原型可在 `codex/ai-navigation` 试用。[项目进度](docs/README.md)
 
 ## 本机开发
 
@@ -11,15 +11,15 @@ WebGuide AI 是一款网页操作引导扩展。AI 根据当前页面选择要�
 3. 在 Chrome 或 Edge 的扩展管理页打开开发者模式，加载 `apps/extension/.output/chrome-mv3`。已有本机安装时可点击「重新加载」。
 
 - 首次执行浏览器测试前运行 `npx playwright install chromium`。随后运行 `npm run test:e2e`，在独立 Chromium 中验证侧栏和模拟引导。
-- `npm run dev:api` 启动本机后端，可打开 `http://127.0.0.1:43130/health` 确认服务在运行。
+- `npm run dev:api` 供本机服务实验使用。常规试用从扩展侧栏开始。
 
 ## 试用新引导
 
-1. 参考 `apps/api/.env.example` 配置 `apps/api/.env`。之前用过同济模型和本机访问令牌，可以沿用配置。侧栏的「本机服务设置」显示当前扩展来源。
-2. 在仓库根目录运行 `npm run dev:api`。当前扩展使用本机默认端口 `43130`。
-3. 在练习网页点击工具栏上的 WebGuide AI 图标。输入本机访问令牌，再用自己的话写目标，例如「带我找到这个页面的导出设置」，点击「开始引导」。页面上的点击、输入和滚动由你自己完成。
+1. 加载扩展，在练习网页点击工具栏上的 WebGuide AI 图标。侧栏默认填的是同济 `DeepSeek-V4.1-Flash`。用其他兼容 Chat Completions 和 JSON 回复的服务时，在「模型设置」填写 HTTPS API 地址和模型名称。
+2. 在侧栏填自己的模型 API 密钥和目标，例如「带我找到这个页面的导出设置」。点「开始引导」，首次使用该模型域名时允许扩展访问。输入的目标和必要的页面线索会发给这个模型服务。
+3. 跟着蓝框和提示，在网页上自己点击、输入和滚动。密钥在本次浏览器会话中有效，退出浏览器后重新填写。模型地址和名称可以继续沿用。
 
-想试用经验引导时，在 `apps/api/.env` 加上 `WG_EXPERIENCE_ENABLED=1`，重启本机服务，再开始一次新引导。默认关闭，改成 `0` 后也可以做无经验对照。两条候选覆盖英文维基百科正文字号和 Figma 图层导出入口。[经验模块设计](docs/design/WebGuideAI-经验模块设计.md)
+想试用经验引导，在「模型设置」勾选「启用导航经验（试验）」后开始一次新引导。开关默认关闭。两条候选覆盖英文维基百科正文字号和 Figma 图层导出入口。[经验模块设计](docs/design/WebGuideAI-经验模块设计.md)
 
 ## 试用旧版实时引导
 

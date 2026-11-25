@@ -29,6 +29,7 @@ it.each([
       },
     } as Response;
   });
-  await expect(chooseGuide(input, 'test-only-token', session.signal)).rejects.toThrow();
+  await expect(chooseGuide(input, { url: 'https://model.example/v1/chat/completions', name: 'test-model', key: 'test-only-key' },
+    session.signal)).rejects.toThrow();
   expect(report).toHaveBeenCalledExactlyOnceWith('[guide]', { outcome, elapsedMs: expect.any(Number) });
 });

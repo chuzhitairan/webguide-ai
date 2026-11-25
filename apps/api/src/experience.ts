@@ -1,21 +1,8 @@
 import { readFileSync } from 'node:fs';
+import type { ExperienceCatalog, ExperienceEntry } from './experience-catalog.js';
 
-export interface ExperienceEntry {
-  id: string;
-  revision: number;
-  hostname: string;
-  status: 'candidate' | 'available' | 'disabled';
-  goal: string;
-  when: string;
-  advice: string;
-  check: string;
-  source: string;
-}
-
-export interface ExperienceCatalog {
-  version: string;
-  entries: ExperienceEntry[];
-}
+export { experienceForSite } from './experience-catalog.js';
+export type { ExperienceCatalog, ExperienceEntry } from './experience-catalog.js';
 
 function isEntry(value: unknown): value is ExperienceEntry {
   if (!value || typeof value !== 'object') return false;
@@ -32,9 +19,4 @@ export function loadExperienceCatalog(file = new URL('../experience-catalog.json
     throw new Error('经验目录格式不正确。');
   }
   return { version: data.version, entries: data.entries };
-}
-
-export function experienceForSite(catalog: ExperienceCatalog | undefined, hostname: string): ExperienceEntry[] {
-  // 扩展传入当前文档的主机名。只取这个站点的线索，由模型判断是否适用于当前目标。
-  return catalog?.entries.filter(entry => entry.hostname === hostname && entry.status !== 'disabled').slice(0, 5) ?? [];
 }
