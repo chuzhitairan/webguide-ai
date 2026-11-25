@@ -14,7 +14,8 @@ type Port = ReturnType<typeof browser.runtime.connect>;
 const pointRoles = new Set(['button', 'link', 'row', 'gridcell', 'treeitem', 'option', 'tab', 'menuitem',
   'menuitemcheckbox', 'menuitemradio', 'checkbox', 'radio', 'switch', 'textbox', 'combobox', 'searchbox']);
 const resultRoles = new Set(['status', 'dialog', 'alertdialog']);
-const arrivalRegions = new Set(['main', 'region', 'dialog', 'alertdialog', 'tabpanel', 'form']);
+const arrivalRegions = new Set(['main', 'article', 'region', 'dialog', 'alertdialog', 'tabpanel', 'form']);
+const headerRegions = new Set(['banner', 'group']);
 
 export default defineUnlistedScript(() => {
   // 同一个文档可能被尝试连接多次，页面中只安装一个连接入口。
@@ -175,14 +176,27 @@ function connect(port: Port): () => void {
     });
   }
 
+  function arrivalScope(identity: Evidence) {
+    if (identity.role !== 'heading') return arrivalRegions.has(identity.role) ? observation?.resolve(identity.id) : undefined;
+    const object = identity.object === undefined ? undefined : observation?.resolve(identity.object);
+    for (let id = identity.region; id !== undefined;) {
+      const region = observation?.resolve(id);
+      if (!region) return;
+      if (arrivalRegions.has(region.evidence.role)) {
+        // 列表项里的标题不能借用它外面的主体控件作为已到达的证据。
+        return object && !inside(region.element, object.element) ? undefined : region;
+      }
+      // 正文标题常包在页头。只穿过布局分组，到最近的实际内容区为止。
+      if (!headerRegions.has(region.evidence.role)) return;
+      id = region.evidence.region;
+    }
+  }
+
   function provesArrival(labels: Evidence[]) {
     return labels.some(identity => {
-      // 标题用所在的内容区限定范围。具名区域可以直接作为范围。
       if (identity.label === identity.role) return false;
-      const region = identity.role === 'heading'
-        ? (identity.region === undefined ? undefined : observation?.resolve(identity.region))
-        : observation?.resolve(identity.id);
-      if (!region || !arrivalRegions.has(region.evidence.role)) return false;
+      const region = arrivalScope(identity);
+      if (!region) return false;
       return labels.some(content => {
         if (content.id === identity.id || content.label === identity.label || !content.available
           || (content.role !== 'text' && (!pointRoles.has(content.role) || content.role === 'link'))) return false;

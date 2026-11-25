@@ -144,7 +144,7 @@ test('入口证明有冲突时重新核对，正确高亮后自动收起', async
   }
 });
 
-test('到达目标须核对实际界面，标题和其他区域的控件不足以完成', async ({ extension: { panel, activate } }) => {
+test('到达目标的标题可以在页头，另一个证据须在同一内容区', async ({ extension: { panel, activate } }) => {
   const origin = 'https://workspace.example';
   const token = 'webguide-test-token-000000';
   const goal = '请帮我打开「侧栏闪烁」的详情。';
@@ -172,7 +172,8 @@ test('到达目标须核对实际界面，标题和其他区域的控件不足�
     await context.route(origin + '/**', route => route.fulfill({ contentType: 'text/html; charset=utf-8',
       body: new URL(route.request().url()).pathname === '/'
         ? '<!doctype html><main><h1>问题列表</h1><a href="/details">侧栏闪烁</a></main>'
-        : '<!doctype html><nav><button>站点选项</button></nav><main><h1>侧栏闪烁</h1><button>留下评论</button></main>' }));
+        : '<!doctype html><nav><button>站点选项</button></nav>'
+          + '<main><article><header><h1>侧栏闪烁</h1></header><button>留下评论</button></article></main>' }));
     const site = await context.newPage();
     await site.goto(origin);
     const entry = site.getByRole('link', { name: title });
@@ -190,6 +191,43 @@ test('到达目标须核对实际界面，标题和其他区域的控件不足�
     expect(calls[1].requirements?.[0]).toMatchObject({ quote: goal, source: 'point' });
     expect(calls.slice(2).every(call => call.requirements?.[0].source === 'arrival'
       && call.feedback?.includes('到达证据未通过'))).toBe(true);
+  } finally {
+    await app.close();
+  }
+});
+
+test('列表条目标题和列表工具不能证明已经打开详情', async ({ extension: { panel, activate } }) => {
+  const url = 'https://workspace.example/tickets';
+  const token = 'webguide-test-token-000000';
+  const goal = '请带我打开「延迟反馈」的详情。';
+  const calls: GuideRequest[] = [];
+  const app = createApp({ token, origins: [panel.url().replace('/sidepanel.html', '')], async decide(input) {
+    calls.push(input);
+    const link = input.page.nodes.find(node => node.role === 'link' && node.label === '延迟反馈')!;
+    if (input.feedback) return { kind: 'highlight', targetId: link.id, instruction: '打开详情。' };
+    const title = input.page.nodes.find(node => node.role === 'heading' && node.label === '延迟反馈')!;
+    const filter = input.page.nodes.find(node => node.role === 'button' && node.label === '筛选列表')!;
+    return { kind: 'keep', requirements: [{ start: null, result: '已打开延迟反馈详情', source: 'arrival' }],
+      proofs: [{ index: 0, checks: [title, filter].map(node => ({ id: node.id, field: 'label', equals: node.label })) }] };
+  } });
+  await app.listen({ host: '127.0.0.1', port: 43130 });
+  try {
+    const context = panel.context();
+    await context.route(url, route => route.fulfill({ contentType: 'text/html; charset=utf-8',
+      body: '<!doctype html><main><h1>任务列表</h1><button>筛选列表</button>'
+        + '<ul><li><h2><a href="/details">延迟反馈</a></h2></li></ul></main>' }));
+    const site = await context.newPage();
+    await site.goto(url);
+    await site.bringToFront();
+    await activate(site);
+    await panel.getByLabel('我想做什么').fill(goal);
+    await panel.getByLabel('本机访问令牌').fill(token);
+    await panel.locator('form').evaluate((form: HTMLFormElement) => form.requestSubmit());
+
+    await expect(panel.getByRole('status')).toHaveText('打开详情。');
+    await expect(site.getByRole('link', { name: '延迟反馈' })).toHaveClass(/driver-active-element/);
+    expect(calls[1].feedback).toContain('到达证据未通过');
+    await expect(site).toHaveURL(url);
   } finally {
     await app.close();
   }

@@ -8,7 +8,7 @@ const entryLinkLimit = 3;
 const entryScanLimit = 120;
 
 const regionRoles = new Set([
-  'alertdialog', 'application', 'banner', 'complementary', 'contentinfo', 'dialog', 'form', 'grid', 'group',
+  'alertdialog', 'application', 'article', 'banner', 'complementary', 'contentinfo', 'dialog', 'form', 'grid', 'group',
   'listbox', 'main', 'menu', 'menubar', 'navigation', 'region', 'search', 'tablist', 'tabpanel', 'toolbar', 'tree', 'treegrid',
 ]);
 
@@ -21,7 +21,7 @@ const entryRoles = new Set(['listitem', 'row']);
 const objectRoles = new Set([...entryRoles, 'treeitem', 'option']);
 
 const nativeRoles: Record<string, string> = {
-  aside: 'complementary', button: 'button', dialog: 'dialog', footer: 'contentinfo', form: 'form', header: 'banner',
+  article: 'article', aside: 'complementary', button: 'button', dialog: 'dialog', footer: 'contentinfo', form: 'form', header: 'banner',
   h1: 'heading', h2: 'heading', h3: 'heading', h4: 'heading', h5: 'heading', h6: 'heading', main: 'main',
   nav: 'navigation', option: 'option', output: 'status', progress: 'progressbar', summary: 'button', textarea: 'textbox',
 };

@@ -52,13 +52,14 @@ const legacyCompletion = [
 
 const completionInstructions = [
   'requirements 为空时，同一回复列出 1 到 5 个独立的最终结果。每项写 start、result、source。首项 start 为 null；从第二项起，start 是它在 goal 中独一无二的原文开头，例如「把主题切换到深色」。程序从这些分界切出完整原话。一项可以跨多个分句。',
-  '先问自己「用户看到什么就可以停？」只要求指出按钮或菜单入口用 point。以真正打开、进入或到达某个界面为结果用 arrival，即使它已经打开。设置生效或出现业务结果用 page。网页之外需用户确认用 user。',
+  '先从用户原话确定终点，再看当前页面。只要求指出按钮或菜单入口用 point。用户要求实际打开、进入或到达界面时用 arrival，哪怕目前只能看见入口。设置生效或出现业务结果用 page。网页之外需用户确认用 user。',
+  '同一个「账户设置」链接，对「找到账户设置入口」可用 point；对「请带我打开账户设置」先用 highlight 指路，实际界面可核对后再按 arrival 收尾。补看时也保留这项条件。',
   '例如「打开团队成员列表，只看管理员，筛选生效就行」是一项 page，result 写「团队成员列表已筛为仅管理员」。打开列表是路径，「生效」是同一个结果。只有结果各自需要核对时才拆开，例如「确认网页导出成功并且电脑上已经有文件」是 page 和 user 两项。',
   'requirements 已有值时沿用，按从 0 开始的顺序引用。发现先前把明确要求到达的结果写成了 point，可改为 arrival，返回完整列表，其他条件保留已有 quote、result 和 source。reviewRequirements 为 true 时，还可合并相邻且描述同一结果的 page 条件，返回完整列表和按新顺序写的 proofs。各自验收的结果保留。',
   '如果当前控件正是用户要找的入口，直接用 kind: point 表示「指到这里就完成此项」，只报一次 targetId。有同名入口时补看并给 scopeId。只有一项时可以省略 index，多项时写这项 point 条件的下标。程序构造这项的核对依据。',
   '{"kind":"point","targetId":2,"scopeId":5,"requirements":[{"start":null,"result":"找到这个图层的导出按钮","source":"point"}]}',
   '有证据的其他网页结果在同一回复逐项提交 proofs。继续指引未完成的条件时，也提交已证实项的证明。每条包含 index 和 checks（id、field、equals），核对结果和所属对象。无后续指引时用 keep 并附 proofs。user 由侧栏处理。',
-  'arrival 要同时核对两个 label：目标标题或区域名称，以及同一区域内另一个可用控件或可读正文。单凭入口链接、标题或状态提示还需要补看。遇到权限提示时继续指路。',
+  'arrival 要同时核对两个 label：目标标题或区域名称，以及同一内容区内的可用按钮等非链接控件或可读正文。标题可能在内容区的页头，另一个证据可以在同一内容区的主体中。只有导航链接或状态提示时继续补看。遇到权限提示时继续指路。',
   '{"kind":"keep","requirements":[{"start":null,"result":"账户设置已打开","source":"arrival"}],"proofs":[{"index":0,"checks":[{"id":8,"field":"label","equals":"Account settings"},{"id":9,"field":"label","equals":"Save preferences"}]}]}',
   'point 要证明的是被指的控件能让用户到达所需设置或操作。先从目标判断控件要做什么，再比较同区候选的具体动作名称、展开状态及关联对象。标题、区域名和同主题的展开控件只说明位置；当旁边另有明确执行所需动作的控件时，指向后者。动作归属不清时先补看，不凭同名收尾。',
   '找到的名称若无法确定所属对象，先用 search 比较视口内外的同名候选，通过 inspect 看所属区域。入口还在视口外时先提示滚动。',
