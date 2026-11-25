@@ -1,12 +1,7 @@
 {
   "extends": "./tsconfig.base.json",
-  "compilerOptions": {
-    "noEmit": true,
-    "allowJs": true
-  },
+  "compilerOptions": { "noEmit": true },
   "include": [
-    "packages/**/*.ts",
-    "tests/fixtures/**/*.ts",
     "vitest.config.ts",
     "apps/api/**/*.ts",
     "tests/e2e/**/*.ts",

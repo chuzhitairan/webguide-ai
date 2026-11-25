@@ -1,12 +1,14 @@
 # WebGuide AI 运行契约 v0.1
 
-更新：2026-11-18。T03 设计草案，衔接[核心设计](WebGuideAI-核心设计-v0.1.md)与[完整 SRS](../requirements/WebGuideAI-SRS-v0.2.md)。本文定义通用引导运行机制，由 GitHub 协作与 Pages 两份教程样例检验格式边界；当前首场景是 GitHub 协作。教程获取、编辑发布和探索模块随后接入同一内容版本，不在此定义其全部业务接口。
+本契约用于已有的固定教程。模型根据当前页面选择高亮目标和提示的运行方式见[浏览器导航原型](WebGuideAI-浏览器导航原型.md)。
+
+初稿于 2026-11-18。本文描述固定教程的格式、消息、会话和步骤推进，由 GitHub 协作与 Pages 样例检验格式边界。[原核心设计](WebGuideAI-核心设计-v0.1.md) · [原完整规格](../requirements/WebGuideAI-SRS-v0.2.md)
 
 2026-11-18 场景更新：发起人已将 [GitHub 小组协作入门](../requirements/首场景调整-GitHub协作-2026-11-17.md)调整为首个交付及展示场景。[协作适配契约](GitHub协作适配契约-v0.1.md)已补充 SC02 的任务身份、页面观察、能力注册和终验；本文的 Pages 专有部分保留适用范围，通用消息与会话机制由两种适配器复用。
 
-当前输入为 [SC02 路径与验收草案](../requirements/GitHub协作首场景规格-v0.1.md)。格式 v2 在独立 Schema 中新增 input 动作；格式 v1 与 Pages 样例保持兼容。两者都不授权扩展代替用户填表或提交。
+格式 v2 随 SC02 增加了 `input` 动作，由用户操作。格式 v1 与 Pages 样例兼容。[SC02 路径与验收草案](../requirements/GitHub协作首场景规格-v0.1.md)
 
-阅读顺序：第 1–2 节看通用格式，第 4–7 节看运行；SC02 专有部分看协作适配契约，第 3、8 节为 Pages，第 9 节为共用后端边界。结构源文件为[v1 Schema](contracts/tutorial.schema.json)、[v2 Schema](contracts/tutorial-v2.schema.json)、[Pages 样例](contracts/pages.tutorial.json)和[协作样例](contracts/collaboration.tutorial.json)。这是设计输入，尚未创建正式工程或验证真实 GitHub 定位器。
+第 1–2 节是通用格式，第 4–7 节是运行机制，第 3、8 节是 Pages 专有规则，第 9 节是原固定教程答疑接口草案。SC02 有单独的协作适配契约，已落地的情况看首轮实施记录。[v1 Schema](contracts/tutorial.schema.json) · [v2 Schema](contracts/tutorial-v2.schema.json) · [Pages 样例](contracts/pages.tutorial.json) · [协作样例](contracts/collaboration.tutorial.json) · [首轮实施记录](首轮工程实施计划-2026-11-18.md)
 
 ## 1. 采用的结构与责任
 
@@ -170,7 +172,7 @@ savedConfiguration 必须有与对应值关联的已保存来源，例如新加�
 
 ## 9. AI 请求与返回
 
-首版建议后端本机运行，模型凭据在后端配置；POST /api/v1/answers 提供一次完整 JSON 返回。开发访问凭据与模型凭据分开，接口要求 Bearer 开发令牌并核对扩展来源；[工程配置第 6 节](WebGuideAI-工程配置与开发方式-v0.1.md#6-本机后端与模型配置)拟定地址、令牌录入与 Origin 缺失时的处理。它不是完整平台的作者身份方案，公开部署前另完成认证及额度设计。
+首版建议后端本机运行，模型凭据在后端配置；POST /api/v1/answers 提供一次完整 JSON 返回。开发访问凭据与模型凭据分开，接口要求 Bearer 开发令牌并核对扩展来源；[工程配置第 6 节](WebGuideAI-工程配置与开发方式-v0.1.md#6-扩展直连与模型配置)记录本机接口与现行扩展的模型配置。它不是完整平台的作者身份方案，公开部署前另完成认证及额度设计。
 
 | 请求字段 | 约束 |
 | --- | --- |

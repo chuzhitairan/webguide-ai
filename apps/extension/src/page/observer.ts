@@ -1,34 +1,56 @@
-import type { RuntimeEvent } from '@webguide/contracts';
+type PageEvent = 'page-left' | 'user-action';
 
-type InvalidationReason = Extract<RuntimeEvent, { type: 'LOCATION_INVALIDATED' }>['reason'];
+const actionable = 'a[href], button, input, select, textarea, summary, [role="button"], [role="link"],'
+  + ' [role="menuitem"], [role="menuitemcheckbox"], [role="menuitemradio"], [role="tab"],'
+  + ' [role="row"], [role="treeitem"], [role="option"], [role="switch"], [contenteditable="true"]';
 
-// 只在当前请求的有限租期内订阅页面变化。撤销监听与高亮在同一事件回调中完成。
+// 引导开始时订阅页面变化，调用方在引导结束或离开页面后停止监听。
 export function watchPage(
   document: Document,
   checkTarget: () => void,
-  invalidate: (reason: InvalidationReason) => void,
+  notify: (event: PageEvent) => void,
 ): () => void {
   const view = document.defaultView;
   if (!view) return () => {};
   const controller = new view.AbortController();
   const options = { signal: controller.signal, capture: true };
-  let typingTimer: number | undefined;
-  const leavePage = () => invalidate('page-left');
-  const changeTarget = () => invalidate('target-changed');
-  const observer = new view.MutationObserver(checkTarget);
-  observer.observe(document, { subtree: true, childList: true, attributes: true, characterData: true });
+  const leavePage = () => notify('page-left');
+  const userAction = (event: Event) => {
+    if (event.isTrusted && event.composedPath().some(node => node instanceof view.Element && node.matches(actionable))) {
+      notify('user-action');
+    }
+  };
+  const registered = new WeakSet<Document | ShadowRoot>();
+  const watchOptions = { subtree: true, childList: true, attributes: true, characterData: true };
+  const observer = new view.MutationObserver(changes => {
+    for (const change of changes) {
+      for (const child of change.addedNodes) if (child instanceof view.Element) findShadowRoots(child);
+    }
+    checkTarget();
+  });
+
+  function observe(root: Document | ShadowRoot) {
+    if (registered.has(root)) return;
+    registered.add(root);
+    observer.observe(root, watchOptions);
+    findShadowRoots(root);
+  }
+
+  function findShadowRoots(root: Document | ShadowRoot | Element) {
+    if (root instanceof view!.Element && root.shadowRoot) observe(root.shadowRoot);
+    for (const element of root.querySelectorAll('*')) if (element.shadowRoot) observe(element.shadowRoot);
+  }
+  observe(document);
 
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'hidden') leavePage();
+    else checkTarget();
   }, options);
-  // 表单提交去向等属性可以只存在于控件的 JS 状态中，不一定触发 DOM mutation。
-  document.addEventListener('change', changeTarget, options);
-  document.addEventListener('toggle', changeTarget, options);
-  document.addEventListener('input', () => {
-    // 等输入稍停再核对，避免每个按键都撤下提示、重读一次表单。
-    view.clearTimeout(typingTimer);
-    typingTimer = view.setTimeout(changeTarget, 150);
-  }, options);
+  // 真实操作可以改变指引。原生 tooltip 也会触发 toggle，只用它检查页面状态。
+  document.addEventListener('click', userAction, options);
+  document.addEventListener('change', userAction, options);
+  document.addEventListener('input', userAction, options);
+  document.addEventListener('toggle', checkTarget, options);
   view.addEventListener('resize', checkTarget, options);
   view.addEventListener('pagehide', leavePage, options);
   view.addEventListener('popstate', leavePage, options);
@@ -38,7 +60,6 @@ export function watchPage(
     (view.navigation as EventTarget).addEventListener('currententrychange', leavePage, options);
   }
   return () => {
-    view.clearTimeout(typingTimer);
     observer.disconnect();
     controller.abort();
   };

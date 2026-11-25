@@ -16,7 +16,6 @@ jobs:
       - run: npm install --global npm@11.19.1
       - run: npm ci
       - run: npm run check
-      - run: node --test experiments/extension-lifecycle-spike/state.test.mjs experiments/extension-lifecycle-spike/content.test.mjs experiments/pages-state-spike/tests/state.test.mjs
 
   browser:
     runs-on: ubuntu-latest

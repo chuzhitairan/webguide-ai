@@ -1,0 +1,339 @@
+export interface Evidence {
+  id: number;
+  role: string;
+  label: string;
+  viewport: boolean;
+  available: boolean;
+  region?: number;
+  object?: number;
+  expanded?: boolean;
+  selected?: boolean;
+  checked?: boolean;
+  canScrollUp?: boolean;
+  canScrollDown?: boolean;
+}
+
+export interface Observation {
+  title: string;
+  site: string;
+  nodes: Evidence[];
+  truncated: boolean;
+}
+
+export type ReadQuery =
+  | { type: 'region'; id: number; includeOffscreen?: boolean }
+  | { type: 'search'; query: string; region?: number }
+  | { type: 'inspect'; id: number };
+
+export interface ReadResult {
+  query: ReadQuery;
+  nodes: Evidence[];
+  truncated: boolean;
+  status: 'ok' | 'empty' | 'unavailable';
+}
+
+export interface EvidenceCheck {
+  id: number;
+  field: 'label' | 'selected' | 'checked' | 'expanded' | 'available' | 'viewport';
+  equals: string | boolean;
+}
+
+export interface Requirement {
+  quote: string;
+  result: string;
+  source: 'point' | 'arrival' | 'page' | 'user';
+}
+
+export interface RequirementProof {
+  index: number;
+  checks: EvidenceCheck[];
+  targetId?: number;
+}
+
+export interface GuideRequest {
+  goal: string;
+  page: Observation;
+  reads: ReadResult[];
+  finishOnly: boolean;
+  previous?: { instruction: string; target?: Evidence };
+  feedback?: string;
+  userAnswer?: string;
+  // 空数组请模型提炼终点；已有条件沿用，也可校正指路与实际到达的区别。
+  requirements?: Requirement[];
+  reviewRequirements?: true;
+}
+
+type NavigationDecision =
+  | { kind: 'observe'; queries: ReadQuery[] }
+  | { kind: 'highlight'; targetId: number; instruction: string; scopeId?: number }
+  | { kind: 'message'; instruction: string; scrollRegion?: number }
+  | { kind: 'wait' | 'ask' | 'blocked'; instruction: string }
+  | { kind: 'keep' }
+  | { kind: 'complete'; instruction: string; targetId?: number; checks: EvidenceCheck[] };
+
+type Target = { targetId: number; scopeId?: number };
+type CompletionFields = { requirements?: Requirement[]; proofs?: RequirementProof[] };
+
+export type Decision = NavigationDecision & CompletionFields;
+type ModelDecision = (NavigationDecision | ({ kind: 'point'; index?: number } & Target)) & CompletionFields;
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return value !== null && typeof value === 'object' && !Array.isArray(value);
+}
+
+function hasOnlyKeys(value: Record<string, unknown>, keys: readonly string[]): boolean {
+  return Object.keys(value).every(key => keys.includes(key));
+}
+
+function isId(value: unknown): value is number {
+  return typeof value === 'number' && Number.isSafeInteger(value) && value > 0;
+}
+
+function isRequirementIndex(value: unknown): value is number {
+  return typeof value === 'number' && Number.isInteger(value) && value >= 0 && value < 5;
+}
+
+function isText(value: unknown, limit: number, allowBlank = true): value is string {
+  return typeof value === 'string' && value.length <= limit && (allowBlank || value.trim().length > 0);
+}
+
+function isReadQuery(value: unknown): value is ReadQuery {
+  if (!isRecord(value)) return false;
+  switch (value.type) {
+    case 'region':
+      return hasOnlyKeys(value, ['type', 'id', 'includeOffscreen']) && isId(value.id)
+        && (value.includeOffscreen === undefined || typeof value.includeOffscreen === 'boolean');
+    case 'search':
+      return hasOnlyKeys(value, ['type', 'query', 'region']) && isText(value.query, 120, false)
+        && (value.region === undefined || isId(value.region));
+    case 'inspect':
+      return hasOnlyKeys(value, ['type', 'id']) && isId(value.id);
+    default:
+      return false;
+  }
+}
+
+function parseCheck(value: unknown): EvidenceCheck | undefined {
+  if (!isRecord(value) || !isId(value.id)) return;
+  const { id, field, equals } = value;
+  switch (field) {
+    case 'label':
+      return isText(equals, 240) ? { id, field, equals } : undefined;
+    case 'selected':
+    case 'checked':
+    case 'expanded':
+    case 'available':
+    case 'viewport':
+      return typeof equals === 'boolean' ? { id, field, equals } : undefined;
+  }
+}
+
+function parseChecks(value: unknown): EvidenceCheck[] | undefined {
+  if (!Array.isArray(value) || value.length === 0 || value.length > 8) return;
+  const checks = value.map(parseCheck);
+  if (checks.every(check => check !== undefined)) return checks;
+}
+
+function isRequirementResult(value: unknown): value is Pick<Requirement, 'result' | 'source'> & Record<string, unknown> {
+  return isRecord(value) && isText(value.result, 120, false)
+    && (value.source === 'point' || value.source === 'arrival' || value.source === 'page' || value.source === 'user');
+}
+
+function isRequirement(value: unknown): value is Requirement {
+  return isRecord(value) && hasOnlyKeys(value, ['quote', 'result', 'source'])
+    && isText(value.quote, 500, false) && isRequirementResult(value);
+}
+
+function isRequirementList(value: unknown): value is Requirement[] {
+  return Array.isArray(value) && value.length <= 5 && value.every(isRequirement);
+}
+
+function goalContent(text: string): string {
+  return text.replace(/[\p{White_Space}\p{Punctuation}]/gu, '');
+}
+
+// 模型只给出各段开头，程序连续切分原话。连接词和标点也留在片段里。
+function requirementsFromStarts(goal: string, value: unknown): Requirement[] | undefined {
+  if (!Array.isArray(value) || value.length === 0 || value.length > 5) return;
+  const requirements: Requirement[] = [];
+  const starts: number[] = [];
+  for (const item of value as unknown[]) {
+    if (!isRequirementResult(item) || !hasOnlyKeys(item, ['start', 'result', 'source'])) return;
+    const { start, result, source } = item;
+    if (starts.length === 0 ? start !== null : !isText(start, 500, false)) return;
+    const index = typeof start === 'string' ? goal.indexOf(start) : 0;
+    if (typeof start === 'string' && (index <= starts[starts.length - 1] || goal.indexOf(start, index + 1) !== -1)) return;
+    starts.push(index);
+    requirements.push({ quote: '', result, source });
+  }
+  for (const [index, item] of requirements.entries()) {
+    item.quote = goal.slice(starts[index], starts[index + 1]);
+    if (!goalContent(item.quote)) return;
+  }
+  return requirements;
+}
+
+export function coversGoal(goal: string, requirements: Requirement[]): boolean {
+  // 连接词可以留在任一项。拼回原句可以发现整段要求被漏掉。
+  return requirements.every(item => goal.includes(item.quote))
+    && goalContent(requirements.map(item => item.quote).join('')) === goalContent(goal);
+}
+
+export function canReviewRequirements(requirements: Requirement[]): boolean {
+  return requirements.length > 1 && requirements.every(item => item.source === 'page');
+}
+
+export function acceptsRequirements(goal: string, proposed: Requirement[], current: Requirement[], review = false): boolean {
+  if (!proposed.length || !coversGoal(goal, proposed)) return false;
+  if (!current.length) return true;
+  // 同一段原话可从「找到入口」改为具体的到达要求，其余条件原样保留。
+  if (proposed.length === current.length && proposed.some((item, index) => item.source !== current[index].source)
+    && proposed.every((item, index) => {
+      const before = current[index];
+      return goalContent(item.quote) === goalContent(before.quote)
+        && (item.source === before.source && item.result === before.result
+          || before.source === 'point' && item.source === 'arrival');
+    })) return true;
+  if (!review || !canReviewRequirements(current) || proposed.length >= current.length
+    || !proposed.every(item => item.source === 'page')) return false;
+
+  // 只合并相邻原文片段，保留完整目标和已经分清的片段边界。
+  const boundaries = new Set<number>();
+  let originalEnd = 0;
+  for (const item of current) {
+    originalEnd += goalContent(item.quote).length;
+    boundaries.add(originalEnd);
+  }
+  let proposedEnd = 0;
+  for (const item of proposed) {
+    proposedEnd += goalContent(item.quote).length;
+    if (!boundaries.has(proposedEnd)) return false;
+  }
+  return true;
+}
+
+function parseProof(value: unknown): RequirementProof | undefined {
+  if (!isRecord(value) || !isRequirementIndex(value.index)) return;
+  const checks = parseChecks(value.checks);
+  const { index, targetId } = value;
+  if (!checks || (targetId !== undefined && !isId(targetId))) return;
+  return targetId === undefined ? { index, checks } : { index, targetId, checks };
+}
+
+function parseTarget({ targetId, scopeId }: Record<string, unknown>): Target | undefined {
+  if (!isId(targetId) || (scopeId !== undefined && !isId(scopeId))) return;
+  return { targetId, ...(scopeId === undefined ? {} : { scopeId }) };
+}
+
+// 只从允许的字段重建决定。编号是否属于当前轮由调用方根据现场证据核对。
+function parseNavigation(value: Record<string, unknown>): NavigationDecision | undefined {
+  const { kind, targetId } = value;
+  if (kind === 'keep') return { kind };
+  if (kind === 'observe') {
+    const { queries } = value;
+    if (Array.isArray(queries) && queries.length >= 1 && queries.length <= 3 && queries.every(isReadQuery)) {
+      return { kind, queries };
+    }
+    return;
+  }
+
+  if (!isText(value.instruction, 500, false)) return;
+  const instruction = value.instruction.trim();
+  switch (kind) {
+    case 'highlight': {
+      const target = parseTarget(value);
+      return target && { kind, instruction, ...target };
+    }
+    case 'message': {
+      const { scrollRegion } = value;
+      if (scrollRegion === undefined) return { kind, instruction };
+      return isId(scrollRegion) ? { kind, instruction, scrollRegion } : undefined;
+    }
+    case 'wait':
+    case 'ask':
+    case 'blocked':
+      return { kind, instruction };
+    case 'complete': {
+      const checks = parseChecks(value.checks);
+      if (!checks || (targetId !== undefined && !isId(targetId))) return;
+      return targetId === undefined
+        ? { kind, instruction, checks }
+        : { kind, instruction, targetId, checks };
+    }
+  }
+}
+
+function parseCompletionFields(value: Record<string, unknown>, goal?: string): CompletionFields {
+  // 条件解析失败时仍可使用格式正确的普通指引。证明按条件分别校验。
+  const requirements = isRequirementList(value.requirements) ? value.requirements
+    : goal === undefined ? undefined : requirementsFromStarts(goal, value.requirements);
+  const proofs = Array.isArray(value.proofs) && value.proofs.length <= 5
+    ? value.proofs.map(parseProof).filter(proof => proof !== undefined) : undefined;
+  return { ...(requirements?.length ? { requirements } : {}), ...(proofs?.length ? { proofs } : {}) };
+}
+
+export function parseDecision(value: unknown): Decision | undefined {
+  if (!isRecord(value)) return;
+  const decision = parseNavigation(value);
+  return decision && { ...decision, ...parseCompletionFields(value) };
+}
+
+export function parseModelDecision(value: unknown, goal: string): ModelDecision | undefined {
+  if (!isRecord(value)) return;
+  if (value.kind === 'point') {
+    const target = parseTarget(value);
+    const { index } = value;
+    if (!target || (index !== undefined && !isRequirementIndex(index))) return;
+    return { kind: 'point', ...target, ...(index === undefined ? {} : { index }), ...parseCompletionFields(value, goal) };
+  }
+  const decision = parseNavigation(value);
+  return decision && { ...decision, ...parseCompletionFields(value, goal) };
+}
+
+const optionalStates = ['expanded', 'selected', 'checked', 'canScrollUp', 'canScrollDown'] as const;
+
+function isEvidence(value: unknown): value is Evidence {
+  return isRecord(value)
+    && hasOnlyKeys(value, ['id', 'role', 'label', 'viewport', 'available', 'region', 'object', ...optionalStates])
+    && isId(value.id) && isText(value.role, 64, false) && isText(value.label, 240)
+    && typeof value.viewport === 'boolean' && typeof value.available === 'boolean'
+    && (value.region === undefined || isId(value.region))
+    && (value.object === undefined || isId(value.object))
+    && optionalStates.every(key => value[key] === undefined || typeof value[key] === 'boolean');
+}
+
+function isObservation(value: unknown): value is Observation {
+  return isRecord(value) && hasOnlyKeys(value, ['title', 'site', 'nodes', 'truncated'])
+    && isText(value.title, 300) && isText(value.site, 300)
+    && /^(?:https?:\/\/)?[^/?#@\s]*$/i.test(value.site)
+    && typeof value.truncated === 'boolean'
+    && Array.isArray(value.nodes) && value.nodes.length <= 200 && value.nodes.every(isEvidence);
+}
+
+function isReadResult(value: unknown): value is ReadResult {
+  return isRecord(value) && hasOnlyKeys(value, ['query', 'nodes', 'truncated', 'status'])
+    && isReadQuery(value.query) && typeof value.truncated === 'boolean'
+    && (value.status === 'ok' || value.status === 'empty' || value.status === 'unavailable')
+    && Array.isArray(value.nodes) && value.nodes.length <= 100 && value.nodes.every(isEvidence);
+}
+
+function isPrevious(value: unknown): value is NonNullable<GuideRequest['previous']> {
+  return isRecord(value) && hasOnlyKeys(value, ['instruction', 'target'])
+    && isText(value.instruction, 500, false) && (value.target === undefined || isEvidence(value.target));
+}
+
+// 严格限制发送给上游的证据字段和长度，拒绝附带完整地址、页面源码等额外数据。
+export function isGuideRequest(value: unknown): value is GuideRequest {
+  if (!isRecord(value) || !isText(value.goal, 500, false)) return false;
+  const { requirements } = value;
+  if (requirements !== undefined && (!isRequirementList(requirements)
+    || (requirements.length && !coversGoal(value.goal, requirements)))) return false;
+  return hasOnlyKeys(value, ['goal', 'page', 'reads', 'finishOnly', 'previous', 'feedback', 'userAnswer', 'requirements', 'reviewRequirements'])
+    && isObservation(value.page) && typeof value.finishOnly === 'boolean'
+    && Array.isArray(value.reads) && value.reads.length <= 9 && value.reads.every(isReadResult)
+    && (value.previous === undefined || isPrevious(value.previous))
+    && (value.feedback === undefined || isText(value.feedback, 500))
+    && (value.userAnswer === undefined || isText(value.userAnswer, 500))
+    && (value.reviewRequirements === undefined
+      || (value.reviewRequirements === true && requirements !== undefined && canReviewRequirements(requirements)));
+}

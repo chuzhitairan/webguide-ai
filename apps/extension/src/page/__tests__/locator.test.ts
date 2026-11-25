@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { resolveTarget } from '../locator.js';
+import { isAvailableTarget, isVisibleTarget } from '../locator.js';
 import { createRenderer } from '../renderer.js';
 import { readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
@@ -14,26 +14,29 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-describe('resolveTarget', () => {
-  it('requires exactly one visible match after applying the exact text filter', () => {
-    document.body.innerHTML = '<button hidden>Open</button><button>Open</button><button>Open menu</button>';
-    const found = resolveTarget({ css: 'button', textEquals: 'Open' }, document);
-    expect(found).toEqual({ status: 'found', element: document.querySelectorAll('button')[1] });
-    expect(resolveTarget({ css: 'button' }, document)).toEqual({ status: 'ambiguous' });
-    expect(resolveTarget({ css: 'button', textEquals: 'open' }, document)).toEqual({ status: 'missing' });
+describe('page targets', () => {
+  it('requires a visible element attached to the current document', () => {
+    document.body.innerHTML = '<button hidden></button><section style="display:none"><button></button></section><button></button>';
+    const [hidden, hiddenByParent, visible] = document.querySelectorAll('button');
+    expect(isVisibleTarget(hidden, document)).toBe(false);
+    expect(isVisibleTarget(hiddenByParent, document)).toBe(false);
+    expect(isVisibleTarget(visible, document)).toBe(true);
+    visible.remove();
+    expect(isVisibleTarget(visible, document)).toBe(false);
   });
-  it('distinguishes missing, unavailable, and ambiguous targets without guessing', () => {
-    document.body.innerHTML = '<section style="display:none"><button>Hidden</button></section><button id="zero"></button>';
-    vi.spyOn(document.querySelector('#zero')!, 'getBoundingClientRect').mockReturnValue(new DOMRect());
-    expect(resolveTarget({ css: 'a' }, document).status).toBe('missing');
-    expect(resolveTarget({ css: 'section button' }, document).status).toBe('unavailable');
-    expect(resolveTarget({ css: '#zero' }, document).status).toBe('unavailable');
-    expect(resolveTarget({ css: 'button[' }, document).status).toBe('unavailable');
-    expect(resolveTarget({ locatorId: 'unregistered' }, document).status).toBe('unavailable');
+
+  it('excludes disabled controls and controls from the guide itself', () => {
+    document.body.innerHTML = '<fieldset disabled><legend><button></button></legend><button></button></fieldset>'
+      + '<div aria-disabled="true"><button></button></div><div class="webguide-popover"><button></button></div>';
+    const [available, disabled, ariaDisabled, popover] = document.querySelectorAll('button');
+    expect(isAvailableTarget(available, document)).toBe(true);
+    expect(isAvailableTarget(disabled, document)).toBe(false);
+    expect(isAvailableTarget(ariaDisabled, document)).toBe(false);
+    expect(isAvailableTarget(popover, document)).toBe(false);
   });
 });
 
-it('renders tutorial markup as text and clears the guide without synthetic clicks', () => {
+it('renders guidance markup as text and clears the guide without synthetic clicks', () => {
   const button = document.createElement('button');
   document.body.append(button);
   const click = vi.fn();
@@ -44,11 +47,17 @@ it('renders tutorial markup as text and clears the guide without synthetic click
     expect(document.querySelector('.webguide-popover')?.textContent).toContain('<strong>Title</strong>');
     expect(document.querySelector('.webguide-popover')?.textContent).toContain('<img src=x>Click here');
     expect(document.querySelector('.webguide-popover img')).toBeNull();
+    expect(document.documentElement.classList.contains('webguide-guiding')).toBe(true);
     expect(document.querySelector('.webguide-popover button:not([style*="none"])')).toBeNull();
+    const originalPopover = document.querySelector('.webguide-popover');
+    renderer.show(button, { title: 'Next', instruction: 'Same target, new wording' });
+    expect(document.querySelector('.webguide-popover')).toBe(originalPopover);
+    expect(originalPopover?.textContent).toContain('Same target, new wording');
   } finally {
     renderer.clear();
   }
   expect(document.querySelector('.webguide-popover, .driver-overlay')).toBeNull();
+  expect(document.documentElement.classList.contains('webguide-guiding')).toBe(false);
   expect(click).not.toHaveBeenCalled();
 });
 

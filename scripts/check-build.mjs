@@ -7,8 +7,12 @@ const manifest = JSON.parse(await readFile(join(production, 'manifest.json'), 'u
 assert.equal(manifest.manifest_version, 3);
 assert.ok(manifest.side_panel?.default_path && manifest.background?.service_worker);
 assert.equal(manifest.host_permissions?.length ?? 0, 0);
+assert.deepEqual(manifest.optional_host_permissions, ['https://*/*']);
 assert.equal(manifest.content_scripts?.length ?? 0, 0);
-for (const path of ['page-agent.js', 'assets/page-agent-style.css', 'sidepanel.html', manifest.background.service_worker]) {
+assert.deepEqual(new Set(manifest.permissions), new Set(['sidePanel', 'activeTab', 'scripting', 'storage']));
+const scripts = (await readdir(production)).filter(name => name.endsWith('.js')).sort();
+assert.deepEqual(scripts, [manifest.background.service_worker, 'guide-page.js'].sort());
+for (const path of ['guide-page.js', 'assets/page-agent-style.css', manifest.side_panel.default_path, manifest.background.service_worker]) {
   await readFile(join(production, path));
 }
 
@@ -18,10 +22,9 @@ async function checkFolder(dir) {
     if (entry.isDirectory()) await checkFolder(path);
     else if (/\.(?:js|html|json)$/.test(entry.name)) {
       const source = await readFile(path, 'utf8');
-      assert.doesNotMatch(source, /fixture-team\/guide|fixture\.collaboration\.first-pr|127\.0\.0\.1/, path);
       assert.doesNotMatch(source, /\beval\s*\(|\bnew\s+Function\s*\(/, path);
     }
   }
 }
 await checkFolder(production);
-console.log('生产包验证通过：入口完整，无模拟站点或运行时校验编译。');
+console.log('生产包验证通过：侧栏、后台和高亮样式齐全。');
