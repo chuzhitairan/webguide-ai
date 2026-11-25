@@ -155,7 +155,7 @@ test('到达目标须核对实际界面，标题和其他区域的控件不足�
   }
 });
 
-test('同名入口需要核对包含它的区域，视口外的同名控件也计入', async ({ extension: { panel, activate } }) => {
+test('最终指引核对同名入口的区域，指到正确入口后直接完成', async ({ extension: { panel, activate } }) => {
   const url = 'https://workspace.example/export-scopes';
   const token = 'webguide-test-token-000000';
   const goal = '找到 Frame 1 的导出设置';
@@ -165,19 +165,16 @@ test('同名入口需要核对包含它的区域，视口外的同名控件也�
     const region = input.page.nodes.find(node => node.label === 'Frame 1 properties')!;
     const pageTools = input.page.nodes.find(node => node.label === 'Page tools')!;
     const pageExport = input.page.nodes.find(node => node.label === 'Export settings' && node.region === pageTools.id)!;
-    const labelCheck = (node: typeof region) => ({ id: node.id, field: 'label', equals: node.label });
     if (calls.length === 1) return { kind: 'highlight', targetId: pageExport.id, scopeId: pageTools.id, instruction: '点击导出设置。' };
-    if (calls.length === 2) return { kind: 'keep',
+    if (calls.length === 2) return { kind: 'point', targetId: pageExport.id, scopeId: region.id,
       requirements: [{ quote: goal, result: goal, source: 'point' }],
-      proofs: [{ index: 0, targetId: pageExport.id, checks: [labelCheck(pageExport), labelCheck(region)] }],
     };
     const target = input.page.nodes.find(node => node.label === 'Export settings' && node.id !== pageExport.id);
     if (!target) return { kind: 'message', instruction: '向下滚动 Frame 1 的属性面板。', scrollRegion: region.id };
     if (input.reads.length === 0) return { kind: 'observe', queries: [{ type: 'inspect', id: target.id }] };
     const owner = input.reads[0]?.nodes.find(node => node.id === region.id);
     if (!owner) return { kind: 'blocked', instruction: '还没有看到图层属性。' };
-    if (calls.length === 5) return { kind: 'highlight', targetId: target.id, scopeId: owner.id, instruction: '这里是图层导出设置。' };
-    return { kind: 'keep', proofs: [{ index: 0, targetId: target.id, checks: [labelCheck(target), labelCheck(owner)] }] };
+    return { kind: 'point', targetId: target.id, scopeId: owner.id };
   } });
   await app.listen({ host: '127.0.0.1', port: 43130 });
   try {
@@ -212,9 +209,8 @@ test('同名入口需要核对包含它的区域，视口外的同名控件也�
     await site.mouse.wheel(0, 400);
     await expect(target).toBeInViewport();
     await expect(target).toHaveClass(/driver-active-element/);
-    await expect(panel.getByRole('status')).toHaveText('这里是图层导出设置。');
-    await site.getByRole('treeitem', { name: 'Frame 1' }).click();
     await expect(panel.getByRole('status')).toHaveText('已完成。找到 Frame 1 的导出设置。');
+    expect(calls).toHaveLength(5);
     await expect(wrong).not.toHaveClass(/driver-active-element/);
   } finally {
     await app.close();

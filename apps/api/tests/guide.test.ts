@@ -176,6 +176,50 @@ describe('引导接口', () => {
     expect(result.json()).toEqual(decision);
   });
 
+  it('最终指引从当前观察构造入口证明，模型只需选择目标', async () => {
+    const app = service(async () => ({ kind: 'point', targetId: 2, scopeId: 1,
+      requirements: [{ start: null, result: '找到导出按钮', source: 'point' }] }));
+    const result = await app.inject({ method: 'POST', url, headers, payload: {
+      ...payload, requirements: [], reads: [{ query: { type: 'region', id: 1 }, status: 'ok', truncated: false,
+        nodes: [{ id: 2, role: 'button', label: '导出', viewport: true, available: true, region: 1 }] }],
+    } });
+    expect(result.statusCode).toBe(200);
+    expect(result.json()).toEqual({ kind: 'highlight', targetId: 2, scopeId: 1, instruction: '找到导出按钮',
+      requirements: [{ quote: payload.goal, result: '找到导出按钮', source: 'point' }],
+      proofs: [{ index: 0, targetId: 2, checks: [
+        { id: 2, field: 'label', equals: '导出' }, { id: 1, field: 'label', equals: '属性栏' },
+      ] }],
+    });
+  });
+
+  it('多项任务要求给出入口对应的下标，并保留其他项的独立证明', async () => {
+    const requirements = [
+      { quote: '确认同步已生效', result: '同步已生效', source: 'page' },
+      { quote: '并找到导出入口', result: '找到导出入口', source: 'point' },
+    ];
+    const proof = { index: 0, checks: [{ id: 2, field: 'checked', equals: true }] };
+    const point = { kind: 'point', targetId: 3, proofs: [proof] };
+    const app = service(async input => input.finishOnly ? { ...point, index: 1 } : point);
+    const input = { ...payload, goal: requirements.map(item => item.quote).join(''), requirements,
+      page: { ...payload.page, nodes: [
+        ...payload.page.nodes, { id: 2, role: 'checkbox', label: '同步', checked: true, viewport: true, available: true },
+        { id: 3, role: 'button', label: '导出', viewport: true, available: true, region: 1 },
+      ] },
+    };
+    expect((await app.inject({ method: 'POST', url, headers, payload: input })).statusCode).toBe(502);
+    const result = await app.inject({ method: 'POST', url, headers, payload: { ...input, finishOnly: true } });
+    expect(result.json().proofs).toEqual([{ index: 1, targetId: 3,
+      checks: [{ id: 3, field: 'label', equals: '导出' }] }, proof]);
+  });
+
+  it('到达界面的条件不能用最终指引当作已完成', async () => {
+    const app = service(async () => ({ kind: 'point', targetId: 1,
+      requirements: [{ start: null, result: '详情界面已打开', source: 'arrival' }] }));
+    const result = await app.inject({ method: 'POST', url, headers,
+      payload: { ...payload, goal: '带我打开详情界面', requirements: [] } });
+    expect(result.statusCode).toBe(502);
+  });
+
   it('由分界切出完整原话，并保留已完成项的证明', async () => {
     const goal = '把字号调成大号，并把主题切换到深色。';
     const proofs = [{ index: 0, checks: [{ id: 1, field: 'checked', equals: true }] }];

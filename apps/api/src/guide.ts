@@ -1,5 +1,5 @@
-import { acceptsRequirements, parseDecision } from './guide-protocol.js';
-import type { Decision, GuideRequest, ReadQuery } from './guide-protocol.js';
+import { acceptsRequirements, parseModelDecision } from './guide-protocol.js';
+import type { Decision, EvidenceCheck, GuideRequest, ReadQuery } from './guide-protocol.js';
 import type { ExperienceCatalog, ExperienceEntry } from './experience.js';
 
 export interface ModelConfig {
@@ -35,8 +35,8 @@ const instruction = [
   '用户点名的入口、区域或选项在当前证据里缺失时，优先用补看搜索该名称或简短别名。若建议走间接入口，请用当前证据说明它与目标的关系。',
   '只输出一个 JSON 对象，以下是允许的决定及示例：',
   '{"kind":"observe","queries":[{"type":"region","id":1,"includeOffscreen":true},{"type":"search","query":"导出","region":1},{"type":"inspect","id":2}]}',
-  '补看必须是 1 到 3 项互不依赖的只读查询。search 的 region 可省略。finishOnly 为 true 时，给出指引、保持、追问、等待或卡点。',
-  '{"kind":"highlight","targetId":2,"scopeId":5,"instruction":"打开导出设置。"} 仅指向当前可见可用的目标。同名入口需补看，scopeId 引用实际包含目标且能与其他候选区分的区域或对象。唯一入口可省略 scopeId。',
+  '补看必须是 1 到 3 项互不依赖的只读查询。search 的 region 可省略。finishOnly 为 true 时使用已有观察，给出指引、收尾、保持、追问、等待或卡点。',
+  '{"kind":"highlight","targetId":2,"scopeId":5,"instruction":"打开导出设置。"} 用于仍需用户操作的下一步。目标须可见可用。同名入口需补看，scopeId 引用实际包含目标且能与其他候选区分的区域或对象。唯一入口可省略 scopeId。',
   '{"kind":"message","instruction":"在右侧属性栏向下滚动。","scrollRegion":7} 用于屏外目标；scrollRegion 是当前证据里可以滚动的区域编号。普通文字提示省略 scrollRegion。',
   '{"kind":"keep"} 已有有效的 previous 或足以收尾的 proofs 时使用。新证据未改变当前指引时维持原路。',
   '{"kind":"ask","instruction":"要打开导出入口，还是确认导出完成？"} 仅问一个会影响下一步的问题。',
@@ -51,15 +51,16 @@ const legacyCompletion = [
 
 const completionInstructions = [
   'requirements 为空时，同一回复列出 1 到 5 个独立的最终结果。每项写 start、result、source。首项 start 为 null；从第二项起，start 是它在 goal 中独一无二的原文开头，例如「把主题切换到深色」。程序从这些分界切出完整原话。一项可以跨多个分句。',
-  '先问自己「用户看到什么就可以停？」只要求指出按钮或菜单入口用 point；要求打开、进入或到达目标界面用 arrival；要求设置生效或出现结果用 page；网页之外需用户确认用 user。',
+  '先问自己「用户看到什么就可以停？」只要求指出按钮或菜单入口用 point。以真正打开、进入或到达某个界面为结果用 arrival，即使它已经打开。设置生效或出现业务结果用 page。网页之外需用户确认用 user。',
   '例如「打开团队成员列表，只看管理员，筛选生效就行」是一项 page，result 写「团队成员列表已筛为仅管理员」。打开列表是路径，「生效」是同一个结果。只有结果各自需要核对时才拆开，例如「确认网页导出成功并且电脑上已经有文件」是 page 和 user 两项。',
   'requirements 已有值时沿用，按从 0 开始的顺序引用。发现先前把明确要求到达的结果写成了 point，可改为 arrival，返回完整列表，其他条件保留已有 quote、result 和 source。reviewRequirements 为 true 时，还可合并相邻且描述同一结果的 page 条件，返回完整列表和按新顺序写的 proofs。各自验收的结果保留。',
-  '有证据时，用 proofs 提交已证实的网页项目，每个 index 最多一条 proof。每条包含 index 和 checks（id、field、equals）；point 附唯一的可见可用 targetId，并在 checks 核对其 label。所属对象的名称和选中状态放进同一份 checks。user 由侧栏处理。',
-  'arrival 的同一份 checks 至少核对两个 label：能识别目标的标题或区域名称，以及同一区域内另一个已可用控件或可读正文。看到通往目标的链接、只有标题、或遇到权限提示时继续指路。需要正文时对目标区域补看。',
-  '完成由扩展核对后决定。若无需下一步而已有终点证据，输出 keep 并附 proofs，例如：',
-  '{"kind":"keep","requirements":[{"start":null,"result":"找到导出按钮","source":"point"}],"proofs":[{"index":0,"targetId":2,"checks":[{"id":2,"field":"label","equals":"Add export settings"}]}]}',
+  '如果当前控件正是用户要找的入口，直接用 kind: point 表示「指到这里就完成此项」，只报一次 targetId。有同名入口时补看并给 scopeId。只有一项时可以省略 index，多项时写这项 point 条件的下标。程序构造这项的核对依据。',
+  '{"kind":"point","targetId":2,"scopeId":5,"requirements":[{"start":null,"result":"找到这个图层的导出按钮","source":"point"}]}',
+  '有证据的其他网页结果在同一回复逐项提交 proofs。继续指引未完成的条件时，也提交已证实项的证明。每条包含 index 和 checks（id、field、equals），核对结果和所属对象。无后续指引时用 keep 并附 proofs。user 由侧栏处理。',
+  'arrival 要同时核对两个 label：目标标题或区域名称，以及同一区域内另一个可用控件或可读正文。单凭入口链接、标题或状态提示还需要补看。遇到权限提示时继续指路。',
+  '{"kind":"keep","requirements":[{"start":null,"result":"账户设置已打开","source":"arrival"}],"proofs":[{"index":0,"checks":[{"id":8,"field":"label","equals":"Account settings"},{"id":9,"field":"label","equals":"Save preferences"}]}]}',
   'point 要证明的是被指的控件能让用户到达所需设置或操作。先从目标判断控件要做什么，再比较同区候选的具体动作名称、展开状态及关联对象。标题、区域名和同主题的展开控件只说明位置；当旁边另有明确执行所需动作的控件时，指向后者。动作归属不清时先补看，不凭同名收尾。',
-  '找到的名称若无法确定所属对象，先用 search 比较视口内外的同名候选，通过 inspect 看所属区域。存在同名入口时，point 证明的 checks 要核对目标 label，以及实际包含它且能区分其他候选的区域或对象的 label。入口还在视口外时先提示滚动。',
+  '找到的名称若无法确定所属对象，先用 search 比较视口内外的同名候选，通过 inspect 看所属区域。入口还在视口外时先提示滚动。',
   'page 要核对当前已生效的状态。控件在关闭时只显示当前值的摘要，若它明确声明了同一功能的当前选择，可用这条摘要证明设置生效。菜单里只出现一个可选名称或页面只出现相关文字时，还要找已勾选、已选中、应用后摘要等证据。空列表与筛选是否已应用是两回事。',
 ].join('\n');
 
@@ -119,29 +120,46 @@ export function createModelGuide(config: ModelConfig, request: typeof fetch = fe
 
 // 旧提示提供语境，不授予旧编号任何权限。页面脚本在绘制前再次检查实际目标。
 export function validateDecision(value: unknown, input: GuideRequest): Decision | undefined {
-  const parsed = parseDecision(value, input.goal);
+  const parsed = parseModelDecision(value, input.goal);
   if (!parsed) return;
   const { requirements: proposed, proofs: candidates, ...decision } = parsed;
 
-  const ids = new Set(input.page.nodes.map(node => node.id));
+  const evidence = new Map(input.page.nodes.map(node => [node.id, node]));
   for (const result of input.reads) {
-    for (const node of result.nodes) ids.add(node.id);
+    for (const node of result.nodes) evidence.set(node.id, node);
   }
-  const known = (id: number | undefined) => id === undefined || ids.has(id);
+  const known = (id: number | undefined) => id === undefined || evidence.has(id);
   const requirements = proposed && input.requirements
     && acceptsRequirements(input.goal, proposed, input.requirements, input.reviewRequirements) ? proposed : undefined;
   const active = requirements ?? input.requirements;
-  const proofs = candidates?.flatMap(proof => {
+  const proofs = (candidates ?? []).flatMap(proof => {
     const condition = active?.[proof.index];
     if (!condition || condition.source === 'user' || !proof.checks.every(check => known(check.id))) return [];
     if (condition.source === 'point') return proof.targetId !== undefined && known(proof.targetId) ? [proof] : [];
     return [{ index: proof.index, checks: proof.checks }];
   });
-  const reply = { ...decision, ...(requirements ? { requirements } : {}), ...(proofs?.length ? { proofs } : {}) };
+  const conditions = requirements ? { requirements } : {};
+  if (decision.kind === 'point') {
+    const index = decision.index ?? (active?.length === 1 ? 0 : undefined);
+    if (index === undefined) return;
+    const condition = active?.[index];
+    const { targetId, scopeId } = decision;
+    const target = evidence.get(targetId);
+    if (condition?.source !== 'point' || !target || !known(scopeId)) return;
+
+    // 依据来自本轮观察。浏览器仍要复查可见性、可用性和同名控件的归属，再画最后一个蓝框。
+    const checks: EvidenceCheck[] = [{ id: targetId, field: 'label', equals: target.label }];
+    const scope = scopeId === undefined ? undefined : evidence.get(scopeId);
+    if (scope) checks.push({ id: scope.id, field: 'label', equals: scope.label });
+    return { kind: 'highlight', targetId, ...(scopeId === undefined ? {} : { scopeId }),
+      instruction: condition.result, ...conditions,
+      proofs: [{ index, targetId, checks }, ...proofs.filter(proof => proof.index !== index)] };
+  }
+  const reply = { ...decision, ...conditions, ...(proofs.length ? { proofs } : {}) };
 
   switch (decision.kind) {
     case 'keep':
-      return input.previous || proofs?.length || (active?.length && active.every(item => item.source === 'user'))
+      return input.previous || proofs.length || (active?.length && active.every(item => item.source === 'user'))
         ? reply : undefined;
     case 'observe': {
       const knownQuery = (query: ReadQuery) => known(query.type === 'search' ? query.region : query.id);
@@ -153,7 +171,7 @@ export function validateDecision(value: unknown, input: GuideRequest): Decision 
       return known(decision.scrollRegion) ? reply : undefined;
     case 'complete':
       return input.requirements === undefined && known(decision.targetId)
-        && decision.checks.every(check => ids.has(check.id)) ? reply : undefined;
+        && decision.checks.every(check => evidence.has(check.id)) ? reply : undefined;
     default:
       return reply;
   }

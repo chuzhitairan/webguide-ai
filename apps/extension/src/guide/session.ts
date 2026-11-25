@@ -254,7 +254,7 @@ export function createGuideSession(goal: string, options: SessionOptions) {
           // 现场变化后重新取证，上一份输出里的编号不再是最新证据。
           if (finishOnly) break;
           await reread(pageRequirements.some(item => item.source === 'point')
-            ? '入口完成证据未通过。若有同名控件，请搜索并用 inspect 查看候选的所属区域，在 checks 同时核对目标和包含它的区域或对象名称。'
+            ? '入口完成证据未通过。请复查目标是否可见可用。若有同名控件，请用 search 和 inspect 比较所属区域，再用 scopeId 指定实际包含目标的区域。'
             : pageRequirements.some(item => item.source === 'arrival')
               ? '到达证据未通过。请核对目标界面的标题或区域名称，以及同一区域内另一个可用控件或可读正文。'
               : undefined);

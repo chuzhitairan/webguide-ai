@@ -70,7 +70,11 @@ type NavigationDecision =
   | { kind: 'keep' }
   | { kind: 'complete'; instruction: string; targetId?: number; checks: EvidenceCheck[] };
 
-export type Decision = NavigationDecision & { requirements?: Requirement[]; proofs?: RequirementProof[] };
+type Target = { targetId: number; scopeId?: number };
+type CompletionFields = { requirements?: Requirement[]; proofs?: RequirementProof[] };
+
+export type Decision = NavigationDecision & CompletionFields;
+type ModelDecision = (NavigationDecision | ({ kind: 'point'; index?: number } & Target)) & CompletionFields;
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
@@ -82,6 +86,10 @@ function hasOnlyKeys(value: Record<string, unknown>, keys: readonly string[]): b
 
 function isId(value: unknown): value is number {
   return typeof value === 'number' && Number.isSafeInteger(value) && value > 0;
+}
+
+function isRequirementIndex(value: unknown): value is number {
+  return typeof value === 'number' && Number.isInteger(value) && value >= 0 && value < 5;
 }
 
 function isText(value: unknown, limit: number, allowBlank = true): value is string {
@@ -204,12 +212,16 @@ export function acceptsRequirements(goal: string, proposed: Requirement[], curre
 }
 
 function parseProof(value: unknown): RequirementProof | undefined {
-  if (!isRecord(value) || typeof value.index !== 'number' || !Number.isInteger(value.index)
-    || value.index < 0 || value.index >= 5) return;
+  if (!isRecord(value) || !isRequirementIndex(value.index)) return;
   const checks = parseChecks(value.checks);
   const { index, targetId } = value;
   if (!checks || (targetId !== undefined && !isId(targetId))) return;
   return targetId === undefined ? { index, checks } : { index, targetId, checks };
+}
+
+function parseTarget({ targetId, scopeId }: Record<string, unknown>): Target | undefined {
+  if (!isId(targetId) || (scopeId !== undefined && !isId(scopeId))) return;
+  return { targetId, ...(scopeId === undefined ? {} : { scopeId }) };
 }
 
 // 只从允许的字段重建决定。编号是否属于当前轮由调用方根据现场证据核对。
@@ -228,9 +240,8 @@ function parseNavigation(value: Record<string, unknown>): NavigationDecision | u
   const instruction = value.instruction.trim();
   switch (kind) {
     case 'highlight': {
-      const { scopeId } = value;
-      if (!isId(targetId) || (scopeId !== undefined && !isId(scopeId))) return;
-      return { kind, targetId, instruction, ...(scopeId === undefined ? {} : { scopeId }) };
+      const target = parseTarget(value);
+      return target && { kind, instruction, ...target };
     }
     case 'message': {
       const { scrollRegion } = value;
@@ -251,16 +262,31 @@ function parseNavigation(value: Record<string, unknown>): NavigationDecision | u
   }
 }
 
-export function parseDecision(value: unknown, goal?: string): Decision | undefined {
-  if (!isRecord(value)) return;
-  const decision = parseNavigation(value);
-  if (!decision) return;
+function parseCompletionFields(value: Record<string, unknown>, goal?: string): CompletionFields {
   // 条件解析失败时仍可使用格式正确的普通指引。证明按条件分别校验。
   const requirements = isRequirementList(value.requirements) ? value.requirements
     : goal === undefined ? undefined : requirementsFromStarts(goal, value.requirements);
   const proofs = Array.isArray(value.proofs) && value.proofs.length <= 5
     ? value.proofs.map(parseProof).filter(proof => proof !== undefined) : undefined;
-  return { ...decision, ...(requirements?.length ? { requirements } : {}), ...(proofs?.length ? { proofs } : {}) };
+  return { ...(requirements?.length ? { requirements } : {}), ...(proofs?.length ? { proofs } : {}) };
+}
+
+export function parseDecision(value: unknown): Decision | undefined {
+  if (!isRecord(value)) return;
+  const decision = parseNavigation(value);
+  return decision && { ...decision, ...parseCompletionFields(value) };
+}
+
+export function parseModelDecision(value: unknown, goal: string): ModelDecision | undefined {
+  if (!isRecord(value)) return;
+  if (value.kind === 'point') {
+    const target = parseTarget(value);
+    const { index } = value;
+    if (!target || (index !== undefined && !isRequirementIndex(index))) return;
+    return { kind: 'point', ...target, ...(index === undefined ? {} : { index }), ...parseCompletionFields(value, goal) };
+  }
+  const decision = parseNavigation(value);
+  return decision && { ...decision, ...parseCompletionFields(value, goal) };
 }
 
 const optionalStates = ['expanded', 'selected', 'checked', 'canScrollUp', 'canScrollDown'] as const;
