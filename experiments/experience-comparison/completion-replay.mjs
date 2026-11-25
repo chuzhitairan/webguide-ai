@@ -7,6 +7,7 @@ if (!config) throw new Error('请先加载 apps/api/.env，再运行此实验。
 
 const original = '完成由扩展核对后决定。若无需下一步而已有终点证据，输出 keep 并附 proofs，例如：';
 const candidate = '完成由扩展核对后决定。requirements 为空且已有结果证据时，在同一回复提交完整 requirements 和对应的 proofs。只有一项结果时，quote 用整句原话，proof 的 index 写 0。有多项独立结果时保留每一项，只给已经证实的项目提交证明。其余结果继续指引。已证明所有结果且无需下一步时输出 keep，例如：';
+const implemented = process.argv.includes('--implemented');
 
 const node = (id, role, label, state = {}) => ({ id, role, label, viewport: true, available: true, ...state });
 const page = (site, title, nodes) => ({ site, title, nodes, truncated: false });
@@ -26,6 +27,8 @@ const issueLink = node(3, 'link', issueTitle);
 const issueHeading = node(2, 'heading', issueTitle);
 const issueEditor = node(4, 'textbox', 'Leave a comment');
 const issueEditButton = node(5, 'button', 'Edit issue');
+const issueDetails = node(1, 'main', 'Issue details');
+const issueNodes = [issueHeading, node(3, 'status', 'Open'), issueEditor, issueEditButton];
 
 const wikipediaGoal = '把字号调成大号，并把主题切换到深色。';
 function wikipedia(dark) {
@@ -47,15 +50,15 @@ const snapshots = [
     checks: [[label(exportButton), label(frameExport)]], target: exportButton.id,
   },
   {
-    name: '入口可见但尚未到达', goal: githubGoal, sources: ['page'],
+    name: '入口可见但尚未到达', goal: githubGoal, sources: [implemented ? 'arrival' : 'page'],
     page: page('github.com', 'Issues · example/web-guide', [
       node(1, 'heading', 'Issues'), node(2, 'button', 'New issue'), issueLink]),
     next: issueLink.id,
   },
   {
-    name: '已到达目标界面', goal: githubGoal, sources: ['page'],
+    name: '已到达目标界面', goal: githubGoal, sources: [implemented ? 'arrival' : 'page'],
     page: page('github.com', issueTitle + ' · example/web-guide',
-      [issueHeading, node(3, 'status', 'Open'), issueEditor, issueEditButton]),
+      implemented ? [issueDetails, ...issueNodes.map(item => ({ ...item, region: issueDetails.id }))] : issueNodes),
     checks: [[label(issueHeading)]], oneOf: [label(issueEditor), label(issueEditButton)],
   },
   {
@@ -95,12 +98,13 @@ for (const [index, round] of [1, 2].entries()) {
   for (const [position, snapshot] of snapshots.entries()) {
     const input = { goal: snapshot.goal, page: snapshot.page, reads: [], finishOnly: false, requirements: [] };
     if (!isGuideRequest(input)) throw new Error('观察没有通过正式请求校验：' + snapshot.name);
-    // 每对只更换一段完成提示，交替请求顺序，经验保持关闭。
-    const variants = (index + position) % 2 === 0 ? ['current', 'candidate'] : ['candidate', 'current'];
+    // 历史对照只换一段提示并交替顺序。实现版直接使用当前 API，两种模式都关闭经验。
+    const variants = implemented ? ['implemented']
+      : (index + position) % 2 === 0 ? ['current', 'candidate'] : ['candidate', 'current'];
     for (const variant of variants) {
       const started = Date.now();
       const decide = createModelGuide(config, async (url, init) => {
-        if (variant === 'current') return fetch(url, init);
+        if (variant !== 'candidate') return fetch(url, init);
         const body = JSON.parse(init.body);
         const system = body.messages[0].content;
         if (!system.includes(original)) throw new Error('本对照依赖原版完成提示。');

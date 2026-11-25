@@ -176,6 +176,32 @@ describe('引导接口', () => {
     expect(result.json()).toEqual(decision);
   });
 
+  it('由分界切出完整原话，并保留已完成项的证明', async () => {
+    const goal = '把字号调成大号，并把主题切换到深色。';
+    const proofs = [{ index: 0, checks: [{ id: 1, field: 'checked', equals: true }] }];
+    const app = service(async () => ({ kind: 'message', instruction: '再选择深色主题。', proofs, requirements: [
+      { start: null, result: '字号已调大', source: 'page' },
+      { start: '把主题切换到深色', result: '主题已切换到深色', source: 'page' },
+    ] }));
+    const result = await app.inject({ method: 'POST', url, headers, payload: { ...payload, goal, requirements: [] } });
+    expect(result.statusCode).toBe(200);
+    expect(result.json()).toMatchObject({ proofs, requirements: [
+      { quote: '把字号调成大号，并', source: 'page' },
+      { quote: '把主题切换到深色。', source: 'page' },
+    ] });
+  });
+
+  it('遇到重复分界时，保留普通指引并等待模型重新提炼条件', async () => {
+    const app = service(async () => ({ kind: 'message', instruction: '选择可见范围。', requirements: [
+      { start: null, result: '已发布', source: 'page' },
+      { start: '确认', result: '可见范围已切换', source: 'page' },
+    ] }));
+    const result = await app.inject({ method: 'POST', url, headers, payload: {
+      ...payload, goal: '确认已经发布，并确认可见范围只限团队。', requirements: [],
+    } });
+    expect(result.json()).toEqual({ kind: 'message', instruction: '选择可见范围。' });
+  });
+
   it('已明确的条件保持不变，网页只能提交它能证明的部分', async () => {
     const requirements = [{ quote: '请确认已下载到电脑', result: '文件存在于本机', source: 'user' }];
     const input = { ...payload, goal: '请确认已下载到电脑', requirements };

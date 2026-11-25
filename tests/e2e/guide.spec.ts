@@ -104,6 +104,57 @@ test('入口证明有冲突时重新核对，正确高亮后自动收起', async
   }
 });
 
+test('到达目标须核对实际界面，标题和其他区域的控件不足以完成', async ({ extension: { panel, activate } }) => {
+  const origin = 'https://workspace.example';
+  const token = 'webguide-test-token-000000';
+  const goal = '请帮我打开「侧栏闪烁」的详情。';
+  const title = '侧栏闪烁';
+  const calls: GuideRequest[] = [];
+  const app = createApp({ token, origins: [panel.url().replace('/sidepanel.html', '')], async decide(input) {
+    calls.push(input);
+    const link = input.page.nodes.find(node => node.role === 'link' && node.label === title);
+    if (link) return { kind: 'highlight', targetId: link.id, instruction: '打开详情。',
+      requirements: [{ start: null, result: '找到详情入口', source: 'point' }] };
+
+    const heading = input.page.nodes.find(node => node.role === 'heading' && node.label === title)!;
+    const checks = [{ id: heading.id, field: 'label', equals: title }];
+    if (!input.feedback) return { kind: 'keep', proofs: [{ index: 0, checks }],
+      requirements: [{ quote: goal, result: '已打开侧栏闪烁的详情', source: 'arrival' }] };
+
+    // 连续测试标题、站点导航栏里的控件、详情区自己的控件。
+    const label = calls.length === 3 ? '站点选项' : '留下评论';
+    const control = input.page.nodes.find(node => node.label === label)!;
+    return { kind: 'keep', proofs: [{ index: 0, checks: [...checks, { id: control.id, field: 'label', equals: label }] }] };
+  } });
+  await app.listen({ host: '127.0.0.1', port: 43130 });
+  try {
+    const context = panel.context();
+    await context.route(origin + '/**', route => route.fulfill({ contentType: 'text/html; charset=utf-8',
+      body: new URL(route.request().url()).pathname === '/'
+        ? '<!doctype html><main><h1>问题列表</h1><a href="/details">侧栏闪烁</a></main>'
+        : '<!doctype html><nav><button>站点选项</button></nav><main><h1>侧栏闪烁</h1><button>留下评论</button></main>' }));
+    const site = await context.newPage();
+    await site.goto(origin);
+    const entry = site.getByRole('link', { name: title });
+    await expect(entry).toBeVisible();
+    await site.bringToFront();
+    await activate(site);
+    await panel.getByLabel('我想做什么').fill(goal);
+    await panel.getByLabel('本机访问令牌').fill(token);
+    await panel.locator('form').evaluate((form: HTMLFormElement) => form.requestSubmit());
+
+    await expect(panel.getByRole('status')).toHaveText('打开详情。');
+    await entry.click();
+    await expect(panel.getByRole('status')).toHaveText('已完成。已打开侧栏闪烁的详情。');
+    expect(calls).toHaveLength(4);
+    expect(calls[1].requirements?.[0]).toMatchObject({ quote: goal, source: 'point' });
+    expect(calls.slice(2).every(call => call.requirements?.[0].source === 'arrival'
+      && call.feedback?.includes('到达证据未通过'))).toBe(true);
+  } finally {
+    await app.close();
+  }
+});
+
 test('同名入口需要核对包含它的区域，视口外的同名控件也计入', async ({ extension: { panel, activate } }) => {
   const url = 'https://workspace.example/export-scopes';
   const token = 'webguide-test-token-000000';

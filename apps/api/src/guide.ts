@@ -50,13 +50,14 @@ const legacyCompletion = [
 ].join('\n');
 
 const completionInstructions = [
-  'requirements 为空时，同一条回复附上 1 到 5 个独立的最终结果。先问自己「用户看到什么就可以停？」默认写一个。source 用 point 表示找到入口、page 表示到达或状态已生效、user 表示网页之外需用户确认。用 result 简述该终点。各项 quote 从 goal 原样取相邻片段，依次覆盖整句。一项可以跨多个分句。',
-  '例如「打开团队成员列表，只看管理员，筛选生效就行」是一项 page，quote 取整句，result 写「团队成员列表已筛为仅管理员」。打开列表是路径，列表是结果的范围，「生效」是同一个结果。只有结果各自需要核对时才拆开，例如「确认网页导出成功并且电脑上已经有文件」是 page 和 user 两项。',
-  'requirements 已有值时沿用，按从 0 开始的顺序引用。reviewRequirements 为 true 时，复查未过的条件是否只是路径、范围或已生效结果的重述。可以归并相邻的 page 条件，返回完整 requirements 和按新序号写的 proofs。分别验收的结果各保留一项。若无需归并，继续核对原条件。',
+  'requirements 为空时，同一回复列出 1 到 5 个独立的最终结果。每项写 start、result、source。首项 start 为 null；从第二项起，start 是它在 goal 中独一无二的原文开头，例如「把主题切换到深色」。程序从这些分界切出完整原话。一项可以跨多个分句。',
+  '先问自己「用户看到什么就可以停？」只要求指出按钮或菜单入口用 point；要求打开、进入或到达目标界面用 arrival；要求设置生效或出现结果用 page；网页之外需用户确认用 user。',
+  '例如「打开团队成员列表，只看管理员，筛选生效就行」是一项 page，result 写「团队成员列表已筛为仅管理员」。打开列表是路径，「生效」是同一个结果。只有结果各自需要核对时才拆开，例如「确认网页导出成功并且电脑上已经有文件」是 page 和 user 两项。',
+  'requirements 已有值时沿用，按从 0 开始的顺序引用。发现先前把明确要求到达的结果写成了 point，可改为 arrival，返回完整列表，其他条件保留已有 quote、result 和 source。reviewRequirements 为 true 时，还可合并相邻且描述同一结果的 page 条件，返回完整列表和按新顺序写的 proofs。各自验收的结果保留。',
   '有证据时，用 proofs 提交已证实的网页项目，每个 index 最多一条 proof。每条包含 index 和 checks（id、field、equals）；point 附唯一的可见可用 targetId，并在 checks 核对其 label。所属对象的名称和选中状态放进同一份 checks。user 由侧栏处理。',
-  '到达界面要引用可用界面与对应对象，标题单独不足以证明到达。权限提示时继续指路。',
+  'arrival 的同一份 checks 至少核对两个 label：能识别目标的标题或区域名称，以及同一区域内另一个已可用控件或可读正文。看到通往目标的链接、只有标题、或遇到权限提示时继续指路。需要正文时对目标区域补看。',
   '完成由扩展核对后决定。若无需下一步而已有终点证据，输出 keep 并附 proofs，例如：',
-  '{"kind":"keep","requirements":[{"quote":"找到导出按钮","result":"找到导出按钮","source":"point"}],"proofs":[{"index":0,"targetId":2,"checks":[{"id":2,"field":"label","equals":"Add export settings"}]}]}',
+  '{"kind":"keep","requirements":[{"start":null,"result":"找到导出按钮","source":"point"}],"proofs":[{"index":0,"targetId":2,"checks":[{"id":2,"field":"label","equals":"Add export settings"}]}]}',
   'point 要证明的是被指的控件能让用户到达所需设置或操作。先从目标判断控件要做什么，再比较同区候选的具体动作名称、展开状态及关联对象。标题、区域名和同主题的展开控件只说明位置；当旁边另有明确执行所需动作的控件时，指向后者。动作归属不清时先补看，不凭同名收尾。',
   '找到的名称若无法确定所属对象，先用 search 比较视口内外的同名候选，通过 inspect 看所属区域。存在同名入口时，point 证明的 checks 要核对目标 label，以及实际包含它且能区分其他候选的区域或对象的 label。入口还在视口外时先提示滚动。',
   'page 要核对当前已生效的状态。控件在关闭时只显示当前值的摘要，若它明确声明了同一功能的当前选择，可用这条摘要证明设置生效。菜单里只出现一个可选名称或页面只出现相关文字时，还要找已勾选、已选中、应用后摘要等证据。空列表与筛选是否已应用是两回事。',
@@ -118,7 +119,7 @@ export function createModelGuide(config: ModelConfig, request: typeof fetch = fe
 
 // 旧提示提供语境，不授予旧编号任何权限。页面脚本在绘制前再次检查实际目标。
 export function validateDecision(value: unknown, input: GuideRequest): Decision | undefined {
-  const parsed = parseDecision(value);
+  const parsed = parseDecision(value, input.goal);
   if (!parsed) return;
   const { requirements: proposed, proofs: candidates, ...decision } = parsed;
 

@@ -40,7 +40,7 @@ export interface EvidenceCheck {
 export interface Requirement {
   quote: string;
   result: string;
-  source: 'point' | 'page' | 'user';
+  source: 'point' | 'arrival' | 'page' | 'user';
 }
 
 export interface RequirementProof {
@@ -57,7 +57,7 @@ export interface GuideRequest {
   previous?: { instruction: string; target?: Evidence };
   feedback?: string;
   userAnswer?: string;
-  // 空数组请模型提炼终点；已有条件沿用，除非会话发起归并复查。
+  // 空数组请模型提炼终点；已有条件沿用，也可校正指路与实际到达的区别。
   requirements?: Requirement[];
   reviewRequirements?: true;
 }
@@ -125,10 +125,14 @@ function parseChecks(value: unknown): EvidenceCheck[] | undefined {
   if (checks.every(check => check !== undefined)) return checks;
 }
 
+function isRequirementResult(value: unknown): value is Pick<Requirement, 'result' | 'source'> & Record<string, unknown> {
+  return isRecord(value) && isText(value.result, 120, false)
+    && (value.source === 'point' || value.source === 'arrival' || value.source === 'page' || value.source === 'user');
+}
+
 function isRequirement(value: unknown): value is Requirement {
   return isRecord(value) && hasOnlyKeys(value, ['quote', 'result', 'source'])
-    && isText(value.quote, 500, false) && isText(value.result, 120, false)
-    && (value.source === 'point' || value.source === 'page' || value.source === 'user');
+    && isText(value.quote, 500, false) && isRequirementResult(value);
 }
 
 function isRequirementList(value: unknown): value is Requirement[] {
@@ -137,6 +141,27 @@ function isRequirementList(value: unknown): value is Requirement[] {
 
 function goalContent(text: string): string {
   return text.replace(/[\p{White_Space}\p{Punctuation}]/gu, '');
+}
+
+// 模型只给出各段开头，程序连续切分原话。连接词和标点也留在片段里。
+function requirementsFromStarts(goal: string, value: unknown): Requirement[] | undefined {
+  if (!Array.isArray(value) || value.length === 0 || value.length > 5) return;
+  const requirements: Requirement[] = [];
+  const starts: number[] = [];
+  for (const item of value as unknown[]) {
+    if (!isRequirementResult(item) || !hasOnlyKeys(item, ['start', 'result', 'source'])) return;
+    const { start, result, source } = item;
+    if (starts.length === 0 ? start !== null : !isText(start, 500, false)) return;
+    const index = typeof start === 'string' ? goal.indexOf(start) : 0;
+    if (typeof start === 'string' && (index <= starts[starts.length - 1] || goal.indexOf(start, index + 1) !== -1)) return;
+    starts.push(index);
+    requirements.push({ quote: '', result, source });
+  }
+  for (const [index, item] of requirements.entries()) {
+    item.quote = goal.slice(starts[index], starts[index + 1]);
+    if (!goalContent(item.quote)) return;
+  }
+  return requirements;
 }
 
 export function coversGoal(goal: string, requirements: Requirement[]): boolean {
@@ -152,6 +177,14 @@ export function canReviewRequirements(requirements: Requirement[]): boolean {
 export function acceptsRequirements(goal: string, proposed: Requirement[], current: Requirement[], review = false): boolean {
   if (!proposed.length || !coversGoal(goal, proposed)) return false;
   if (!current.length) return true;
+  // 同一段原话可从「找到入口」改为具体的到达要求，其余条件原样保留。
+  if (proposed.length === current.length && proposed.some((item, index) => item.source !== current[index].source)
+    && proposed.every((item, index) => {
+      const before = current[index];
+      return goalContent(item.quote) === goalContent(before.quote)
+        && (item.source === before.source && item.result === before.result
+          || before.source === 'point' && item.source === 'arrival');
+    })) return true;
   if (!review || !canReviewRequirements(current) || proposed.length >= current.length
     || !proposed.every(item => item.source === 'page')) return false;
 
@@ -218,12 +251,13 @@ function parseNavigation(value: Record<string, unknown>): NavigationDecision | u
   }
 }
 
-export function parseDecision(value: unknown): Decision | undefined {
+export function parseDecision(value: unknown, goal?: string): Decision | undefined {
   if (!isRecord(value)) return;
   const decision = parseNavigation(value);
   if (!decision) return;
   // 条件解析失败时仍可使用格式正确的普通指引。证明按条件分别校验。
-  const requirements = isRequirementList(value.requirements) ? value.requirements : undefined;
+  const requirements = isRequirementList(value.requirements) ? value.requirements
+    : goal === undefined ? undefined : requirementsFromStarts(goal, value.requirements);
   const proofs = Array.isArray(value.proofs) && value.proofs.length <= 5
     ? value.proofs.map(parseProof).filter(proof => proof !== undefined) : undefined;
   return { ...decision, ...(requirements?.length ? { requirements } : {}), ...(proofs?.length ? { proofs } : {}) };

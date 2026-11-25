@@ -2,7 +2,7 @@ import { acceptsRequirements, canReviewRequirements } from '../../../api/src/gui
 import type { Decision, EvidenceCheck, GuideRequest, Observation, ReadQuery, ReadResult, Requirement } from '../../../api/src/guide-protocol.js';
 
 export type PageDecision = { kind: 'highlight'; targetId: number; instruction: string; scopeIds?: number[] };
-export type PageProof = { source: 'page'; checks: EvidenceCheck[] }
+export type PageProof = { source: 'page' | 'arrival'; checks: EvidenceCheck[] }
   | { source: 'point'; checks: EvidenceCheck[]; targetId: number };
 export type GuideStatus = {
   kind: 'reading' | 'guiding' | 'asking' | 'waiting' | 'paused' | 'complete';
@@ -203,7 +203,10 @@ export function createGuideSession(goal: string, options: SessionOptions) {
         if (!current()) return;
         if (result.requirements && acceptsRequirements(goal, result.requirements, requirements, reviewRequirements)) {
           requirements = result.requirements;
-          // 归并后条件序号可能变化，旧证明需要按新条件重新提交。
+          // 已指过入口不能当作到达证明。条件变化后重新核对现场。
+          for (const index of pointed) {
+            if (requirements[index]?.source !== 'point') pointed.delete(index);
+          }
           proofs.clear();
           saveProgress();
         }
@@ -214,12 +217,12 @@ export function createGuideSession(goal: string, options: SessionOptions) {
           continue;
         }
         const pageRequirements = requirements.filter((item, index) =>
-          item.source === 'page' || (item.source === 'point' && !pointed.has(index)));
+          item.source === 'page' || item.source === 'arrival' || (item.source === 'point' && !pointed.has(index)));
         const submitted = new Set<number>();
         for (const { index, checks, targetId } of result.proofs ?? []) {
           const source = requirements[index]?.source;
           if (pointed.has(index) || !checks.every(check => evidence.has(check.id))) continue;
-          const proof = source === 'page' ? { source, checks } as const
+          const proof = source === 'page' || source === 'arrival' ? { source, checks } as const
             : source === 'point' && targetId !== undefined && evidence.has(targetId) ? { source, checks, targetId } as const : undefined;
           if (!proof) continue;
           submitted.add(index);
@@ -252,7 +255,9 @@ export function createGuideSession(goal: string, options: SessionOptions) {
           if (finishOnly) break;
           await reread(pageRequirements.some(item => item.source === 'point')
             ? '入口完成证据未通过。若有同名控件，请搜索并用 inspect 查看候选的所属区域，在 checks 同时核对目标和包含它的区域或对象名称。'
-            : undefined);
+            : pageRequirements.some(item => item.source === 'arrival')
+              ? '到达证据未通过。请核对目标界面的标题或区域名称，以及同一区域内另一个可用控件或可读正文。'
+              : undefined);
           continue;
         }
         if (result.kind === 'observe' && !finishOnly) {
