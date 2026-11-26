@@ -44,7 +44,7 @@ WebGuide AI 是一款网页操作引导扩展。用户说出目标，扩展结�
 
 ![WebGuide AI 用例图，按组内预览、本机经验和共享经验展示 20 个功能用例](../../models/WebGuideAI-用例图.svg)
 
-两侧分别排列主参与者和次参与者。线上圆点标出分支，交叉处留空区分各自的连线。[打开 SVG 全图](../../models/WebGuideAI-用例图.svg) · [PlantUML 用例模型](../../models/WebGuideAI-用例图.puml)
+两侧分别排列主参与者和次参与者。沿参与者的连线可找到对应的用例，圆点表示分支。[打开 SVG 全图](../../models/WebGuideAI-用例图.svg) · [PlantUML 用例模型](../../models/WebGuideAI-用例图.puml)
 
 | 交付阶段 | 交付内容 | 阶段完成时的检查 |
 | --- | --- | --- |

@@ -33,10 +33,10 @@
   <text x="800" y="961" font-size="16" class="muted" text-anchor="end">3 个用例</text>
   <path d="M 360 972 H 800" stroke="#cad8dc"/>
 
-  <!-- Orthogonal associations. A gap marks a crossing without a connection. -->
+  <!-- Orthogonal associations. Dots mark branch junctions. -->
   <g id="user-associations" aria-label="操作用户关联用例">
     <g class="association" stroke="#226961">
-      <path d="M 248 244 V 845 M 248 857 V 992"/>
+      <path d="M 248 244 V 992"/>
       <path d="M 112 460 H 248"/>
       <path data-use-case="NAV-UC01" d="M 248 244 H 360.00"/>
       <path data-use-case="NAV-UC02" d="M 248 280 H 360.00"/>
@@ -95,7 +95,7 @@
   </g>
   <g id="model-associations" aria-label="模型服务关联用例">
     <g class="association" stroke="#3a639c">
-      <path d="M 896 244 V 454 M 896 466 V 815"/>
+      <path d="M 896 244 V 815"/>
       <path d="M 1048 280 H 896"/>
       <path data-use-case="NAV-UC01" d="M 896 244 H 800.00"/>
       <path data-use-case="NAV-UC02" d="M 896 280 H 800.00"/>
@@ -113,7 +113,7 @@
   </g>
   <g id="page-associations" aria-label="目标网页关联用例">
     <g class="association" stroke="#52697e">
-      <path d="M 848 357 V 377 M 848 389 V 532"/>
+      <path d="M 848 357 V 532"/>
       <path d="M 1048 460 H 848"/>
       <path data-use-case="NAV-UC04" d="M 848 357 H 788.98"/>
       <path data-use-case="NAV-UC05" d="M 848 393 H 788.98"/>
