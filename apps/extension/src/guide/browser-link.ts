@@ -49,7 +49,7 @@ function connectPage(port: PagePort, onSignal: (event: PageSignal) => void, disc
     snapshot: newRound => send({ kind: 'snapshot', newRound }),
     read: queries => send({ kind: 'read', queries }),
     apply: decision => send({ kind: 'apply', decision }),
-    verify: (proofs, finish) => send({ kind: 'verify', proofs, finish }),
+    verify: (proofs, finish, reveal) => send({ kind: 'verify', proofs, finish, reveal }),
     trackScroll: id => { void send({ kind: 'track-scroll', id }).catch(() => {}); },
     clear: () => { void send({ kind: 'clear' }).catch(() => {}); },
   };

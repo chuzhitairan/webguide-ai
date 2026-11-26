@@ -1,5 +1,5 @@
 import type { Evidence, Observation, ReadQuery, ReadResult } from '../../../api/src/guide-protocol.js';
-import { clipsOverflow, controlLabel, isEnabledTarget, isVisibleTarget, listEntryLabel, overflowOnAxis, pageParent } from './locator.js';
+import { clipsOverflow, controlLabel, isEnabledTarget, isVisibleTarget, listEntryLabel, pageParent, verticalScrollRange } from './locator.js';
 
 const pageLimit = 40;
 const readLimit = 20;
@@ -53,13 +53,6 @@ interface Binding extends Context {
 
 function compact(value: string, limit: number): string {
   return value.replace(/\s+/g, ' ').trim().slice(0, limit);
-}
-
-function canScroll(element: Element): number {
-  const distance = element.scrollHeight - element.clientHeight;
-  if (distance <= 1) return 0;
-  const view = element.ownerDocument.defaultView;
-  return view && /^(auto|scroll|overlay)$/.test(overflowOnAxis(view.getComputedStyle(element), 'y')) ? distance : 0;
 }
 
 function semanticRole(element: Element): string | undefined {
@@ -128,7 +121,7 @@ function describe(element: Element, document: Document, includeText = false): Ca
   const associated = element.localName === 'label' ? (element as HTMLLabelElement).control : null;
   const control = associated?.matches('input[type="radio"], input[type="checkbox"]')
     && !associated.closest('[aria-hidden="true"]') && !isVisibleTarget(associated, document) ? associated : element;
-  const scrollRange = canScroll(element);
+  const scrollRange = verticalScrollRange(element);
   const role = semanticRole(control) ?? (scrollRange ? 'region' : undefined)
     ?? (includeText && standaloneText(element) ? 'text' : undefined);
   if (!role || !document.defaultView || !isVisibleTarget(element, document, { asControlLabel: control !== element })) return;
@@ -216,7 +209,7 @@ export function createObservation(document: Document, focus?: Element): {
     for (let node = pageParent(element); node; node = pageParent(node)) {
       const role = semanticRole(node) ?? '';
       const isObject = objectRoles.has(role);
-      if (!isObject && !regionRoles.has(role) && !canScroll(node)) continue;
+      if (!isObject && !regionRoles.has(role) && !verticalScrollRange(node)) continue;
       const candidate = describe(node, document);
       if (candidate) ancestors.push({ candidate, isObject });
     }
@@ -382,7 +375,7 @@ export function createObservation(document: Document, focus?: Element): {
       const regionId = query.type === 'region' ? query.id : query.region;
       const region = regionId === undefined ? undefined : resolve(regionId);
       if (regionId !== undefined && (!region
-        || (!regionRoles.has(region.evidence.role) && !canScroll(region.element)))) return unavailable;
+        || (!regionRoles.has(region.evidence.role) && !verticalScrollRange(region.element)))) return unavailable;
 
       const keyword = query.type === 'search' ? compact(query.query, 120).toLowerCase() : '';
       if (query.type === 'search' && !keyword) return { query, nodes: [], truncated: false, status: 'empty' };

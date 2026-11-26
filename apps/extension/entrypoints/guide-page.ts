@@ -1,7 +1,7 @@
 import { browser } from 'wxt/browser';
 import { defineUnlistedScript } from 'wxt/utils/define-unlisted-script';
 import { createObservation } from '../src/page/snapshot.js';
-import { clipsOverflow, pageParent } from '../src/page/locator.js';
+import { clipsOverflow, pageParent, revealVertically } from '../src/page/locator.js';
 import { watchPage } from '../src/page/observer.js';
 import { createRenderer } from '../src/page/renderer.js';
 import { guidePort } from '../src/guide/page-messages.js';
@@ -42,7 +42,9 @@ function connect(port: Port): () => void {
   let contextAtRead = '';
   let checkTimer: ReturnType<typeof setTimeout> | undefined;
   let finishTimer: ReturnType<typeof setTimeout> | undefined;
+  let finishClick: AbortController | undefined;
   let stopped = false;
+  let revealing = false;
   let scrolled = false;
   let scrollHint: { id: number; element: Element; key: string } | 'any' | undefined;
   const events = new AbortController();
@@ -50,6 +52,8 @@ function connect(port: Port): () => void {
 
   function clear() {
     clearTimeout(finishTimer);
+    finishClick?.abort();
+    finishClick = undefined;
     currentTarget = undefined;
     scrollHint = undefined;
     scrolled = false;
@@ -89,7 +93,7 @@ function connect(port: Port): () => void {
   }
 
   function check() {
-    if (!observation || observed !== generation || stopped) return;
+    if (!observation || observed !== generation || stopped || revealing) return;
     const page = observation.page();
     if (!sameContext(page)) return;
     if (currentTarget !== undefined && !visibleTarget(currentTarget)) {
@@ -131,7 +135,7 @@ function connect(port: Port): () => void {
     if (!target?.evidence.viewport || !target.evidence.available) return;
     const { element, control } = target;
     const rect = element.getBoundingClientRect();
-    // Driver 会把未完整显示的目标滚进视口。让用户先滚到能操作的位置。
+    // 先核对完整视口和实际命中点，再让 Driver 绘制。
     if (rect.left < 0 || rect.top < 0 || rect.right > innerWidth || rect.bottom > innerHeight) return;
     for (let parent = pageParent(element); parent; parent = pageParent(parent)) {
       const style = getComputedStyle(parent);
@@ -159,7 +163,7 @@ function connect(port: Port): () => void {
     return false;
   }
 
-  function provesScope(element: Element, label: string, scopeIds: number[] = []) {
+  function provesScope(element: Element, label: string, scopeIds: number[] = [], requireViewport = true) {
     // 搜索也包含被面板裁掉的控件。第一个可见匹配可能是另一个对象的入口。
     const alternatives = observation?.namedControls(label, pointRoles)
       // 行及其同名的内部按钮可能只是同一处入口的两层语义。
@@ -171,9 +175,31 @@ function connect(port: Port): () => void {
     // 同名时，证明要核对一个确实包含目标、且排除其他候选的区域或对象。
     return scopeIds.some(id => {
       const scope = observation?.resolve(id);
-      return !!scope?.evidence.viewport && !!scope.evidence.label && inside(element, scope.element)
+      return !!scope?.evidence.label && (!requireViewport || scope.evidence.viewport) && inside(element, scope.element)
         && alternatives.every(other => !inside(other.element, scope.element));
     });
+  }
+
+  async function targetForDisplay(id: number, scopeIds: number[] = [], reveal = false) {
+    const visible = visibleTarget(id);
+    if (visible) return !pointRoles.has(visible.evidence.role) || provesScope(visible.element, visible.evidence.label, scopeIds)
+      ? visible : undefined;
+    if (!reveal || revealing) return;
+    const source = observation;
+    const before = source?.resolve(id);
+    if (!source || !before?.evidence.available || !pointRoles.has(before.evidence.role)
+      || !provesScope(before.element, before.evidence.label, scopeIds, false) || !revealVertically(before.element)) return;
+
+    clear();
+    revealing = true;
+    const startedIn = generation;
+    // 给滚动监听器一次更新列表的机会，再用原编号核对元素、所属区域和真实点击位置。
+    await new Promise(resolve => setTimeout(resolve, 80));
+    revealing = false;
+    if (stopped || document.visibilityState === 'hidden' || observation !== source || generation !== startedIn
+      || observed !== generation || !sameContext(source.page())) return;
+    const target = visibleTarget(id);
+    return target && provesScope(target.element, target.evidence.label, scopeIds) ? target : undefined;
   }
 
   function arrivalScope(identity: Evidence) {
@@ -206,17 +232,22 @@ function connect(port: Port): () => void {
     });
   }
 
-  function verifies(proof: PageProof) {
+  function pointScopes(proof: Extract<PageProof, { source: 'point' }>) {
+    return proof.checks.filter(check => check.field === 'label' && check.id !== proof.targetId).map(check => check.id);
+  }
+
+  function verifies(proof: PageProof, reveal = false) {
+    const mayBeOffscreen = reveal && proof.source === 'point';
     const matches = proof.checks.map(check => ({ check, evidence: observation?.resolve(check.id)?.evidence }));
-    if (!matches.length || !matches.every(({ check, evidence }) => evidence?.viewport && evidence[check.field] === check.equals)) {
+    if (!matches.length || !matches.every(({ check, evidence }) =>
+      evidence && (mayBeOffscreen || evidence.viewport) && evidence[check.field] === check.equals)) {
       return false;
     }
     if (proof.source === 'point') {
-      const target = visibleTarget(proof.targetId);
-      return Boolean(target && pointRoles.has(target.evidence.role)
+      const target = mayBeOffscreen ? observation?.resolve(proof.targetId) : visibleTarget(proof.targetId);
+      return Boolean(target?.evidence.available && pointRoles.has(target.evidence.role)
         && matches.some(({ check }) => check.id === proof.targetId && check.field === 'label')
-        && provesScope(target.element, target.evidence.label,
-          proof.checks.filter(check => check.field === 'label' && check.id !== proof.targetId).map(check => check.id)));
+        && provesScope(target.element, target.evidence.label, pointScopes(proof), !mayBeOffscreen));
     }
     if (proof.source === 'arrival') {
       const labels = matches.flatMap(({ check, evidence }) => check.field === 'label' && evidence?.label ? [evidence] : []);
@@ -231,7 +262,7 @@ function connect(port: Port): () => void {
     });
   }
 
-  function handle(command: PageCommand) {
+  async function handle(command: PageCommand) {
     if (command.kind === 'clear') {
       clear();
       return true;
@@ -269,14 +300,20 @@ function connect(port: Port): () => void {
     }
 
     if (command.kind === 'verify') {
-      if (!command.proofs.every(verifies)) return false;
+      if (!command.proofs.every(proof => verifies(proof, command.reveal))) return false;
       if (!command.finish) return true;
-      const id = command.proofs.find(proof => proof.source === 'point')?.targetId;
-      const target = id === undefined ? undefined : visibleTarget(id);
-      if (id !== undefined && !target) return false;
-      if (target) {
-        currentTarget = id;
+      const point = command.proofs.find(proof => proof.source === 'point');
+      if (point) {
+        const target = await targetForDisplay(point.targetId, pointScopes(point), command.reveal);
+        if (!target || (command.reveal && !command.proofs.every(proof => verifies(proof)))) return false;
+        currentTarget = point.targetId;
         renderer.show(target.element, { title: '已找到', instruction: command.finish });
+        // 会话已完成，单独监听最后一次点击，让网站照常处理这次操作。
+        finishClick = new AbortController();
+        document.addEventListener('click', event => {
+          const path = event.composedPath();
+          if (event.isTrusted && (path.includes(target.element) || path.includes(target.control))) clear();
+        }, { capture: true, signal: finishClick.signal });
         finishTimer = setTimeout(clear, 4_000);
       } else clear();
       stopped = true;
@@ -286,9 +323,8 @@ function connect(port: Port): () => void {
     }
 
     const decision = command.decision;
-    const target = visibleTarget(decision.targetId);
-    if (!target || (pointRoles.has(target.evidence.role)
-      && !provesScope(target.element, target.evidence.label, decision.scopeIds))) return false;
+    const target = await targetForDisplay(decision.targetId, decision.scopeIds, decision.reveal);
+    if (!target) return false;
     scrollHint = undefined;
     scrolled = false;
     currentTarget = decision.targetId;
@@ -297,9 +333,13 @@ function connect(port: Port): () => void {
     return true;
   }
 
-  port.onMessage.addListener(({ id, command }: PageRequest) => {
-    const value = handle(command);
-    port.postMessage({ id, value });
+  port.onMessage.addListener(async ({ id, command }: PageRequest) => {
+    const value = await handle(command).catch(() => null);
+    try {
+      port.postMessage({ id, value });
+    } catch {
+      // 等待滚动期间可能切换标签页或关闭了侧栏。
+    }
   });
   function close() {
     stopped = true;
