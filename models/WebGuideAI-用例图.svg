@@ -1,84 +1,271 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1320" height="1085" viewBox="0 0 1320 1085" role="img" aria-labelledby="title desc">
-<title id="title">WebGuide AI 完整功能用例图</title>
-<desc id="desc">20 个用例，三个主参与者、两个次参与者。范围分为组内预览、本机经验、共享经验。</desc>
-<style>text{font-family:"Microsoft YaHei","Noto Sans CJK SC","PingFang SC",sans-serif;fill:#1e3042}.minor{fill:#4c6176}</style>
-<rect width="1320" height="1085" fill="#fff"/><text x="40" y="52" font-size="34" font-weight="700">WebGuide AI 用例图</text>
-<text x="42" y="81" class="minor" font-size="17">SRS v0.3 评审稿 · 20 个功能用例</text>
-<rect x="195" y="96" width="907" height="945" rx="12" fill="#fff" stroke="#8194a5" stroke-width="1.5"/>
-<text x="1058" y="111" text-anchor="end" font-size="13" class="minor">WebGuide AI 系统边界</text>
-<rect x="217" y="116" width="862" height="525" rx="10" fill="#f1f8f7"/><text x="316" y="139" font-size="17" font-weight="700">组内预览</text><text x="316" y="176" font-size="13" class="minor">已有试用原型</text>
-<rect x="217" y="673" width="862" height="173" rx="10" fill="#f8f4fb"/><text x="316" y="696" font-size="17" font-weight="700">本机经验</text><text x="316" y="733" font-size="13" class="minor">后续范围</text>
-<rect x="217" y="878" width="862" height="145" rx="10" fill="#fdf6ef"/><text x="316" y="901" font-size="17" font-weight="700">共享经验</text><text x="316" y="938" font-size="13" class="minor">后续范围</text>
-<g stroke="#31766d" stroke-width="1.45" fill="none" aria-label="操作用户关联用例">
-<path d="M 111 374 H 259 M 259 151 V 912"/>
-<path d="M 259 151 H 431"/>
-<path d="M 259 190 H 431"/>
-<path d="M 259 229 H 431"/>
-<path d="M 259 268 H 431"/>
-<path d="M 259 307 H 431"/>
-<path d="M 259 346 H 431"/>
-<path d="M 259 385 H 431"/>
-<path d="M 259 424 H 431"/>
-<path d="M 259 463 H 431"/>
-<path d="M 259 502 H 431"/>
-<path d="M 259 541 H 431"/>
-<path d="M 259 580 H 431"/>
-<path d="M 259 619 H 431"/>
-<path d="M 259 708 H 431"/>
-<path d="M 259 912 H 431"/>
-</g><g stroke="#31766d" fill="#fff" stroke-width="2.35" stroke-linecap="round"><circle cx="90" cy="350" r="10"/><path d="M 90 361 v23 m-20 -10 h40 m-20 10 l-15 21 m15 -21 l15 21" fill="none"/></g>
-<text x="90" y="430" text-anchor="middle" font-weight="700" font-size="19">操作用户</text><text x="90" y="451" class="minor" text-anchor="middle" font-size="14">主参与者</text>
-<g stroke="#76629e" stroke-width="1.45" fill="none" aria-label="经验维护者关联用例">
-<path d="M 111 834 H 286 M 286 748 V 834"/>
-<path d="M 286 748 H 431"/>
-<path d="M 286 788 H 431"/>
-<path d="M 286 828 H 431"/>
-</g><g stroke="#76629e" fill="#fff" stroke-width="2.35" stroke-linecap="round"><circle cx="90" cy="810" r="10"/><path d="M 90 821 v23 m-20 -10 h40 m-20 10 l-15 21 m15 -21 l15 21" fill="none"/></g>
-<text x="90" y="890" text-anchor="middle" font-weight="700" font-size="19">经验维护者</text><text x="90" y="911" class="minor" text-anchor="middle" font-size="14">主参与者</text>
-<g stroke="#925d49" stroke-width="1.45" fill="none" aria-label="发布管理员关联用例">
-<path d="M 1169 975 H 993 M 993 952 V 992"/>
-<path d="M 993 952 H 827"/>
-<path d="M 993 992 H 827"/>
-</g><g stroke="#925d49" fill="#fff" stroke-width="2.35" stroke-linecap="round"><circle cx="1190" cy="951" r="10"/><path d="M 1190 962 v23 m-20 -10 h40 m-20 10 l-15 21 m15 -21 l15 21" fill="none"/></g>
-<text x="1190" y="1031" text-anchor="middle" font-weight="700" font-size="19">发布管理员</text><text x="1190" y="1052" class="minor" text-anchor="middle" font-size="14">主参与者</text>
-<g stroke="#35648e" stroke-width="1.45" fill="none" aria-label="模型服务关联用例">
-<path d="M 1169 249 H 962 M 962 147 V 744"/>
-<path d="M 962 147 H 827"/>
-<path d="M 962 186 H 827"/>
-<path d="M 962 225 H 827"/>
-<path d="M 962 264 H 827"/>
-<path d="M 962 303 H 827"/>
-<path d="M 962 744 H 827"/>
-</g><g stroke="#35648e" fill="#fff" stroke-width="2.35" stroke-linecap="round"><circle cx="1190" cy="225" r="10"/><path d="M 1190 236 v23 m-20 -10 h40 m-20 10 l-15 21 m15 -21 l15 21" fill="none"/></g>
-<text x="1190" y="305" text-anchor="middle" font-weight="700" font-size="19">模型服务</text><text x="1190" y="326" class="minor" text-anchor="middle" font-size="14">次参与者</text>
-<g stroke="#687a8d" stroke-width="1.45" fill="none" aria-label="目标网页关联用例">
-<path d="M 1169 474 H 918 M 918 273 V 474"/>
-<path d="M 918 273 H 827"/>
-<path d="M 918 312 H 827"/>
-<path d="M 918 351 H 827"/>
-<path d="M 918 390 H 827"/>
-<path d="M 918 429 H 827"/>
-<path d="M 918 468 H 827"/>
-</g><g stroke="#687a8d" fill="#fff" stroke-width="2.35" stroke-linecap="round"><circle cx="1190" cy="450" r="10"/><path d="M 1190 461 v23 m-20 -10 h40 m-20 10 l-15 21 m15 -21 l15 21" fill="none"/></g>
-<text x="1190" y="530" text-anchor="middle" font-weight="700" font-size="19">目标网页</text><text x="1190" y="551" class="minor" text-anchor="middle" font-size="14">次参与者</text>
-<g id="NAV-UC01"><ellipse cx="629" cy="151" rx="198" ry="16" fill="#fff" stroke="#688093" stroke-width="1.3"/><text x="629" y="156" text-anchor="middle" font-size="16"><tspan class="minor">NAV-UC01</tspan><tspan dx="12">配置个人模型</tspan></text></g>
-<g id="NAV-UC02"><ellipse cx="629" cy="190" rx="198" ry="16" fill="#fff" stroke="#688093" stroke-width="1.3"/><text x="629" y="195" text-anchor="middle" font-size="16"><tspan class="minor">NAV-UC02</tspan><tspan dx="12">从当前网页开始引导</tspan></text></g>
-<g id="NAV-UC03"><ellipse cx="629" cy="229" rx="198" ry="16" fill="#fff" stroke="#688093" stroke-width="1.3"/><text x="629" y="234" text-anchor="middle" font-size="16"><tspan class="minor">NAV-UC03</tspan><tspan dx="12">回答影响下一步的澄清</tspan></text></g>
-<g id="NAV-UC04"><ellipse cx="629" cy="268" rx="198" ry="16" fill="#fff" stroke="#688093" stroke-width="1.3"/><text x="629" y="273" text-anchor="middle" font-size="16"><tspan class="minor">NAV-UC04</tspan><tspan dx="12">在页面上看到下一步</tspan></text></g>
-<g id="NAV-UC05"><ellipse cx="629" cy="307" rx="198" ry="16" fill="#fff" stroke="#688093" stroke-width="1.3"/><text x="629" y="312" text-anchor="middle" font-size="16"><tspan class="minor">NAV-UC05</tspan><tspan dx="12">操作后继续跟随页面变化</tspan></text></g>
-<g id="NAV-UC06"><ellipse cx="629" cy="346" rx="198" ry="16" fill="#fff" stroke="#688093" stroke-width="1.3"/><text x="629" y="351" text-anchor="middle" font-size="16"><tspan class="minor">NAV-UC06</tspan><tspan dx="12">核对已找到指定入口</tspan></text></g>
-<g id="NAV-UC07"><ellipse cx="629" cy="385" rx="198" ry="16" fill="#fff" stroke="#688093" stroke-width="1.3"/><text x="629" y="390" text-anchor="middle" font-size="16"><tspan class="minor">NAV-UC07</tspan><tspan dx="12">核对已进入指定界面</tspan></text></g>
-<g id="NAV-UC08"><ellipse cx="629" cy="424" rx="198" ry="16" fill="#fff" stroke="#688093" stroke-width="1.3"/><text x="629" y="429" text-anchor="middle" font-size="16"><tspan class="minor">NAV-UC08</tspan><tspan dx="12">核对设置实际生效</tspan></text></g>
-<g id="NAV-UC09"><ellipse cx="629" cy="463" rx="198" ry="16" fill="#fff" stroke="#688093" stroke-width="1.3"/><text x="629" y="468" text-anchor="middle" font-size="16"><tspan class="minor">NAV-UC09</tspan><tspan dx="12">确认网页外结果</tspan></text></g>
-<g id="NAV-UC10"><ellipse cx="629" cy="502" rx="198" ry="16" fill="#fff" stroke="#688093" stroke-width="1.3"/><text x="629" y="507" text-anchor="middle" font-size="16"><tspan class="minor">NAV-UC10</tspan><tspan dx="12">了解无法继续的原因</tspan></text></g>
-<g id="NAV-UC11"><ellipse cx="629" cy="541" rx="198" ry="16" fill="#fff" stroke="#688093" stroke-width="1.3"/><text x="629" y="546" text-anchor="middle" font-size="16"><tspan class="minor">NAV-UC11</tspan><tspan dx="12">暂停后继续原目标</tspan></text></g>
-<g id="NAV-UC12"><ellipse cx="629" cy="580" rx="198" ry="16" fill="#fff" stroke="#688093" stroke-width="1.3"/><text x="629" y="585" text-anchor="middle" font-size="16"><tspan class="minor">NAV-UC12</tspan><tspan dx="12">停止引导或改用新目标</tspan></text></g>
-<g id="NAV-UC13"><ellipse cx="629" cy="619" rx="198" ry="16" fill="#fff" stroke="#688093" stroke-width="1.3"/><text x="629" y="624" text-anchor="middle" font-size="16"><tspan class="minor">NAV-UC13</tspan><tspan dx="12">选择是否采用本地经验</tspan></text></g>
-<g id="NAV-UC14"><ellipse cx="629" cy="708" rx="198" ry="16" fill="#fff" stroke="#688093" stroke-width="1.3"/><text x="629" y="713" text-anchor="middle" font-size="16"><tspan class="minor">NAV-UC14</tspan><tspan dx="12">查看本机引导摘要</tspan></text></g>
-<g id="NAV-UC15"><ellipse cx="629" cy="748" rx="198" ry="16" fill="#fff" stroke="#688093" stroke-width="1.3"/><text x="629" y="753" text-anchor="middle" font-size="16"><tspan class="minor">NAV-UC15</tspan><tspan dx="12">从真实结果提炼候选</tspan></text></g>
-<g id="NAV-UC16"><ellipse cx="629" cy="788" rx="198" ry="16" fill="#fff" stroke="#688093" stroke-width="1.3"/><text x="629" y="793" text-anchor="middle" font-size="16"><tspan class="minor">NAV-UC16</tspan><tspan dx="12">修订和合并候选经验</tspan></text></g>
-<g id="NAV-UC17"><ellipse cx="629" cy="828" rx="198" ry="16" fill="#fff" stroke="#688093" stroke-width="1.3"/><text x="629" y="833" text-anchor="middle" font-size="16"><tspan class="minor">NAV-UC17</tspan><tspan dx="12">验证候选能否帮助新任务</tspan></text></g>
-<g id="NAV-UC18"><ellipse cx="629" cy="912" rx="198" ry="16" fill="#fff" stroke="#688093" stroke-width="1.3"/><text x="629" y="917" text-anchor="middle" font-size="16"><tspan class="minor">NAV-UC18</tspan><tspan dx="12">向小组贡献一条经验</tspan></text></g>
-<g id="NAV-UC19"><ellipse cx="629" cy="952" rx="198" ry="16" fill="#fff" stroke="#688093" stroke-width="1.3"/><text x="629" y="957" text-anchor="middle" font-size="16"><tspan class="minor">NAV-UC19</tspan><tspan dx="12">发布通过验证的经验版本</tspan></text></g>
-<g id="NAV-UC20"><ellipse cx="629" cy="992" rx="198" ry="16" fill="#fff" stroke="#688093" stroke-width="1.3"/><text x="629" y="997" text-anchor="middle" font-size="16"><tspan class="minor">NAV-UC20</tspan><tspan dx="12">停用或回退失效经验</tspan></text></g>
+<svg xmlns="http://www.w3.org/2000/svg" width="1160" height="1130" viewBox="0 0 1160 1130" role="img" aria-labelledby="title desc">
+  <title id="title">WebGuide AI 完整功能用例图</title>
+  <desc id="desc">WebGuide AI 系统边界内按组内预览、本机经验和共享经验排列 20 个功能用例。三位主参与者位于左侧，两位次参与者位于右侧。每条支线准确落到对应的用例。</desc>
+  <style>
+    text { font-family: "Microsoft YaHei", "Noto Sans CJK SC", "PingFang SC", sans-serif; fill: #172e37; }
+    .muted { fill: #4d626c; }
+    .actor-name { font-size: 20px; font-weight: 700; text-anchor: middle; }
+    .association { fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+    .use-case { fill: #fff; stroke: #81959b; stroke-width: 1.35; }
+    .case-id { fill: #465f6b; font-size: 15.5px; font-weight: 600; }
+    .case-name { font-size: 19.5px; font-weight: 500; }
+  </style>
+  <rect width="1160" height="1130" fill="#fff"/>
+  <text x="36" y="60" font-size="38" font-weight="700">WebGuide AI 用例图</text>
+  <text x="38" y="91" font-size="18" class="muted">SRS v0.3 评审稿 · 20 个功能用例</text>
+  <path d="M 36 112 H 1124" stroke="#d1dce0"/>
+  <text x="94" y="158" class="muted" font-size="17" font-weight="600" text-anchor="middle">主参与者</text>
+  <text x="1066" y="158" class="muted" font-size="17" font-weight="600" text-anchor="middle">次参与者</text>
+  <rect x="172" y="129" width="816" height="982" rx="14" fill="#fff" stroke="#81959b" stroke-width="1.5"/>
+  <text x="580" y="159" font-size="21" font-weight="700" text-anchor="middle">WebGuide AI 系统边界</text>
+
+  <!-- Delivery stages share the same system boundary and case grid. -->
+  <rect x="186" y="179" width="788" height="522" rx="10" fill="#edf6f3"/>
+  <text x="360" y="210" font-size="22" font-weight="700">组内预览</text>
+  <text x="800" y="210" font-size="16" class="muted" text-anchor="end">13 个用例</text>
+  <path d="M 360 221 H 800" stroke="#cad8dc"/>
+  <rect x="186" y="714" width="788" height="203" rx="10" fill="#f4f1f8"/>
+  <text x="360" y="745" font-size="22" font-weight="700">本机经验</text>
+  <text x="800" y="745" font-size="16" class="muted" text-anchor="end">4 个用例</text>
+  <path d="M 360 756 H 800" stroke="#cad8dc"/>
+  <rect x="186" y="930" width="788" height="166" rx="10" fill="#faf4ec"/>
+  <text x="360" y="961" font-size="22" font-weight="700">共享经验</text>
+  <text x="800" y="961" font-size="16" class="muted" text-anchor="end">3 个用例</text>
+  <path d="M 360 972 H 800" stroke="#cad8dc"/>
+
+  <!-- Orthogonal associations. A gap marks a crossing without a connection. -->
+  <g id="user-associations" aria-label="操作用户关联用例">
+    <g class="association" stroke="#226961">
+      <path d="M 248 244 V 845 M 248 857 V 992"/>
+      <path d="M 112 460 H 248"/>
+      <path data-use-case="NAV-UC01" d="M 248 244 H 360.00"/>
+      <path data-use-case="NAV-UC02" d="M 248 280 H 360.00"/>
+      <path data-use-case="NAV-UC03" d="M 248 316 H 360.00"/>
+      <path data-use-case="NAV-UC04" d="M 248 352 H 360.00"/>
+      <path data-use-case="NAV-UC05" d="M 248 388 H 360.00"/>
+      <path data-use-case="NAV-UC06" d="M 248 424 H 360.00"/>
+      <path data-use-case="NAV-UC07" d="M 248 460 H 360.00"/>
+      <path data-use-case="NAV-UC08" d="M 248 496 H 360.00"/>
+      <path data-use-case="NAV-UC09" d="M 248 532 H 360.00"/>
+      <path data-use-case="NAV-UC10" d="M 248 568 H 360.00"/>
+      <path data-use-case="NAV-UC11" d="M 248 604 H 360.00"/>
+      <path data-use-case="NAV-UC12" d="M 248 640 H 360.00"/>
+      <path data-use-case="NAV-UC13" d="M 248 676 H 360.00"/>
+      <path data-use-case="NAV-UC14" d="M 248 779 H 360.00"/>
+      <path data-use-case="NAV-UC18" d="M 248 992 H 360.00"/>
+    </g>
+    <g fill="#226961">
+      <circle cx="248" cy="280" r="2.65"/>
+      <circle cx="248" cy="316" r="2.65"/>
+      <circle cx="248" cy="352" r="2.65"/>
+      <circle cx="248" cy="388" r="2.65"/>
+      <circle cx="248" cy="424" r="2.65"/>
+      <circle cx="248" cy="460" r="2.65"/>
+      <circle cx="248" cy="496" r="2.65"/>
+      <circle cx="248" cy="532" r="2.65"/>
+      <circle cx="248" cy="568" r="2.65"/>
+      <circle cx="248" cy="604" r="2.65"/>
+      <circle cx="248" cy="640" r="2.65"/>
+      <circle cx="248" cy="676" r="2.65"/>
+      <circle cx="248" cy="779" r="2.65"/>
+    </g>
+  </g>
+  <g id="keeper-associations" aria-label="经验维护者关联用例">
+    <g class="association" stroke="#6e528e">
+      <path d="M 292 815 V 887"/>
+      <path d="M 112 851 H 292"/>
+      <path data-use-case="NAV-UC15" d="M 292 815 H 360.00"/>
+      <path data-use-case="NAV-UC16" d="M 292 851 H 360.00"/>
+      <path data-use-case="NAV-UC17" d="M 292 887 H 360.00"/>
+    </g>
+    <g fill="#6e528e">
+      <circle cx="292" cy="851" r="2.65"/>
+    </g>
+  </g>
+  <g id="admin-associations" aria-label="发布管理员关联用例">
+    <g class="association" stroke="#875137">
+      <path d="M 292 1028 V 1064"/>
+      <path d="M 112 1046 H 292"/>
+      <path data-use-case="NAV-UC19" d="M 292 1028 H 360.00"/>
+      <path data-use-case="NAV-UC20" d="M 292 1064 H 360.00"/>
+    </g>
+    <g fill="#875137">
+      <circle cx="292" cy="1046" r="2.65"/>
+    </g>
+  </g>
+  <g id="model-associations" aria-label="模型服务关联用例">
+    <g class="association" stroke="#3a639c">
+      <path d="M 896 244 V 454 M 896 466 V 815"/>
+      <path d="M 1048 280 H 896"/>
+      <path data-use-case="NAV-UC01" d="M 896 244 H 800.00"/>
+      <path data-use-case="NAV-UC02" d="M 896 280 H 800.00"/>
+      <path data-use-case="NAV-UC03" d="M 896 316 H 800.00"/>
+      <path data-use-case="NAV-UC04" d="M 896 347 H 788.98"/>
+      <path data-use-case="NAV-UC05" d="M 896 383 H 788.98"/>
+      <path data-use-case="NAV-UC15" d="M 896 815 H 800.00"/>
+    </g>
+    <g fill="#3a639c">
+      <circle cx="896" cy="280" r="2.65"/>
+      <circle cx="896" cy="316" r="2.65"/>
+      <circle cx="896" cy="347" r="2.65"/>
+      <circle cx="896" cy="383" r="2.65"/>
+    </g>
+  </g>
+  <g id="page-associations" aria-label="目标网页关联用例">
+    <g class="association" stroke="#52697e">
+      <path d="M 848 357 V 377 M 848 389 V 532"/>
+      <path d="M 1048 460 H 848"/>
+      <path data-use-case="NAV-UC04" d="M 848 357 H 788.98"/>
+      <path data-use-case="NAV-UC05" d="M 848 393 H 788.98"/>
+      <path data-use-case="NAV-UC06" d="M 848 424 H 800.00"/>
+      <path data-use-case="NAV-UC07" d="M 848 460 H 800.00"/>
+      <path data-use-case="NAV-UC08" d="M 848 496 H 800.00"/>
+      <path data-use-case="NAV-UC09" d="M 848 532 H 800.00"/>
+    </g>
+    <g fill="#52697e">
+      <circle cx="848" cy="393" r="2.65"/>
+      <circle cx="848" cy="424" r="2.65"/>
+      <circle cx="848" cy="460" r="2.65"/>
+      <circle cx="848" cy="496" r="2.65"/>
+    </g>
+  </g>
+
+  <!-- All ellipses and their labels use one grid. -->
+  <g id="NAV-UC01" transform="translate(0 244)">
+    <ellipse class="use-case" cx="580" cy="0" rx="220" ry="16"/>
+    <text class="case-id" x="398" y="5">NAV-UC01</text>
+    <text class="case-name" x="501" y="6">配置个人模型</text>
+  </g>
+  <g id="NAV-UC02" transform="translate(0 280)">
+    <ellipse class="use-case" cx="580" cy="0" rx="220" ry="16"/>
+    <text class="case-id" x="398" y="5">NAV-UC02</text>
+    <text class="case-name" x="501" y="6">从当前网页开始引导</text>
+  </g>
+  <g id="NAV-UC03" transform="translate(0 316)">
+    <ellipse class="use-case" cx="580" cy="0" rx="220" ry="16"/>
+    <text class="case-id" x="398" y="5">NAV-UC03</text>
+    <text class="case-name" x="501" y="6">回答影响下一步的澄清</text>
+  </g>
+  <g id="NAV-UC04" transform="translate(0 352)">
+    <ellipse class="use-case" cx="580" cy="0" rx="220" ry="16"/>
+    <text class="case-id" x="398" y="5">NAV-UC04</text>
+    <text class="case-name" x="501" y="6">在页面上看到下一步</text>
+  </g>
+  <g id="NAV-UC05" transform="translate(0 388)">
+    <ellipse class="use-case" cx="580" cy="0" rx="220" ry="16"/>
+    <text class="case-id" x="398" y="5">NAV-UC05</text>
+    <text class="case-name" x="501" y="6">操作后继续跟随页面变化</text>
+  </g>
+  <g id="NAV-UC06" transform="translate(0 424)">
+    <ellipse class="use-case" cx="580" cy="0" rx="220" ry="16"/>
+    <text class="case-id" x="398" y="5">NAV-UC06</text>
+    <text class="case-name" x="501" y="6">核对已找到指定入口</text>
+  </g>
+  <g id="NAV-UC07" transform="translate(0 460)">
+    <ellipse class="use-case" cx="580" cy="0" rx="220" ry="16"/>
+    <text class="case-id" x="398" y="5">NAV-UC07</text>
+    <text class="case-name" x="501" y="6">核对已进入指定界面</text>
+  </g>
+  <g id="NAV-UC08" transform="translate(0 496)">
+    <ellipse class="use-case" cx="580" cy="0" rx="220" ry="16"/>
+    <text class="case-id" x="398" y="5">NAV-UC08</text>
+    <text class="case-name" x="501" y="6">核对设置实际生效</text>
+  </g>
+  <g id="NAV-UC09" transform="translate(0 532)">
+    <ellipse class="use-case" cx="580" cy="0" rx="220" ry="16"/>
+    <text class="case-id" x="398" y="5">NAV-UC09</text>
+    <text class="case-name" x="501" y="6">确认网页外结果</text>
+  </g>
+  <g id="NAV-UC10" transform="translate(0 568)">
+    <ellipse class="use-case" cx="580" cy="0" rx="220" ry="16"/>
+    <text class="case-id" x="398" y="5">NAV-UC10</text>
+    <text class="case-name" x="501" y="6">了解无法继续的原因</text>
+  </g>
+  <g id="NAV-UC11" transform="translate(0 604)">
+    <ellipse class="use-case" cx="580" cy="0" rx="220" ry="16"/>
+    <text class="case-id" x="398" y="5">NAV-UC11</text>
+    <text class="case-name" x="501" y="6">暂停后继续原目标</text>
+  </g>
+  <g id="NAV-UC12" transform="translate(0 640)">
+    <ellipse class="use-case" cx="580" cy="0" rx="220" ry="16"/>
+    <text class="case-id" x="398" y="5">NAV-UC12</text>
+    <text class="case-name" x="501" y="6">停止引导或改用新目标</text>
+  </g>
+  <g id="NAV-UC13" transform="translate(0 676)">
+    <ellipse class="use-case" cx="580" cy="0" rx="220" ry="16"/>
+    <text class="case-id" x="398" y="5">NAV-UC13</text>
+    <text class="case-name" x="501" y="6">选择是否采用本地经验</text>
+  </g>
+  <g id="NAV-UC14" transform="translate(0 779)">
+    <ellipse class="use-case" cx="580" cy="0" rx="220" ry="16"/>
+    <text class="case-id" x="398" y="5">NAV-UC14</text>
+    <text class="case-name" x="501" y="6">查看本机引导摘要</text>
+  </g>
+  <g id="NAV-UC15" transform="translate(0 815)">
+    <ellipse class="use-case" cx="580" cy="0" rx="220" ry="16"/>
+    <text class="case-id" x="398" y="5">NAV-UC15</text>
+    <text class="case-name" x="501" y="6">从真实结果提炼候选</text>
+  </g>
+  <g id="NAV-UC16" transform="translate(0 851)">
+    <ellipse class="use-case" cx="580" cy="0" rx="220" ry="16"/>
+    <text class="case-id" x="398" y="5">NAV-UC16</text>
+    <text class="case-name" x="501" y="6">修订和合并候选经验</text>
+  </g>
+  <g id="NAV-UC17" transform="translate(0 887)">
+    <ellipse class="use-case" cx="580" cy="0" rx="220" ry="16"/>
+    <text class="case-id" x="398" y="5">NAV-UC17</text>
+    <text class="case-name" x="501" y="6">验证候选能否帮助新任务</text>
+  </g>
+  <g id="NAV-UC18" transform="translate(0 992)">
+    <ellipse class="use-case" cx="580" cy="0" rx="220" ry="16"/>
+    <text class="case-id" x="398" y="5">NAV-UC18</text>
+    <text class="case-name" x="501" y="6">向小组贡献一条经验</text>
+  </g>
+  <g id="NAV-UC19" transform="translate(0 1028)">
+    <ellipse class="use-case" cx="580" cy="0" rx="220" ry="16"/>
+    <text class="case-id" x="398" y="5">NAV-UC19</text>
+    <text class="case-name" x="501" y="6">发布通过验证的经验版本</text>
+  </g>
+  <g id="NAV-UC20" transform="translate(0 1064)">
+    <ellipse class="use-case" cx="580" cy="0" rx="220" ry="16"/>
+    <text class="case-id" x="398" y="5">NAV-UC20</text>
+    <text class="case-name" x="501" y="6">停用或回退失效经验</text>
+  </g>
+
+  <!-- Actors stay outside the system. Their arms meet the association stems. -->
+  <g id="user" transform="translate(94 460)" aria-label="操作用户，主参与者">
+    <g fill="none" stroke="#226961" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <circle cy="-22" r="10"/>
+      <path d="M 0 -12 V 12 L -14 31 M 0 12 L 14 31 M -18 0 H 18"/>
+    </g>
+    <text class="actor-name" y="59">操作用户</text>
+  </g>
+  <g id="keeper" transform="translate(94 851)" aria-label="经验维护者，主参与者">
+    <g fill="none" stroke="#6e528e" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <circle cy="-22" r="10"/>
+      <path d="M 0 -12 V 12 L -14 31 M 0 12 L 14 31 M -18 0 H 18"/>
+    </g>
+    <text class="actor-name" y="59">经验维护者</text>
+  </g>
+  <g id="admin" transform="translate(94 1046)" aria-label="发布管理员，主参与者">
+    <g fill="none" stroke="#875137" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <circle cy="-22" r="10"/>
+      <path d="M 0 -12 V 12 L -14 31 M 0 12 L 14 31 M -18 0 H 18"/>
+    </g>
+    <text class="actor-name" y="59">发布管理员</text>
+  </g>
+  <g id="model" transform="translate(1066 280)" aria-label="模型服务，次参与者">
+    <g fill="none" stroke="#3a639c" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <circle cy="-22" r="10"/>
+      <path d="M 0 -12 V 12 L -14 31 M 0 12 L 14 31 M -18 0 H 18"/>
+    </g>
+    <text class="actor-name" y="59">模型服务</text>
+  </g>
+  <g id="page" transform="translate(1066 460)" aria-label="目标网页，次参与者">
+    <g fill="none" stroke="#52697e" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <circle cy="-22" r="10"/>
+      <path d="M 0 -12 V 12 L -14 31 M 0 12 L 14 31 M -18 0 H 18"/>
+    </g>
+    <text class="actor-name" y="59">目标网页</text>
+  </g>
 </svg>
