@@ -1,25 +1,27 @@
 # 第 11 周 · 需求评审与 SRS 定稿
 
-第三次课按现有排课推算为 2026-11-27。第 2 课补充讲义要求故事相关的仓库材料在下次课前一天 24:00 前入库，按此推算为 11 月 26 日 24:00。课堂安排以教师最新通知为准。[第 11 周 Milestone](https://github.com/chuzhitairan/webguide-ai/milestone/2)
+按现有排课，第三次课为 2026-11-27。故事材料应于 11 月 26 日 24:00 前入库。老师安排每组约 8 分钟讲解完整需求，随后逐组评审。
 
-2026-11-26 已登记故事并提交评审稿。[评审材料总览](https://github.com/chuzhitairan/webguide-ai/blob/400db9d/docs/course/week11/评审材料.md) · [SRS v0.3 草稿 PR #37](https://github.com/chuzhitairan/webguide-ai/pull/37) · [评审跟踪 Issue #36](https://github.com/chuzhitairan/webguide-ai/issues/36)
+**现场从 [评审材料总览](评审材料.md)进入。** 直接投屏 [SRS v0.3](../../requirements/WebGuideAI-SRS-v0.3.md)，从用例图讲到两个典型场景和非功能需求。[草稿 PR #37](https://github.com/chuzhitairan/webguide-ai/pull/37) · [评审 Issue #36](https://github.com/chuzhitairan/webguide-ai/issues/36) · [本周 Milestone](https://github.com/chuzhitairan/webguide-ai/milestone/2)
 
 ## 课前与课堂检查
 
 | 检查项 | 对应材料和状态 |
 | --- | --- |
-| 上周遗留检查：至少 20 条用户故事 Issue，其中性能、安全、可用性至少各 1 条。给每条写 Given/When/Then，打 `story` 标签，指派负责人，链接调研证据。 | [已登记 23 条](https://github.com/chuzhitairan/webguide-ai/labels/story)，每条已链接依据、用例与验收，并分派给五个组员账号。第 10 周的 [14 条初稿](../week10/用户故事.md)随历史材料归档。 |
-| 完整用例图应标明主、次参与者，课堂讲解场景与非功能需求。 | [20 个功能用例图](https://github.com/chuzhitairan/webguide-ai/blob/400db9d/models/WebGuideAI-用例图.svg)标明 3 个主参与者和 2 个次参与者。评审稿有 3 个细化场景及 3 个非功能验收用例。 |
-| 课前提交 SRS 草稿 PR。 | [PR #37](https://github.com/chuzhitairan/webguide-ai/pull/37)已提交，待实际评审。草稿区分组内预览原型和后续的本机经验、共享经验。 |
+| 至少 20 条用户故事 Issue，性能、安全、可用性各至少 1 条。每条有 Given/When/Then、`story` 标签、负责人及依据链接。 | [已登记 23 条](https://github.com/chuzhitairan/webguide-ai/labels/story)，含 20 条功能、3 条质量故事，已分派给五名组员。[完整故事清单](用户故事.md) |
+| 完整用例图，标明主、次参与者。 | [20 个功能用例图](../../../models/WebGuideAI-用例图.svg)含 3 个主参与者、2 个次参与者和三阶段边界。[PlantUML 源](../../../models/WebGuideAI-用例图.puml) |
+| 提交 SRS 草稿 PR。功能要求应有编号、描述和验收标准。 | [PR #37](https://github.com/chuzhitairan/webguide-ai/pull/37)已提交。[SRS 附录 A](../../requirements/WebGuideAI-SRS-v0.3.md#附录-a-功能用例规格)逐条列出 20 个用例的需求、流程和通过条件。 |
+| 讲解典型场景、非功能需求与约束，供其他组提问。 | SRS 有 [4 个细化场景](../../requirements/WebGuideAI-SRS-v0.3.md#4-典型场景)及 [3 类非功能要求](../../requirements/WebGuideAI-SRS-v0.3.md#5-非功能需求)。[验收与证据](验收与证据.md)含复现条件、已有结果和待测项。 |
 
 ## 评审后交付
 
 | 交付 | 已有依据和下一步 |
 | --- | --- |
-| SRS v1.0 Release，附变更记录 | 课堂评审关注需求是否可测试、完整、一致。评审签字后再定稿发布，请从 [Releases](https://github.com/chuzhitairan/webguide-ai/releases)核对状态。 |
-| 需求追溯矩阵 v0 | [矩阵草稿](https://github.com/chuzhitairan/webguide-ai/blob/400db9d/docs/course/week11/追溯矩阵-v0.md)逐条关联需求 ID、用例、故事 Issue 和依据，正式基线待评审确认。 |
-| 需求变更记录及 Issue＋PR 通道 | PR #37 含[变更记录](https://github.com/chuzhitairan/webguide-ai/blob/400db9d/docs/requirements/需求变更记录.md)和[需求变更模板](https://github.com/chuzhitairan/webguide-ai/blob/400db9d/.github/ISSUE_TEMPLATE/requirement-change.md)。已有[协作约定](../../../CONTRIBUTING.md)和 [PR 模板](../../../.github/pull_request_template.md)。 |
+| 评审意见与签字 | 在 [Issue #36](https://github.com/chuzhitairan/webguide-ai/issues/36)记录实际意见、处理结果及确认。评审核对需求是否完整、可测试和前后一致。 |
+| SRS v1.0 Release，附变更记录 | 评审通过后根据确认结果定稿，发 [Release](https://github.com/chuzhitairan/webguide-ai/releases)。 |
+| 需求追溯矩阵 v0 | [矩阵草稿](追溯矩阵-v0.md)逐条关联需求、用例、故事 Issue、验收和来源，随定稿确认基线。 |
+| 需求变更走 Issue 与 PR | [变更记录](../../requirements/需求变更记录.md)已有本轮来源和影响。[需求变更模板](../../../.github/ISSUE_TEMPLATE/requirement-change.md) · [协作约定](../../../CONTRIBUTING.md#需求变更) |
 
 课堂可用[当前工程进度](../../README.md)和[真实站点验证](../../design/导航Harness-真实站点验证-2026-11-23.md)说明已实现的引导闭环。调研出处、上周故事与演示见[第 1–2 次课材料](../week10/README.md)。
 
-**要求出处**　教师资料《第 02 课：教师与学生的对话》第 4 页给出故事 Issue 检查点，《第 03 课：学生讲解项目需求》第 1 页给出用例图、评审、基线与追溯要求。[课程时间表与来源索引](../课程任务与时间节点.md)
+**要求出处**　《第02课-教师与学生的对话》第 4 页给出故事 Issue 检查点。《第03课-学生讲解项目需求》第 1 页给出用例图、讲解、评审、基线及追溯要求。[课程时间表与来源索引](../课程任务与时间节点.md)

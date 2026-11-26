@@ -8,7 +8,7 @@ WebGuide AI 是一款网页操作引导扩展。第一次用 GitHub 等工具协
 
 | 周次 | 教师检查内容与仓库入口 |
 | --- | --- |
-| **第 11 周 · 需求评审** | [课前检查与评审材料](docs/course/week11/README.md) · [SRS v0.3 草稿 PR #37](https://github.com/chuzhitairan/webguide-ai/pull/37) · [23 条故事 Issue](https://github.com/chuzhitairan/webguide-ai/labels/story) |
+| **第 11 周 · 需求评审** | [课前检查与评审材料](docs/course/week11/README.md) · [SRS v0.3 正文](docs/requirements/WebGuideAI-SRS-v0.3.md) · [草稿 PR #37](https://github.com/chuzhitairan/webguide-ai/pull/37) · [23 条故事 Issue](https://github.com/chuzhitairan/webguide-ai/labels/story) |
 | 第 10 周 · 需求调研 | [调研报告](docs/course/week10/调研报告.md) · [14 条用户故事初稿](docs/course/week10/用户故事.md) · [课堂演示材料](docs/course/week10/presentation/README.md) |
 | 第 9 周 · 组队与立项 | [选题 Issue](https://github.com/chuzhitairan/webguide-ai/issues/1) · [调研计划](docs/course/week10/调研计划.md) · [仓库配置与提交](docs/course/week10/仓库配置与提交清单.md) |
 | 课程全过程 | [课程资料总览](docs/course/README.md) · [教学时间表与最终交付物](docs/course/课程任务与时间节点.md) · [团队与 AI 使用台账](docs/course/week10/团队与过程台账.md) |
