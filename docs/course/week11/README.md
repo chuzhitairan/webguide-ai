@@ -2,7 +2,9 @@
 
 按现有排课，第三次课为 2026-11-27。故事材料应于 11 月 26 日 24:00 前入库。老师安排每组约 8 分钟讲解完整需求，随后逐组评审。
 
-**现场从 [评审材料总览](评审材料.md)进入。** 直接投屏 [SRS v0.3](../../requirements/WebGuideAI-SRS-v0.3.md)，从用例图讲到两个典型场景和非功能需求。[草稿 PR #37](https://github.com/chuzhitairan/webguide-ai/pull/37) · [评审 Issue #36](https://github.com/chuzhitairan/webguide-ai/issues/36) · [本周 Milestone](https://github.com/chuzhitairan/webguide-ai/milestone/2)
+**课堂投屏**　[代讲讲稿](../week10/presentation/week11/代讲讲稿.md) · [7 页 PPTX](../week10/presentation/week11/WebGuideAI-第11周需求评审.pptx) · [SRS v0.3](../../requirements/WebGuideAI-SRS-v0.3.md) · [评审材料总览](评审材料.md)
+
+[SRS 草稿 PR #37](https://github.com/chuzhitairan/webguide-ai/pull/37) · [评审 Issue #36](https://github.com/chuzhitairan/webguide-ai/issues/36) · [本周 Milestone](https://github.com/chuzhitairan/webguide-ai/milestone/2)
 
 ## 课前与课堂检查
 

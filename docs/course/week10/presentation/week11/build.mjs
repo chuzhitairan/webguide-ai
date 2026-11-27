@@ -4,7 +4,7 @@ const source = {
   brief: '教师《第03课-学生讲解项目需求》第 1 页；docs/course/week11/评审材料.md',
   scope: 'docs/requirements/WebGuideAI-SRS-v0.3.md 第 1–3 节；docs/course/week10/发起人体验记录.md',
   useCases: 'models/WebGuideAI-用例图.svg；docs/requirements/WebGuideAI-SRS-v0.3.md 第 2–3 节。',
-  figma: 'NAV-UC06；docs/design/导航Harness-真实站点验证-2026-11-23.md「2026-11-25 最终指引真实站点复测」',
+  figma: 'NAV-UC06。docs/course/week11/验收与证据.md 第 1 节。',
   github: 'NAV-UC07；docs/design/导航Harness-真实站点验证-2026-11-23.md「从列表打开 PR 详情」',
   quality: 'docs/requirements/WebGuideAI-SRS-v0.3.md 第 5 节；GitHub Issues #33–#35；tests/e2e/guide.spec.ts 第一个用例',
   trace: 'docs/course/week11/追溯矩阵-v0.md；https://github.com/chuzhitairan/webguide-ai/issues/19；https://github.com/chuzhitairan/webguide-ai/pull/37；https://github.com/chuzhitairan/webguide-ai/issues/36',
@@ -87,9 +87,9 @@ export async function build(presentation, diagram) {
       text(s, desc, 66, y + 57, 364, 40, 21, C.muted);
     });
     text(s, '次参与者', 66, 551, 364, 33, 20, C.teal, true);
-    text(s, '目标网页、模型服务', 66, 587, 364, 35, 24, C.ink, true);
+    text(s, '模型服务、目标网页', 66, 587, 364, 35, 24, C.ink, true);
     text(s, '完整图可在 SRS 中放大查看', 66, 644, 364, 30, 17, C.muted);
-    notes(s, 95, '【依次指图中三个阶段。】这是完整用例图，有二十个功能用例。最上面是当前组内预览的范围。操作用户可以配置自己的模型，从正在看的网页提出目标，也能澄清、暂停和恢复。中间是后续的本机经验。用户自愿按最小范围记录，维护者整理候选，再验证它能否帮助新任务。下面是共享阶段，用户贡献候选，管理员决定发布、停用和回退。目标网页和模型服务是次参与者。网页提供可核对的现场，模型提出下一步，扩展复查对应控件是否仍然有效。后两个阶段的用例体现需求的分期。', source.useCases);
+    notes(s, 95, '【依次指图中三个阶段。】这是完整用例图，有二十个功能用例。最上面是当前组内预览的范围。操作用户可以配置自己的模型，从正在看的网页提出目标，也能澄清、暂停和恢复。中间是后续的本机经验。用户自愿按最小范围记录，维护者整理候选，再验证它能否帮助新任务。下面是共享阶段，用户贡献候选，管理员决定发布、停用和回退。【指右侧，上面是模型服务，下面是目标网页。】模型提出下一步，目标网页提供可核对的控件和状态，扩展复查控件后再高亮。', source.useCases);
   }
 
   // 4 · Figma: two matching labels belong to different objects.
@@ -108,7 +108,7 @@ export async function build(presentation, diagram) {
     shape(s, 817, 414, 52, 48, C.white, C.teal, 4, 3);
     text(s, '＋', 817, 418, 52, 42, 28, C.teal, true, 'center');
     text(s, '看到按钮所属图层，画出正确蓝框后收尾。', 66, 567, 1150, 65, 28, C.ink, true);
-    notes(s, 75, '【指向两个加号。】第一个场景，用户只想知道导出入口在哪。验收样例里，页面级和图层级的加号都叫 Add export settings。扩展先核对用户指定的 Frame 1 是否选中。属性栏还看不到导出区时，先提示用户往下滚。正确按钮进入视口，而且扩展复查它确实属于 Frame 1，才画出蓝框并在侧栏显示完成。如果只读到区域标题，或用户选中了别的图层，还要继续补看。这个任务的验收点就是蓝框最后落在哪里。', source.figma);
+    notes(s, 75, '【指向两个加号。】用户想找到 Frame 1 的导出入口。验收样例里，页面级和图层级的加号都叫 Add export settings。扩展先确认用户选中了 Frame 1。已经定位到属于这个图层的屏外加号时，就滚动属性面板，复查后高亮。线索不足时先补看，或请用户滚动。验收时要看蓝框落在正确加号上，侧栏也报告已找到。真实 Figma 复测曾出现滚动后指对、侧栏仍未收尾，所以这两项分开记录。', source.figma);
   }
 
   // 5 · GitHub: the goal is a page state and completion follows navigation.
@@ -150,10 +150,10 @@ export async function build(presentation, diagram) {
     text(s, '同一 PR 实测，从列表进入和已在详情页各通过 2/2。', 67, 369, 1147, 45, 24, C.teal, true);
     line(s, 66, 444, 1147);
     text(s, '本次评审确认', 67, 474, 320, 52, 33, C.ink, true);
-    text(s, '用例范围、非功能标准和验收证据。', 396, 479, 818, 45, 26, C.muted);
+    text(s, '交付范围、验收条件、模型 API 是否算外部集成。', 396, 479, 818, 45, 26, C.muted);
     text(s, 'SRS 草稿 PR #37', 68, 572, 342, 43, 22, C.teal, true);
     text(s, '追溯矩阵 v0', 463, 572, 331, 43, 22, C.teal, true);
     text(s, '评审跟踪 Issue #36', 849, 572, 365, 43, 22, C.teal, true);
-    notes(s, 60, '最后用一条追溯链收尾。故事来自 GitHub Issue 十九，组员需要确认自己打开了正确详情。它对应 NAV-UC07，验收要求核对对应详情后才显示完成。我们在同一个 PR 上，从列表和已在详情页两个起点各跑两次，各通过两次。这几次都核对了详情证据，结果可以从追溯矩阵查到。这次请老师和同学确认用例范围和三类质量验收标准。评审意见记在 Issue 三十六，确认后再定稿发布 SRS v1.0。', source.trace);
+    notes(s, 60, '最后用一条追溯链收尾。故事来自 GitHub Issue 十九，组员需要确认自己打开了正确详情。它对应 NAV-UC07，验收要求核对对应详情后才显示完成。我们从列表和已在详情页两个起点各跑两次，各通过两次，结果可以从追溯矩阵查到。这次请老师和同学确认三件事：交付分期、验收条件、扩展直连的模型 API 是否满足课程外部集成要求。评审意见和签字记在 Issue 三十六，确认后再定稿发布 SRS v1.0。', source.trace);
   }
 }
