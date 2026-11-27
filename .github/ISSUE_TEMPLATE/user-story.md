@@ -2,7 +2,7 @@
 name: 用户故事
 about: 有角色、目标与验收条件的需求
 title: "[USxx] "
-labels: ""
+labels: "story"
 assignees: ""
 ---
 

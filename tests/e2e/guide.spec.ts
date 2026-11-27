@@ -661,3 +661,72 @@ test('属性栏按钮没变时，选中对象变化也会使在途回复失效',
     await closeMock();
   }
 });
+
+for (const kind of ['point', 'highlight'] as const) {
+  test(`屏外或被裁剪的控件只滚动所属面板，使用原判断高亮（${kind}）`, async ({ extension: { panel, activate } }) => {
+    const url = 'https://workspace.example/offscreen-control';
+    const key = 'webguide-test-token-000000';
+    const calls: GuideRequest[] = [];
+    const goal = kind === 'point' ? '找到 Frame 1 的导出设置' : '带我打开 Frame 1 的导出设置';
+    const closeMock = await mockModel(panel, key, async input => {
+      calls.push(input);
+      if (calls.length === 1) return { kind: 'observe', queries: [{ type: 'search', query: 'Export settings' }] };
+      const scope = input.page.nodes.find(node => node.label === 'Frame 1 properties')!;
+      const target = input.reads.flatMap(read => read.nodes)
+        .find(node => node.label === 'Export settings' && node.region === scope.id)!;
+      expect(target.viewport).toBe(kind === 'highlight');
+      const common = { targetId: target.id, scopeId: scope.id };
+      return kind === 'point'
+        ? { kind, ...common, requirements: [{ quote: goal, result: '找到 Frame 1 的导出设置', source: 'point' }] }
+        : { kind, ...common, instruction: '点击 Frame 1 的导出设置。' };
+    });
+    try {
+      const context = panel.context();
+      await context.route(url, route => route.fulfill({ contentType: 'text/html', body: `<!doctype html>
+        <style>body{min-height:1800px} main{display:flex;gap:24px}
+          aside{height:180px;width:200px;overflow:auto;scroll-behavior:smooth} .spacer{height:380px} #frame-properties .spacer{height:${kind === 'highlight' ? 172 : 380}px}</style>
+        <main>
+          <aside aria-label="Page tools" id="page-tools">
+            <button id="wrong">Export settings</button><div class="spacer"></div>
+          </aside>
+          <aside aria-label="Frame 1 properties" id="frame-properties">
+            <div class="spacer"></div><button id="target"
+              onclick="this.dataset.overlayAtClick=String(Boolean(document.querySelector('.webguide-popover')))"
+            ><span>Export settings</span></button>
+          </aside>
+        </main>` }));
+      const site = await context.newPage();
+      await site.goto(url);
+      await site.bringToFront();
+      await activate(site);
+      const target = site.locator('#target');
+      await expect(target).not.toBeInViewport({ ratio: 1 });
+
+      await panel.getByLabel('我想做什么').fill(goal);
+      await panel.getByLabel('模型 API 密钥').fill(key);
+      await panel.locator('form').evaluate((form: HTMLFormElement) => form.requestSubmit());
+
+      await expect(target).toBeInViewport();
+      await expect(target).toHaveClass(/driver-active-element/);
+      await expect(panel.getByRole('status')).toHaveText(kind === 'point'
+        ? '已完成。找到 Frame 1 的导出设置。' : '点击 Frame 1 的导出设置。');
+      await expect(site.locator('#wrong')).not.toHaveClass(/driver-active-element/);
+      await expect(target).not.toHaveAttribute('data-overlay-at-click');
+      expect(await site.locator('#frame-properties').evaluate(panel => panel.scrollTop)).toBeGreaterThan(0);
+      expect(await site.locator('#page-tools').evaluate(panel => panel.scrollTop)).toBe(0);
+      expect(await site.evaluate(() => window.scrollY)).toBe(0);
+      if (kind === 'point') {
+        const popover = site.locator('.webguide-popover');
+        await expect(popover).toBeVisible();
+        await target.locator('span').click();
+        await expect(target).toHaveAttribute('data-overlay-at-click', 'false');
+        await expect(target).not.toHaveClass(/driver-active-element/);
+        await expect(popover).toHaveCount(0);
+        await expect(panel.getByRole('status')).toHaveText('已完成。找到 Frame 1 的导出设置。');
+      }
+      expect(calls).toHaveLength(2);
+    } finally {
+      await closeMock();
+    }
+  });
+}

@@ -45,7 +45,7 @@ it('在同一轮用两个各需 12 秒的请求完成补看和高亮', async () 
       apply, async verify() { return true; }, trackScroll() {}, clear() {},
     });
     await vi.advanceTimersByTimeAsync(24_001);
-    expect(apply).toHaveBeenCalledExactlyOnceWith({ kind: 'highlight', targetId: button.id, instruction: '打开发布设置。' });
+    expect(apply).toHaveBeenCalledExactlyOnceWith({ kind: 'highlight', targetId: button.id, instruction: '打开发布设置。', reveal: true });
     await active;
     expect(deadlines.mock.calls).toEqual([[45_000], [15_000], [15_000]]);
     expect(report).toHaveBeenLastCalledWith({ kind: 'guiding', text: '打开发布设置。' });
@@ -78,7 +78,7 @@ it('自动重试用到最后一次额度时，只要求模型利用已有证据'
   expect(choose.mock.calls[1][0]).toEqual({ ...choose.mock.calls[0][0], finishOnly: true });
   expect(saveUsed.mock.calls).toEqual([[guideRequestLimit - 1], [guideRequestLimit]]);
   expect(read).not.toHaveBeenCalled();
-  expect(apply).toHaveBeenCalledExactlyOnceWith({ kind: 'highlight', targetId: button.id, instruction: '打开发布设置。' });
+  expect(apply).toHaveBeenCalledExactlyOnceWith({ kind: 'highlight', targetId: button.id, instruction: '打开发布设置。', reveal: true });
 });
 
 it('两次技术失败后等待用户操作，页面自行更新不会继续花额度', async () => {
@@ -119,7 +119,7 @@ it('找到正确入口时，一次回复同时给出条件和证据并结束', a
   expect(choose).toHaveBeenCalledOnce();
   expect(verify).toHaveBeenCalledExactlyOnceWith([
     { source: 'point', targetId: 2, checks: [{ id: 2, field: 'label', equals: button.label }] },
-  ], '已完成。找到发布设置。');
+  ], '已完成。找到发布设置。', true);
   expect(report).toHaveBeenLastCalledWith({ kind: 'complete', text: '已完成。找到发布设置。' });
 });
 
@@ -145,7 +145,7 @@ it.each([true, false])('同一入口的两个目标先复查（能消除冲突�
   if (canResolve) {
     expect(verify).toHaveBeenCalledExactlyOnceWith([
       { source: 'point', targetId: button.id, checks: entryProof.checks },
-    ], '已完成。找到发布入口。');
+    ], '已完成。找到发布入口。', true);
     expect(report).toHaveBeenLastCalledWith({ kind: 'complete', text: '已完成。找到发布入口。' });
   } else {
     expect(verify).not.toHaveBeenCalled();
@@ -272,7 +272,7 @@ it('先展示一个入口，侧栏继续后再高亮下一处并完成', async (
     async snapshot() { return { title: 'Project', site: 'example.test', nodes: [button, share], truncated: false }; },
     async read() { return []; }, apply, verify, trackScroll() {}, clear() {},
   });
-  expect(apply).toHaveBeenCalledExactlyOnceWith({ kind: 'highlight', targetId: button.id, instruction: '发布设置' });
+  expect(apply).toHaveBeenCalledExactlyOnceWith({ kind: 'highlight', targetId: button.id, instruction: '发布设置', reveal: true });
   expect(report).toHaveBeenLastCalledWith(expect.objectContaining({ kind: 'confirm', source: 'point', index: 0 }));
   await session.confirm(0);
   expect(report).toHaveBeenLastCalledWith({ kind: 'complete', text: '已完成。发布设置，分享入口。' });
@@ -350,7 +350,7 @@ it('需要网页外确认时，仍先让用户看见已找到的入口', async (
     async snapshot() { return { title: 'Project', site: 'example.test', nodes: evidence, truncated: false }; },
     async read() { return []; }, apply, verify, trackScroll() {}, clear() {},
   });
-  expect(apply).toHaveBeenCalledExactlyOnceWith({ kind: 'highlight', targetId: button.id, instruction: '发布设置入口' });
+  expect(apply).toHaveBeenCalledExactlyOnceWith({ kind: 'highlight', targetId: button.id, instruction: '发布设置入口', reveal: true });
   expect(report).toHaveBeenLastCalledWith(expect.objectContaining({ kind: 'confirm', source: 'user', index: 1 }));
   evidence = [];
   await session.refresh('user');
@@ -389,7 +389,7 @@ it('合并局部补看，等用户操作后再完成自然语言目标', async (
   await session.attach(page);
   expect(calls).toHaveLength(2);
   expect(calls[1].reads).toHaveLength(2);
-  expect(apply).toHaveBeenCalledExactlyOnceWith({ kind: 'highlight', instruction: '点击发布设置', targetId: 2 });
+  expect(apply).toHaveBeenCalledExactlyOnceWith({ kind: 'highlight', instruction: '点击发布设置', targetId: 2, reveal: true });
   expect(statuses.at(-1)?.kind).toBe('guiding');
 
   evidence = [heading];

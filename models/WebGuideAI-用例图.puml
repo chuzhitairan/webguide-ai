@@ -1,0 +1,71 @@
+@startuml
+!pragma layout smetana
+left to right direction
+skinparam shadowing false
+title WebGuide AI 功能用例图
+actor "操作用户\n（主参与者）" as user
+actor "经验维护者\n（主参与者）" as keeper
+actor "发布管理员\n（主参与者）" as admin
+actor "模型服务\n（次参与者）" as model
+actor "目标网页\n（次参与者）" as page
+rectangle "WebGuide AI" {
+  package "组内预览" {
+    usecase "NAV-UC01 配置个人模型" as UC01
+    usecase "NAV-UC02 从当前网页开始引导" as UC02
+    usecase "NAV-UC03 回答影响下一步的澄清" as UC03
+    usecase "NAV-UC04 在页面上看到下一步" as UC04
+    usecase "NAV-UC05 操作后继续跟随页面变化" as UC05
+    usecase "NAV-UC06 核对已找到指定入口" as UC06
+    usecase "NAV-UC07 核对已进入指定界面" as UC07
+    usecase "NAV-UC08 核对设置实际生效" as UC08
+    usecase "NAV-UC09 确认网页外结果" as UC09
+    usecase "NAV-UC10 了解无法继续的原因" as UC10
+    usecase "NAV-UC11 暂停后继续原目标" as UC11
+    usecase "NAV-UC12 停止引导或改用新目标" as UC12
+    usecase "NAV-UC13 选择是否采用本地经验" as UC13
+  }
+  package "本机经验" {
+    usecase "NAV-UC14 查看本机引导摘要" as UC14
+    usecase "NAV-UC15 从真实结果提炼候选" as UC15
+    usecase "NAV-UC16 修订和合并候选经验" as UC16
+    usecase "NAV-UC17 验证候选能否帮助新任务" as UC17
+  }
+  package "共享经验" {
+    usecase "NAV-UC18 向小组贡献一条经验" as UC18
+    usecase "NAV-UC19 发布通过验证的经验版本" as UC19
+    usecase "NAV-UC20 停用或回退失效经验" as UC20
+  }
+}
+user -- UC01
+user -- UC02
+user -- UC03
+user -- UC04
+user -- UC05
+user -- UC06
+user -- UC07
+user -- UC08
+user -- UC09
+user -- UC10
+user -- UC11
+user -- UC12
+user -- UC13
+user -- UC14
+user -- UC18
+keeper -- UC15
+keeper -- UC16
+keeper -- UC17
+admin -- UC19
+admin -- UC20
+model -- UC01
+model -- UC02
+model -- UC03
+model -- UC04
+model -- UC05
+model -- UC15
+page -- UC04
+page -- UC05
+page -- UC06
+page -- UC07
+page -- UC08
+page -- UC09
+@enduml

@@ -8,7 +8,7 @@ WebGuide AI 是一款网页操作引导扩展。第一次用 GitHub 等工具协
 
 | 周次 | 教师检查内容与仓库入口 |
 | --- | --- |
-| **第 11 周 · 需求评审** | [课前检查与评审材料](docs/course/week11/README.md) · [SRS v0.3 草稿 PR #37](https://github.com/chuzhitairan/webguide-ai/pull/37) · [23 条故事 Issue](https://github.com/chuzhitairan/webguide-ai/labels/story) |
+| **第 11 周 · 需求评审** | [课前检查与评审材料](docs/course/week11/README.md) · [SRS v0.3 正文](docs/requirements/WebGuideAI-SRS-v0.3.md) · [草稿 PR #37](https://github.com/chuzhitairan/webguide-ai/pull/37) · [23 条故事 Issue](https://github.com/chuzhitairan/webguide-ai/labels/story) |
 | 第 10 周 · 需求调研 | [调研报告](docs/course/week10/调研报告.md) · [14 条用户故事初稿](docs/course/week10/用户故事.md) · [课堂演示材料](docs/course/week10/presentation/README.md) |
 | 第 9 周 · 组队与立项 | [选题 Issue](https://github.com/chuzhitairan/webguide-ai/issues/1) · [调研计划](docs/course/week10/调研计划.md) · [仓库配置与提交](docs/course/week10/仓库配置与提交清单.md) |
 | 课程全过程 | [课程资料总览](docs/course/README.md) · [教学时间表与最终交付物](docs/course/课程任务与时间节点.md) · [团队与 AI 使用台账](docs/course/week10/团队与过程台账.md) |
@@ -26,9 +26,11 @@ WebGuide AI 是一款网页操作引导扩展。第一次用 GitHub 等工具协
 
 ## 试用新引导
 
-1. 加载扩展，在练习网页点击工具栏上的 WebGuide AI 图标。侧栏默认填的是同济 `DeepSeek-V4.1-Flash`。用其他兼容 Chat Completions 和 JSON 回复的服务时，在「模型设置」填写 HTTPS API 地址和模型名称。
+从 [v0.0.1 Release](https://github.com/chuzhitairan/webguide-ai/releases/tag/v0.0.1) 下载插件包并解压。在 Chrome 或 Edge 的扩展管理页打开开发者模式，选择「加载已解压的扩展」，打开含 `manifest.json` 的文件夹。
+
+1. 加载扩展，在练习网页点击工具栏上的 WebGuide AI 图标。默认的同济 `DeepSeek-V4.1-Flash` 试用低推理强度。用其他兼容 Chat Completions 和 JSON 回复的服务时，在「模型设置」填写 HTTPS API 地址和模型名称，推理强度沿用服务默认设置。
 2. 在侧栏填自己的模型 API 密钥和目标，例如「带我找到这个页面的导出设置」。点「开始引导」，首次使用该模型域名时允许扩展访问。输入的目标和必要的页面线索会发给这个模型服务。
-3. 跟着蓝框和提示，在网页上自己点击、输入和滚动。密钥在本次浏览器会话中有效，退出浏览器后重新填写。模型地址和名称可以继续沿用。
+3. 跟着蓝框和提示操作。定位到屏外控件后，扩展可以滚到它的位置再高亮。点击、输入和提交由你完成。密钥在本次浏览器会话中有效，退出浏览器后重新填写。模型地址和名称可以继续沿用。
 
 想试用经验引导，在「模型设置」勾选「启用导航经验（试验）」后开始一次新引导。开关默认关闭。两条候选覆盖英文维基百科正文字号和 Figma 图层导出入口。[经验模块设计](docs/design/WebGuideAI-经验模块设计.md)
 
