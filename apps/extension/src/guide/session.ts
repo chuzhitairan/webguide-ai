@@ -1,7 +1,7 @@
 import { acceptsRequirements, canReviewRequirements } from '../../../api/src/guide-protocol.js';
 import type { Decision, EvidenceCheck, GuideRequest, Observation, ReadQuery, ReadResult, Requirement } from '../../../api/src/guide-protocol.js';
 
-export type PageDecision = { kind: 'highlight'; targetId: number; instruction: string; scopeIds?: number[] };
+export type PageDecision = { kind: 'highlight'; targetId: number; instruction: string; scopeIds?: number[]; reveal?: true };
 export type PageProof = { source: 'page' | 'arrival'; checks: EvidenceCheck[] }
   | { source: 'point'; checks: EvidenceCheck[]; targetId: number };
 export type GuideStatus = {
@@ -15,7 +15,7 @@ export interface GuidePage {
   snapshot(newRound: boolean): Promise<Observation>;
   read(queries: ReadQuery[]): Promise<ReadResult[]>;
   apply(decision: PageDecision): Promise<boolean>;
-  verify(proofs: PageProof[], finish?: string): Promise<boolean>;
+  verify(proofs: PageProof[], finish?: string, reveal?: true): Promise<boolean>;
   trackScroll(id?: number): void;
   clear(): void;
 }
@@ -91,7 +91,7 @@ export function createGuideSession(goal: string, options: SessionOptions) {
       && result.kind === 'highlight' && result.targetId !== onlyTarget;
   }
 
-  async function settle(view: GuidePage, current: () => boolean) {
+  async function settle(view: GuidePage, current: () => boolean, reveal = false) {
     const userIndex = requirements.findIndex((item, index) => item.source === 'user' && !confirmed.has(index));
     const unshown = [...proofs.entries()].flatMap(([index, proof]) => proof.source === 'point' ? [{ index, proof }] : []);
     const [nextPoint] = unshown;
@@ -99,7 +99,8 @@ export function createGuideSession(goal: string, options: SessionOptions) {
     const verifyOnly = userIndex >= 0 || morePoints;
     const text = '已完成。' + requirements.map(item => item.result.replace(/[。！？.!?]+$/, '')
       + (item.source === 'user' ? '（由你确认）' : '')).join('，') + '。';
-    if (!await view.verify([...proofs.values()], verifyOnly ? undefined : text) || !current()) return false;
+    if (!await view.verify([...proofs.values()], verifyOnly ? undefined : text, ...(reveal && nextPoint ? [true as const] : []))
+      || !current()) return false;
     if (!verifyOnly) {
       completed = true;
       options.report({ kind: 'complete', text });
@@ -109,7 +110,7 @@ export function createGuideSession(goal: string, options: SessionOptions) {
       const { index, proof } = nextPoint;
       const scopeIds = proof.checks.filter(check => check.field === 'label' && check.id !== proof.targetId).map(check => check.id);
       if (!await view.apply({ kind: 'highlight', targetId: proof.targetId, instruction: requirements[index].result,
-        ...(scopeIds.length ? { scopeIds } : {}) }) || !current()) {
+        ...(scopeIds.length ? { scopeIds } : {}), ...(reveal ? { reveal: true } : {}) }) || !current()) {
         return false;
       }
       markPointed(proof.targetId);
@@ -187,6 +188,10 @@ export function createGuideSession(goal: string, options: SessionOptions) {
       let snapshot = await targetPage.snapshot(reason === 'user');
       const reads: ReadResult[] = [];
       const evidence = new Map(snapshot.nodes.map(node => [node.id, node]));
+      // 只有用户开始或推进引导时才移动视口，后台复查沿用用户当前的位置。
+      const canReveal = (proof: PageProof) => reason === 'user' && proof.source === 'point';
+      const verifyObservedProof = (proof: PageProof) => canReveal(proof)
+        ? targetPage.verify([proof], undefined, true) : targetPage.verify([proof]);
       let feedback: string | undefined;
       let reviewRequirements = false;
       let reviewedRequirements = false;
@@ -231,7 +236,7 @@ export function createGuideSession(goal: string, options: SessionOptions) {
           if (!proof) continue;
           submitted.add(index);
           // 单项任务由收尾请求核对一次；组合任务先积累当前轮已复查的证据。
-          if (pageRequirements.length === 1 || await targetPage.verify([proof])) proofs.set(index, proof);
+          if (pageRequirements.length === 1 || await verifyObservedProof(proof)) proofs.set(index, proof);
           if (!current()) return;
         }
         // 模型已经给每项都提交了证据，但只有部分通过。请它复核条件是否其实在描述同一个结果。
@@ -244,7 +249,7 @@ export function createGuideSession(goal: string, options: SessionOptions) {
           await reread();
           for (const [index, proof] of earlierProofs) {
             if (!current()) return;
-            const stillValid = proof.checks.every(check => evidence.has(check.id)) && await targetPage.verify([proof]);
+            const stillValid = proof.checks.every(check => evidence.has(check.id)) && await verifyObservedProof(proof);
             if (!current()) return;
             if (stillValid) proofs.set(index, proof);
           }
@@ -254,7 +259,7 @@ export function createGuideSession(goal: string, options: SessionOptions) {
           continue;
         }
         if (requirements.length && proofs.size === pageRequirements.length) {
-          if (await settle(targetPage, current) || !current()) return;
+          if (await settle(targetPage, current, [...proofs.values()].some(canReveal)) || !current()) return;
           // 现场变化后重新取证，上一份输出里的编号不再是最新证据。
           if (finishOnly) break;
           await reread(pageRequirements.some(item => item.source === 'point')
@@ -275,7 +280,8 @@ export function createGuideSession(goal: string, options: SessionOptions) {
           const target = evidence.get(result.targetId);
           if (reason === 'soft' && shown?.target && shown.target.id !== target?.id) return;
           const applied = target && await targetPage.apply({ kind: 'highlight', targetId: result.targetId, instruction: result.instruction,
-            ...(result.scopeId === undefined ? {} : { scopeIds: [result.scopeId] }) });
+            ...(result.scopeId === undefined ? {} : { scopeIds: [result.scopeId] }),
+            ...(reason === 'user' ? { reveal: true } : {}) });
           if (!current()) return;
           if (!applied) {
             if (finishOnly) break;
@@ -369,7 +375,7 @@ export function createGuideSession(goal: string, options: SessionOptions) {
         confirmed.add(index);
         saveProgress();
       }
-      const settled = await settle(targetPage, current).catch(() => false);
+      const settled = await settle(targetPage, current, true).catch(() => false);
       if (!current()) return;
       confirming = false;
       if (!settled) await refresh('user');

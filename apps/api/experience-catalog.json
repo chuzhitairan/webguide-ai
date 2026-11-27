@@ -15,12 +15,12 @@
     },
     {
       "id": "figma.layer-export",
-      "revision": 1,
+      "revision": 2,
       "hostname": "www.figma.com",
       "status": "candidate",
       "goal": "找 Figma Design 中指定图层的图片导出设置。",
       "when": "设计编辑界面，能够核对目标图层和它对应的 Design 属性面板。",
-      "advice": "需要时先找到目标图层。选中后优先补看右侧属性面板下方的 Export 区。目标在视口外时提示用户滚动该面板。",
+      "advice": "需要时先找到目标图层。选中后直接在其 Design 属性面板内查找 Add export settings，查找范围包含视口外，同时核对 Export 区和所属图层。找到实际控件后引用它的编号，扩展可自动滚到控件处。",
       "check": "确认是目标图层的操作控件。未配置时找 Add export settings，已有配置时检查该图层的导出设置控件。若目标是实际下载，仍需核对下载结果。",
       "source": "docs/design/导航Harness-真实站点验证-2026-11-23.md#网络恢复后的复测"
     }

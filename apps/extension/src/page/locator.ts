@@ -14,6 +14,59 @@ export function clipsOverflow(style: CSSStyleDeclaration, axis: 'x' | 'y'): bool
     && /^(auto|scroll|overlay|hidden|clip)$/.test(overflowOnAxis(style, axis));
 }
 
+export function verticalScrollRange(element: Element): number {
+  const distance = element.scrollHeight - element.clientHeight;
+  const view = element.ownerDocument.defaultView;
+  return view && distance > 1 && /^(auto|scroll|overlay)$/.test(overflowOnAxis(view.getComputedStyle(element), 'y'))
+    ? distance : 0;
+}
+
+export function revealVertically(element: Element): boolean {
+  const document = element.ownerDocument;
+  const view = document.defaultView;
+  if (!view) return false;
+  const rect = element.getBoundingClientRect();
+  if (rect.left < 0 || rect.right > view.innerWidth) return false;
+
+  let top = 0;
+  let bottom = view.innerHeight;
+  let container: Element | undefined;
+  let fixed = view.getComputedStyle(element).position === 'fixed';
+  for (let parent = pageParent(element); parent && parent !== document.scrollingElement; parent = pageParent(parent)) {
+    const style = view.getComputedStyle(parent);
+    fixed ||= style.position === 'fixed';
+    const box = parent.getBoundingClientRect();
+    if (clipsOverflow(style, 'x') && (rect.left < box.left + parent.clientLeft
+      || rect.right > box.left + parent.clientLeft + parent.clientWidth)) return false;
+    if (!clipsOverflow(style, 'y')) continue;
+    const clipTop = box.top + parent.clientTop;
+    const clipBottom = clipTop + parent.clientHeight;
+    if (!container && (rect.top < clipTop || rect.bottom > clipBottom)) {
+      // 只移动最先裁住目标的容器。外层滚动无法解开内层的裁剪。
+      if (!verticalScrollRange(parent)) return false;
+      container = parent;
+    }
+    if (container) {
+      top = Math.max(top, clipTop);
+      bottom = Math.min(bottom, clipBottom);
+    }
+  }
+
+  if ((rect.top >= top && rect.bottom <= bottom) || bottom - top < rect.height) return false;
+  const scroller = container ?? document.scrollingElement;
+  if (!scroller || (!container && (fixed || [scroller, document.body].some(node => node
+    && /^(hidden|clip)$/.test(overflowOnAxis(view.getComputedStyle(node), 'y')))))) return false;
+  const range = scroller.scrollHeight - scroller.clientHeight;
+  if (range <= 1) return false;
+  const position = scroller.scrollTop;
+  const desired = position + (rect.top + rect.bottom - top - bottom) / 2;
+  const next = Math.round(Math.min(Math.max(0, desired), range));
+  const delta = next - position;
+  if (!delta || rect.top - delta < top - 1 || rect.bottom - delta > bottom + 1) return false;
+  scroller.scrollTo({ top: next, behavior: 'instant' });
+  return true;
+}
+
 // 节点移除或所在区域被隐藏后，原目标失效。开放 Shadow DOM 也要检查宿主。
 export function isVisibleTarget(element: Element, root: Document, { asControlLabel = false } = {}): boolean {
   const view = root.defaultView;

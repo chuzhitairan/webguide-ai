@@ -13,7 +13,8 @@ type Checkpoint = { goal: string; used: number; progress?: GuideProgress };
 const checkpointKey = (windowId: number) => 'guide-draft:' + windowId;
 const modelSessionKey = 'webguide-model-session';
 const modelSettingsKey = 'webguide-model-settings';
-const defaultSettings = { address: 'https://agi.tongji.edu.cn/v1', name: 'DeepSeek-V4.1-Flash', useExperience: false };
+const tongjiOrigin = 'https://agi.tongji.edu.cn';
+const defaultSettings = { address: tongjiOrigin + '/v1', name: 'DeepSeek-V4.1-Flash', useExperience: false };
 type ModelSettings = typeof defaultSettings;
 type ModelSession = { settings: ModelSettings; key: string };
 const initialStatus = { kind: 'waiting', text: '在要引导的网页点击 WebGuide AI 工具栏图标，然后输入目标。' } as const;
@@ -87,6 +88,10 @@ export function App() {
     let model: ModelConfig;
     try {
       model = configureModel(settings.address, settings.name, modelKey);
+      // 同济 Flash 试用低强度。其他提供方仍按其模型默认值运行。
+      if (new URL(model.url).origin === tongjiOrigin && model.name.toLowerCase() === defaultSettings.name.toLowerCase()) {
+        model.reasoningEffort = 'low';
+      }
     } catch (error) {
       setStatus({ kind: 'waiting', text: error instanceof Error ? error.message : '请检查模型设置。' });
       return;
